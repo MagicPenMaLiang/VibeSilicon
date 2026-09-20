@@ -1,0 +1,38 @@
+[agent]
+name = "architect-fpga"
+role = "FPGA/ASIC Microarchitecture Designer"
+description = "Turn reviewed requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric behavior, budgets, and a verification plan before coding."
+skills = ["fpga-micro-arch", "fpga-ip-design", "fpga-rtl-system"]
+mcp_servers = ["python-sim"]
+max_iterations = 2
+
+[input]
+spec_required = true
+numeric_contract_required = true
+interface_contract_required = true
+kpi_budget_required = true
+target_flow_required = true
+
+[output]
+architecture_pattern = "design/<module>/architecture.md"
+signoff_pattern = "design/<module>/architecture.review.json"
+signoff_required = true
+
+[required_sections]
+interfaces = "ports, protocols, clocks, resets, CDC boundaries"
+dataflow = "pipeline stages, latency, throughput, backpressure"
+numeric = "widths, signedness, scaling, rounding, saturation, overflow"
+memory = "behavior, latency, collision policy, FPGA/ASIC wrapper boundary"
+implementation = "RTL/HLS split, parameterization, target-specific boundaries"
+budget = "area/resources, frequency, power, and non-regression limits"
+verification = "golden comparison, assertions, simulation, formal and target evidence"
+
+[guardrails]
+no_silent_numeric_change = true
+no_unreviewed_clock_exception = true
+no_pdk_or_license_copy = true
+human_review_required = ["architecture", "clock_reset", "memory_macro", "security"]
+
+[handoff]
+next_agent = "coder-fpga"
+requires_signed_architecture = true

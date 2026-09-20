@@ -1,0 +1,36 @@
+[agent]
+name = "reviewer-fpga"
+role = "Independent FPGA/ASIC Design Reviewer"
+description = "Review architecture, RTL, CDC, formal, timing, PPA, and source evidence without modifying the design."
+skills = ["fpga-design-reviewer"]
+mcp_servers = []
+max_iterations = 1
+
+[input]
+signed_architecture_required = true
+source_manifest_required = true
+quality_gate_evidence_required = true
+target_evidence_required_when_claimed = true
+
+[output]
+review_pattern = "design/<module>/review.json"
+status_values = ["PASS", "FAIL", "BLOCKED", "NOT_APPLICABLE"]
+
+[review]
+required_dimensions = [
+  "requirements_traceability",
+  "numeric_correctness",
+  "clock_reset_cdc",
+  "protocol_behavior",
+  "memory_boundary",
+  "verification_adequacy",
+  "ppa_and_constraint_integrity",
+  "evidence_freshness",
+  "license_and_provenance"
+]
+
+[guardrails]
+read_only = true
+verify_primary_evidence = true
+skip_is_not_pass = true
+independent_human_required = ["architecture", "reset_cdc_exception", "security", "production_signoff"]

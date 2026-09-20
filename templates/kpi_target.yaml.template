@@ -1,0 +1,108 @@
+# KPI 目标值模板（per IP / per Phase）
+#
+# 用法：cp docs/templates/kpi_target.yaml.template docs/kpi_target.yaml
+# 由 Orchestrator + Quality Gate 监控对照
+# 阈值参考计划 §6.5.1 + §8
+
+metadata:
+  phase: <Phase X>
+  module: <module_name | all>      # all 表示 phase 级 KPI
+  version: v1.0
+  date: <ISO8601>
+  owner: <human_name>
+
+# 资源 KPI（计划 §8.2，软上限 + 硬上限）
+resources:
+  bram_pct:
+    soft_limit: 60                # 预警
+    warn_limit: 80                # 报警（csynth）
+    hard_limit: 95                # 阻塞（impl_1）
+    fail_action: "URAM 迁移 + 分块 PARTITION（计划 §4.6 8 项）"
+  uram_pct:
+    soft_limit: 90                # URAM 越多越好
+  dsp_pct:
+    soft_limit: 70
+    hard_limit: 90
+  lut_pct:
+    soft_limit: 70
+    hard_limit: 90
+  ff_pct:
+    soft_limit: 70
+    hard_limit: 90
+
+# 时序 KPI
+timing:
+  wns_ns:
+    warn: 0.5                     # WNS < 0.5 预警
+    fail: 0.0                     # WNS < 0 FAIL
+  tns_ns:
+    warn: -1.0
+    fail: -10.0
+  whs_ns:
+    warn: 0.0
+    fail: -0.5
+  fmax_mhz:
+    target: 100                   # KV260 典型 100 MHz
+
+# 质量 KPI（按 IP 类型）
+quality:
+  psnr_db:
+    target: 45.0                  # 图像类 IP
+    hard_min: 40.0
+  ssim:
+    target: 0.99
+    hard_min: 0.95
+  csim_diff_rate:                 # C-Sim 与 Python bit-match 比例
+    target: 1.0
+    hard_min: 0.99
+  cdc_critical_violations:
+    target: 0
+    hard_max: 0                   # critical 任何都阻塞
+
+# 效率 KPI（计划 §8.1，对比 baseline 节省率）
+efficiency:
+  spec_to_rtl_hours:
+    baseline_human: 40            # 1 周 = 40h 资深工程师
+    target_ai: 4                  # AI 半自动
+    saving_rate_target: 0.90      # 节省 90%
+  rtl_to_board_days:
+    baseline_human: 21            # 3 周 = 21d
+    target_ai: 7                  # 1 周
+    saving_rate_target: 0.67
+  review_hours_per_module:
+    baseline_human: 8             # 1 天
+    target_ai: 1
+    saving_rate_target: 0.875
+  coder_iterations:
+    baseline_human: null         # 人工无上限
+    target_ai_max: 3              # ≤ 3 次（计划 §6.3.1）
+    hard_max: 5
+
+# 安全 KPI（计划 §8.3）
+safety:
+  l1_l2_l3_l4_log_complete: true  # 4 层防御日志齐全
+  l33_signoff_rate: 1.0          # 100% 人工签字
+  quality_gate_pass_rate:
+    target: 0.90                 # ≥ 90% PASS
+    warn: 0.80                   # < 80% 报警
+  private_data_leak_count: 0     # 私有 spec 0 外泄
+  license_file_in_repo: false    # 不含 License 文件
+
+# 学习 KPI（计划 §8.4）
+learning:
+  lessons_per_month: 3
+  skill_refresh_per_phase: 1
+  training_per_month: 1
+
+# Baseline 类型（计划 §3.5 + §8.5）
+baseline:
+  type: <manual | official_ip | ai_first | cross_ai | theoretical | none>
+  rationale: <选择此 baseline 类型的原因>
+  saving_rate_adjustment: <按 §8.5 表调整后的实际节省率>
+
+# 监控频率（计划 §8）
+monitoring:
+  daily_standup_min: 5
+  weekly_review_min: 30
+  monthly_summary_h: 2
+  phase_review_d: 1

@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-reproduction-acceptance-v1.json",
+  "title": "VibeSilicon A04 fixed open-source ASIC reproduction acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "acceptance_id",
+    "profile_id",
+    "profile_sha256",
+    "review_id",
+    "toolchain_provenance_id",
+    "assessed_at",
+    "status",
+    "result_status",
+    "runs",
+    "checks",
+    "metric_comparison",
+    "safety_negatives",
+    "security",
+    "asic_metrics_mixed_with_fpga",
+    "real_execution_performed_by_assessor",
+    "next_gate",
+    "closure_status"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "acceptance_id": {"$ref": "#/$defs/hash"},
+    "profile_id": {"const": "orfs-sky130hd-gcd-v1"},
+    "profile_sha256": {"$ref": "#/$defs/hash"},
+    "review_id": {"$ref": "#/$defs/hash"},
+    "toolchain_provenance_id": {"$ref": "#/$defs/hash"},
+    "assessed_at": {"type": "string", "format": "date-time"},
+    "status": {"const": "A04_REPRODUCTION_ASSESSED"},
+    "result_status": {"enum": ["PASS", "BLOCKED"]},
+    "runs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {"$ref": "#/$defs/baselineRun"},
+        {"$ref": "#/$defs/replayRun"}
+      ],
+      "items": false
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixed_public_profile", "source_chain_integrity", "independent_runs", "two_complete_smokes", "metric_reproduction", "safety_negatives", "license_and_retention"],
+      "properties": {
+        "fixed_public_profile": {"$ref": "#/$defs/check"},
+        "source_chain_integrity": {"$ref": "#/$defs/check"},
+        "independent_runs": {"$ref": "#/$defs/check"},
+        "two_complete_smokes": {"$ref": "#/$defs/check"},
+        "metric_reproduction": {"$ref": "#/$defs/check"},
+        "safety_negatives": {"$ref": "#/$defs/check"},
+        "license_and_retention": {"$ref": "#/$defs/check"}
+      }
+    },
+    "metric_comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["area_delta_percent", "max_area_delta_percent", "wns_delta_ns", "max_wns_delta_ns"],
+      "properties": {
+        "area_delta_percent": {"type": "number", "minimum": 0},
+        "max_area_delta_percent": {"const": 1.0},
+        "wns_delta_ns": {"type": "number", "minimum": 0},
+        "max_wns_delta_ns": {"const": 0.05}
+      }
+    },
+    "safety_negatives": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {"$ref": "#/$defs/safety"}
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_artifacts_mode", "repository_content", "commercial_pdk_present", "customer_rtl_present", "public_artifact_export", "model_context_export"],
+      "properties": {
+        "raw_artifacts_mode": {"const": "EXTERNAL_ONLY"},
+        "repository_content": {"const": "HASHES_AND_SANITIZED_EVIDENCE_ONLY"},
+        "commercial_pdk_present": {"const": false},
+        "customer_rtl_present": {"const": false},
+        "public_artifact_export": {"const": false},
+        "model_context_export": {"const": false}
+      }
+    },
+    "asic_metrics_mixed_with_fpga": {"const": false},
+    "real_execution_performed_by_assessor": {"const": false},
+    "next_gate": {"enum": ["P4_ASIC_REFERENCE_ACCEPTED", "A04_REMEDIATE_AND_RERUN"]},
+    "closure_status": {"enum": ["A04_SCOPED_ACCEPTANCE_COMPLETE", "A04_ENGINEERING_COMPLETE"]}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "check": {"enum": ["PASS", "FAIL"]},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standard_cell_area_um2", "wns_ns", "tns_ns", "timing_met", "drc_count", "drc_rule_counts", "drc_clean"],
+      "properties": {
+        "standard_cell_area_um2": {"type": "number", "minimum": 0},
+        "wns_ns": {"type": "number"},
+        "tns_ns": {"type": "number", "maximum": 0},
+        "timing_met": {"type": "boolean"},
+        "drc_count": {"type": "integer", "minimum": 0},
+        "drc_rule_counts": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule", "count"],
+            "properties": {
+              "rule": {"type": "string", "minLength": 1, "maxLength": 128},
+              "count": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "drc_clean": {"type": "boolean"}
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "binary_sha256"],
+      "properties": {
+        "name": {"enum": ["openroad", "strmrun"]},
+        "version": {"type": "string", "minLength": 1},
+        "binary_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_label", "input_evidence_id", "a02_evidence_id", "physical_evidence_id", "manifest_id", "lvs_receipt_id", "executed_at", "lvs_checked_at", "physical_config_sha256", "tools", "result_status", "metrics"],
+      "properties": {
+        "run_label": {"enum": ["baseline", "replay"]},
+        "input_evidence_id": {"$ref": "#/$defs/hash"},
+        "a02_evidence_id": {"$ref": "#/$defs/hash"},
+        "physical_evidence_id": {"$ref": "#/$defs/hash"},
+        "manifest_id": {"$ref": "#/$defs/hash"},
+        "lvs_receipt_id": {"$ref": "#/$defs/hash"},
+        "executed_at": {"type": "string", "format": "date-time"},
+        "lvs_checked_at": {"type": "string", "format": "date-time"},
+        "physical_config_sha256": {"$ref": "#/$defs/hash"},
+        "tools": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {"allOf": [{"$ref": "#/$defs/tool"}, {"properties": {"name": {"const": "openroad"}}}]},
+            {"allOf": [{"$ref": "#/$defs/tool"}, {"properties": {"name": {"const": "strmrun"}}}]}
+          ],
+          "items": false
+        },
+        "result_status": {"enum": ["PASS", "BLOCKED"]},
+        "metrics": {"$ref": "#/$defs/metrics"}
+      }
+    },
+    "baselineRun": {
+      "allOf": [
+        {"$ref": "#/$defs/run"},
+        {"properties": {"run_label": {"const": "baseline"}}}
+      ]
+    },
+    "replayRun": {
+      "allOf": [
+        {"$ref": "#/$defs/run"},
+        {"properties": {"run_label": {"const": "replay"}}}
+      ]
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "expected", "observed", "validator", "error_type"],
+      "properties": {
+        "case_id": {"enum": ["gds_only", "missing_constraint", "missing_corner", "missing_lvs_report", "pdk_revision_drift", "private_design_input"]},
+        "expected": {"const": "REJECTED"},
+        "observed": {"const": "REJECTED"},
+        "validator": {"type": "string", "minLength": 3},
+        "error_type": {"type": "string", "minLength": 3}
+      }
+    }
+  }
+}

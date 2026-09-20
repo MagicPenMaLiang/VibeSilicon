@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vibesilicon:schema:rtl-project-smoke-evidence:v1",
+  "title": "Project-bound RTL directed smoke evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "gate", "status", "evidence_id", "manifest_sha256", "contract_sha256", "input_set_sha256", "top", "tool_version", "execution", "limitations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "gate": {"const": "G2_PROJECT_RTL_SMOKE"},
+    "status": {"enum": ["PASS", "FAIL", "BLOCKED"]},
+    "evidence_id": {"$ref": "#/$defs/sha256"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "contract_sha256": {"$ref": "#/$defs/sha256"},
+    "input_set_sha256": {"$ref": "#/$defs/sha256"},
+    "top": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$"},
+    "tool_version": {"type": ["string", "null"]},
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compile", "run", "pass_token_count"],
+      "properties": {
+        "compile": {"enum": ["PASS", "FAIL", "TIMEOUT", "ERROR", "NOT_RUN"]},
+        "run": {"enum": ["PASS", "FAIL", "TIMEOUT", "ERROR", "NOT_RUN"]},
+        "pass_token_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

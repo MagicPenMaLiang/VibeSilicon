@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-ppa-report-v1.json",
+  "title": "VibeSilicon ASIC PPA report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "report_id", "power_plan_id", "status", "result_status", "stage", "source_evidence", "corner", "activity", "performance", "power", "area", "tool", "artifacts", "complete_dimensions", "signoff_status", "limitations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "report_id": {"$ref": "#/$defs/hash"},
+    "power_plan_id": {"$ref": "#/$defs/hash"},
+    "status": {"const": "ASIC_PPA_REPORT_COMPLETE"},
+    "result_status": {"enum": ["VECTOR_BACKED_TIMING_MET", "VECTOR_BACKED_TIMING_VIOLATION", "ESTIMATED_TIMING_MET", "ESTIMATED_TIMING_VIOLATION"]},
+    "stage": {"enum": ["POST_SYNTHESIS", "POST_ROUTE"]},
+    "source_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_evidence_id", "a02_evidence_id", "a03_evidence_id"],
+      "properties": {
+        "input_evidence_id": {"$ref": "#/$defs/hash"},
+        "a02_evidence_id": {"$ref": "#/$defs/hash"},
+        "a03_evidence_id": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]}
+      }
+    },
+    "corner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "process", "voltage_v", "temperature_c", "liberty_sha256", "rc_tech_sha256"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "process": {"type": "string", "minLength": 1},
+        "voltage_v": {"type": "number", "exclusiveMinimum": 0},
+        "temperature_c": {"type": "number"},
+        "liberty_sha256": {"$ref": "#/$defs/hash"},
+        "rc_tech_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "confidence", "source_sha256", "source_bytes", "scope", "annotated_pin_count", "default_activity", "default_duty"],
+      "properties": {
+        "mode": {"enum": ["VCD", "SAIF", "ESTIMATED"]},
+        "confidence": {"enum": ["VECTOR_BACKED", "DEFAULT_ACTIVITY_ESTIMATE"]},
+        "source_sha256": {"oneOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "source_bytes": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]},
+        "scope": {"type": ["string", "null"]},
+        "annotated_pin_count": {"type": ["integer", "null"], "minimum": 1},
+        "default_activity": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "default_duty": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "performance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wns_ns", "tns_ns", "timing_met"],
+      "properties": {
+        "wns_ns": {"type": "number"},
+        "tns_ns": {"type": "number", "maximum": 0},
+        "timing_met": {"type": "boolean"}
+      }
+    },
+    "power": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "internal_w", "switching_w", "leakage_w", "total_w"],
+      "properties": {
+        "unit": {"const": "W"},
+        "internal_w": {"type": "number", "minimum": 0},
+        "switching_w": {"type": "number", "minimum": 0},
+        "leakage_w": {"type": "number", "minimum": 0},
+        "total_w": {"type": "number", "minimum": 0}
+      }
+    },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "cell_count", "synth_cell_area_um2", "standard_cell_area_um2"],
+      "properties": {
+        "unit": {"const": "um2"},
+        "cell_count": {"type": "integer", "minimum": 0},
+        "synth_cell_area_um2": {"type": "number", "minimum": 0},
+        "standard_cell_area_um2": {"type": "number", "minimum": 0}
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "binary_sha256"],
+      "properties": {
+        "name": {"const": "openroad"},
+        "version": {"type": "string", "minLength": 1},
+        "binary_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "complete_dimensions": {"const": true},
+    "signoff_status": {"const": "NOT_SIGNOFF"},
+    "limitations": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "sha256", "bytes"],
+      "properties": {
+        "role": {"enum": ["power_script", "power_report", "activity", "spef"]},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

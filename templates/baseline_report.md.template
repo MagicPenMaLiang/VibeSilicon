@@ -1,0 +1,106 @@
+# Baseline 报告模板
+#
+# 用法：cp docs/templates/baseline_report.md.template docs/baseline_report.md
+# 按计划 §3.5 6 种 baseline 类型选择，填写对应字段
+# 节省率计算口径见 §8.5
+
+# <module_name> Baseline Report
+
+## 元信息
+
+```yaml
+module: <module_name>
+phase: <Phase X>
+version: v1.0
+date: <ISO8601>
+owner: <human_name>
+baseline_type: <manual | official_ip | ai_first | cross_ai | theoretical | none>
+plan_ref: <计划章节引用>
+```
+
+## Baseline 类型选择
+
+按计划 §3.5 选择最适合的 baseline：
+
+- [ ] **人工手写**（理想态，资深工程师 1-2 周）
+- [ ] **官方参考 IP**（Xilinx/AMD 官方 IP 资源时序报告，适合 SPI/UART/I2C 等标准接口）
+- [ ] **AI 首版 baseline**（3 轮 Reviewer + 资深工程师签字确认，适合时间紧）
+- [ ] **跨 AI 工具对照**（≥2 工具如 OpenCode + Claude Code diff ≤5%，适合方法论验证）
+- [ ] **理论计算**（基于 Xilinx 资源估算公式手算 LUT/BRAM/DSP，适合 <500 LUT 小模块）
+- [ ] **标记缺失**（兜底：§8 KPI 仅记绝对值，不计算 vs 人工 节省率）
+
+**本项目选择**：`<type>`
+
+**理由**：<为什么选这个 baseline>
+
+## 节省率口径（按 §8.5）
+
+| Baseline 类型 | 节省率计算口径 | KPI 置信度 |
+|---|---|---|
+| 人工手写 | 100% 真实对比 | 🟢 高 |
+| 官方参考 IP | 与 Xilinx 官方报告 diff | 🟢 高 |
+| AI 首版 | 内部一致 + Reviewer 3 轮签字 | 🟡 中 |
+| 跨 AI 工具 | ≥2 工具 diff ≤5% | 🟡 中 |
+| 理论计算 | Xilinx 资源公式 | 🟢 高 |
+| 标记缺失 | 仅记绝对值（节省率 N/A） | ⚪ N/A |
+
+**本项目节省率口径**：<基于上表的具体计算公式>
+
+## Baseline 资源数据
+
+| 资源类型 | Baseline 用量 | AI 目标用量 | 节省率 |
+|---|---|---|---|
+| LUT | <N> | <M> | <%> |
+| FF | <N> | <M> | <%> |
+| BRAM | <N> | <M> | <%> |
+| DSP | <N> | <M> | <%> |
+
+## Baseline 时序数据
+
+| 指标 | Baseline 值 | AI 目标值 | 节省率 |
+|---|---|---|---|
+| WNS (ns) | <N> | <M> | <Δ> |
+| TNS (ns) | <N> | <M> | <Δ> |
+| Fmax (MHz) | <N> | <M> | <Δ> |
+
+## Baseline 效率数据
+
+| 指标 | Baseline 耗时 | AI 目标耗时 | 节省率 |
+|---|---|---|---|
+| Spec-to-RTL | <h> | <h> | <%> |
+| RTL-to-Board | <d> | <d> | <%> |
+| Review 周期 | <h/module> | <h/module> | <%> |
+
+## Baseline 质量数据
+
+| 指标 | Baseline 值 | AI 目标值 | 说明 |
+|---|---|---|---|
+| C-Sim diff rate | <%> | <%> | bit-match 比例 |
+| CDC error rate | <%/module> | <%/module> |  |
+| PSNR (dB) | <N> | <N> | 图像类 IP |
+| SSIM | <N> | <N> | 图像类 IP |
+
+## Baseline 来源
+
+- **官方 IP 报告**：`<Xilinx PGxxx 路径>`
+- **人工历史项目**：`<内部文档路径>`
+- **跨工具对照**：`<工具 A 报告> + <工具 B 报告>`
+- **理论计算公式**：Xilinx UG904 §<X>
+
+## 风险与限制
+
+- **Baseline 误差范围**：<±%>
+- **不适用场景**：<列出不适合参考此 baseline 的场景>
+- **更新频率**：<baseline 数据多久刷新一次>
+
+## 签字
+
+- [ ] Phase Owner（baseline 选择 + 口径确认）
+- [ ] 资深工程师（baseline 数据准确性签字）
+
+---
+
+**填表说明**：
+- 选择 baseline 类型后，必须填写对应章节（其他章节可标 N/A）
+- 节省率必须按 §8.5 表的口径计算，不能拍脑袋
+- 签字前删除本说明段

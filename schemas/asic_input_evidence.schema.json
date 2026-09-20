@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-input-evidence-v1.json",
+  "title": "VibeSilicon ASIC A01 sanitized input evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_id", "policy_id", "backend_id", "backend_contract_id", "status", "pdk", "design", "security", "execution_authorized", "asic_metrics_mixed_with_fpga", "next_gate", "closure_status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evidence_id": {"$ref": "#/$defs/hash"},
+    "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+    "backend_id": {"const": "openroad-orfs-local"},
+    "backend_contract_id": {"$ref": "#/$defs/hash"},
+    "status": {"const": "A01_INPUTS_VERIFIED_UNEXECUTED"},
+    "pdk": {"$ref": "#/$defs/pdk"},
+    "design": {"$ref": "#/$defs/design"},
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paths_are_relative", "copy_into_repository", "network_access", "model_context_export"],
+      "properties": {
+        "paths_are_relative": {"const": true},
+        "copy_into_repository": {"const": false},
+        "network_access": {"const": false},
+        "model_context_export": {"const": false}
+      }
+    },
+    "execution_authorized": {"const": false},
+    "asic_metrics_mixed_with_fpga": {"const": false},
+    "next_gate": {"const": "A02_SYNTHESIS_STA_ADAPTER"},
+    "closure_status": {"const": "A01_ENGINEERING_COMPLETE"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "positiveInteger": {"type": "integer", "minimum": 1},
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "sha256", "bytes"],
+      "properties": {
+        "role": {"enum": ["tech_lef", "cell_lef", "gds", "spice", "sdc", "synthesis_rules", "tracks", "klayout_tech", "rcx_rules", "physical_rules", "lvs_rules", "drc_rules"]},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"$ref": "#/$defs/positiveInteger"}
+      }
+    },
+    "pdk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pdk_id", "source_origin", "source_revision", "license", "storage", "corner", "views"],
+      "properties": {
+        "pdk_id": {"type": "string", "minLength": 3},
+        "source_origin": {"type": "string", "format": "uri"},
+        "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["spdx_id", "review_status", "reviewed_by", "reviewed_at", "sha256", "bytes"],
+          "properties": {
+            "spdx_id": {"type": "string", "minLength": 2},
+            "review_status": {"const": "APPROVED"},
+            "reviewed_by": {"type": "string", "minLength": 3},
+            "reviewed_at": {"type": "string", "format": "date-time"},
+            "sha256": {"$ref": "#/$defs/hash"},
+            "bytes": {"$ref": "#/$defs/positiveInteger"}
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "storage_id", "copied_into_repository", "file_count", "total_bytes"],
+          "properties": {
+            "mode": {"const": "EXTERNAL_ONLY"},
+            "storage_id": {"type": "string", "minLength": 3},
+            "copied_into_repository": {"const": false},
+            "file_count": {"const": 15},
+            "total_bytes": {"$ref": "#/$defs/positiveInteger"}
+          }
+        },
+        "corner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "process", "voltage_v", "temperature_c", "liberty_sha256", "liberty_bytes", "rc_tech_sha256", "rc_tech_bytes"],
+          "properties": {
+            "name": {"type": "string", "minLength": 3},
+            "process": {"type": "string", "minLength": 3},
+            "voltage_v": {"type": "number", "minimum": 0.1, "maximum": 5.0},
+            "temperature_c": {"type": "number", "minimum": -100.0, "maximum": 250.0},
+            "liberty_sha256": {"$ref": "#/$defs/hash"},
+            "liberty_bytes": {"$ref": "#/$defs/positiveInteger"},
+            "rc_tech_sha256": {"$ref": "#/$defs/hash"},
+            "rc_tech_bytes": {"$ref": "#/$defs/positiveInteger"}
+          }
+        },
+        "views": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {"$ref": "#/$defs/digest"}
+        }
+      }
+    },
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["design_id", "top_module", "rtl_languages", "source_visibility", "source_manifest_sha256", "source_count", "source_bytes", "constraints_sha256", "constraints_bytes"],
+      "properties": {
+        "design_id": {"type": "string", "minLength": 3},
+        "top_module": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$"},
+        "rtl_languages": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["verilog", "systemverilog"]}},
+        "source_visibility": {"enum": ["PUBLIC", "LOCAL_PRIVATE"]},
+        "source_manifest_sha256": {"$ref": "#/$defs/hash"},
+        "source_count": {"$ref": "#/$defs/positiveInteger"},
+        "source_bytes": {"$ref": "#/$defs/positiveInteger"},
+        "constraints_sha256": {"$ref": "#/$defs/hash"},
+        "constraints_bytes": {"$ref": "#/$defs/positiveInteger"}
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "global_connections": [
+    {"net": "REPLACE_ME", "pin": "REPLACE_ME", "type": "POWER"},
+    {"net": "REPLACE_ME", "pin": "REPLACE_ME", "type": "GROUND"}
+  ],
+  "tapcell": {
+    "distance_um": 0.0,
+    "tapcell_master": "REPLACE_ME"
+  },
+  "pdn": {
+    "voltage_domains": [
+      {"name": "REPLACE_ME", "power_net": "REPLACE_ME", "ground_net": "REPLACE_ME"}
+    ],
+    "grids": [
+      {
+        "name": "REPLACE_ME",
+        "kind": "STANDARD",
+        "voltage_domain": "REPLACE_ME",
+        "pins": ["REPLACE_ME"]
+      }
+    ],
+    "stripes": [
+      {
+        "grid": "REPLACE_ME",
+        "layer": "REPLACE_ME",
+        "width_um": 0.0,
+        "pitch_um": 0.0,
+        "offset_um": 0.0,
+        "followpins": false
+      }
+    ],
+    "connects": [
+      {"grid": "REPLACE_ME", "layers": ["REPLACE_ME", "REPLACE_ME"]}
+    ]
+  }
+}

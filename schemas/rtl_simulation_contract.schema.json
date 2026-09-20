@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_simulation_contract.schema.json",
+  "title": "VibeSilicon bounded RTL simulation contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "simulator", "top", "dut_instance", "testbench", "pass_token", "timeout_seconds"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "simulator": {"const": "verilator"},
+    "top": {"$ref": "#/$defs/identifier"},
+    "dut_instance": {"$ref": "#/$defs/identifier"},
+    "testbench": {"$ref": "#/$defs/path"},
+    "pass_token": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{4,80}$"},
+    "timeout_seconds": {"type": "integer", "minimum": 10, "maximum": 300}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$"},
+    "path": {"type": "string", "minLength": 1, "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\:]+$"}
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "top": "REQUIRED_TOP",
+  "manifest_sha256": "REQUIRED_SHA256",
+  "clocks": ["REQUIRED_SOURCE_CLOCK", "REQUIRED_DESTINATION_CLOCK"],
+  "resets": ["REQUIRED_RESET"],
+  "tool": {"name": "REQUIRED_CDC_RDC_TOOL", "version": "REQUIRED_PINNED_VERSION"},
+  "cdc_status": "REQUIRED_REAL_RESULT",
+  "rdc_status": "REQUIRED_REAL_RESULT",
+  "evidence_id": "REQUIRED_CONTENT_ID"
+}

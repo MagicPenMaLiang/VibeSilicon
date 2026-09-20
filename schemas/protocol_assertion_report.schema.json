@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/protocol_assertion_report.schema.json",
+  "title": "VibeSilicon Protocol Assertion Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ruleset_version", "status", "generated_at", "trace", "trace_id", "producer", "trace_sha256", "evidence_id", "protocol", "summary", "violations", "waveform"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "ruleset_version": {"const": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "trace": {"type": "string", "minLength": 1},
+    "trace_id": {"type": "string", "minLength": 1},
+    "producer": {"enum": ["curated-fixture", "cocotb", "verilator", "ila"]},
+    "trace_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "protocol": {"enum": ["spi-mode0", "axi-stream"]},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["violations", "blocking"],
+      "properties": {
+        "violations": {"type": "integer", "minimum": 0},
+        "blocking": {"type": "integer", "minimum": 0}
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "severity", "cycle", "message", "evidence"],
+        "properties": {
+          "rule_id": {"pattern": "^(SPI|AXIS)-P00[1-6]$"},
+          "severity": {"const": "ERROR"},
+          "cycle": {"type": "integer", "minimum": 0},
+          "message": {"type": "string", "minLength": 1},
+          "evidence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "waveform": {"type": ["string", "null"]}
+  }
+}

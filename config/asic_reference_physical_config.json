@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "floorplan": {
+    "die_area_um": [0, 0, 100, 100],
+    "core_area_um": [10, 10, 90, 90],
+    "site": "unithd"
+  },
+  "placement": {
+    "pin_horizontal_layer": "met3",
+    "pin_vertical_layer": "met2",
+    "filler_cells": [
+      "sky130_fd_sc_hd__fill_1",
+      "sky130_fd_sc_hd__fill_2",
+      "sky130_fd_sc_hd__fill_4",
+      "sky130_fd_sc_hd__fill_8"
+    ]
+  },
+  "optimization": {
+    "placement_density": 0.6,
+    "timing_driven_placement": true,
+    "routability_driven_placement": true,
+    "force_center_initial_place": true,
+    "min_phi_coefficient": 0.95,
+    "max_phi_coefficient": 1.05,
+    "match_cell_footprint": true,
+    "cts_sink_clustering": true,
+    "cts_repair_clock_nets": true,
+    "post_global_route_repair": true
+  },
+  "routing": {
+    "signal_layers": "met1-met5",
+    "clock_layers": "met3-met5",
+    "signal_wire_rc_layer": "met1",
+    "clock_wire_rc_layer": "met3",
+    "global_layer_adjustment": 0.2,
+    "via_in_pin_layer": "met1",
+    "detailed_route_end_iteration": 64,
+    "detailed_route_seed": 1,
+    "detailed_route_k": 1
+  }
+}

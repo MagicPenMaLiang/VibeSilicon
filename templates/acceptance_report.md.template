@@ -1,0 +1,165 @@
+# Phase Acceptance Report Template
+# ===========================================
+#
+# Purpose:  Phase closeout验收报告模板
+# Usage:    cp templates/acceptance_report.md.template project/<phase>_<ip>/docs/phase<N>_acceptance_report.md
+#           Fill in actual values from reports/ + L3.3 sign-off
+# Reference: docs/process/phase_closeout.md
+#
+# Important:  This is the PROJECT-LEVEL acceptance report (per IP / per phase).
+#             The global docs/ only contains TEMPLATES and OVERALL STATUS
+#             (see docs/CHANGELOG.md for cross-phase changes).
+#
+# Sections (7 required):
+# 1. Executive Summary
+# 2. Verification Matrix (7 quality gates)
+# 3. Resource Utilization (IP + wrapper)
+# 4. Timing (WNS/TNS/WHS)
+# 5. CDC Analysis
+# 6. L3.3 Sign-off
+# 7. Deliverables
+# 8. Known Limitations
+# 9. Next Phase Plan
+# 10. Lessons Learned (link)
+# 11. Signatures
+
+# Phase <N> 验收报告 — <Module Name>
+
+> **Executive Summary**: ✅/⚠️/❌ <one-line: all gates status>
+> **项目**：Phase <N> — <Module Name>
+> **目标器件**：<part number, e.g. xck26-sfvc784-2LV-c>
+> **报告日期**：<ISO8601>
+> **版本**：v1.0
+
+---
+
+## 1. Verification Matrix
+
+| # | Gate | 标准 | 结果 | 证据路径 |
+|---|---|---|---|---|
+| L1 | verilator lint | 0 errors | ✅/❌ | `<path>` |
+| L2 | Python golden | 12/12 PASS | ✅/❌ | `<path>` |
+| L3.1 | AI auto-review | 8/8 PASS | ✅/❌ | `<path>` |
+| L3.2 | AI multi-scheme | RETAIN_A | ✅/❌ | `<path>` |
+| L4 | Protocol trace | PASS | ✅/❌ | `<path>` |
+| L5 | Synth + Impl + bitstream | 0 errors | ✅/❌ | `<path>` |
+| Board | Board loopback | data_o = expected | ✅/❌ | `<path>` |
+
+---
+
+## 2. Resource Utilization (IP + Wrapper)
+
+### 2.1 IP Core (u_<ip>, IP-only)
+| Resource | Synthesized | KPI | Status |
+|---|---|---|---|
+| CLB LUTs | <N> | ≤ <N> | ✅/❌ |
+| CLB Registers | <N> | ≤ <N> | ✅/❌ |
+| Block RAM | <N> | 0 | ✅/❌ |
+| DSP | <N> | 0 | ✅/❌ |
+
+### 2.2 Test Wrapper (with debug)
+| Resource | Synthesized | Post-Route | Available | Util% |
+|---|---|---|---|---|
+| CLB LUTs | <N> | <N> | <N> | <N>% |
+| CLB Registers | <N> | <N> | <N> | <N>% |
+
+---
+
+## 3. Timing
+
+| Metric | Value | KPI | Status |
+|---|---|---|---|
+| WNS (Setup) | +<N> ns | ≥ 0 | ✅/❌ |
+| TNS (Setup) | 0 ns | > -1.0 | ✅/❌ |
+| WHS (Hold) | +<N> ns | ≥ 0 | ✅/❌ |
+| THS (Hold) | 0 ns | > -0.5 | ✅/❌ |
+| Clock freq | <N> MHz | — | ✅ |
+
+---
+
+## 4. CDC Analysis
+
+| Metric | Value | Status |
+|---|---|---|
+| CDC endpoints | <N> | ✅ |
+| UNSAFE endpoints | 0 | ✅ |
+| Sync type | 2-FF + ASYNC_REG | ✅ |
+
+---
+
+## 5. Board Verification
+
+| Item | Result | Evidence |
+|---|---|---|
+| Bitstream generation | ✅ | `<path>.bit` |
+| Board programming | ✅ | Hardware Manager |
+| SPI/<protocol> loopback | ✅ | data_o = 0x<N> |
+| Self-contained | ✅ | no jumper, no external clock |
+
+---
+
+## 6. L3.3 Sign-off
+
+✅/⏳ **<N>/<N> items signed** (<date>, <signer>). 签字文件：`<path>`
+
+| # | Category | Item | Status |
+|---|---|---|---|
+| PHY-1 | PHY | <item> | ✅/⏳ |
+| PHY-2 | PHY | <item> | ✅/⏳ |
+| RST-1 | RST | <item> | ✅/⏳ |
+| RST-2 | RST | <item> | ✅/⏳ |
+| CDC-1 | CDC | <item> | ✅/⏳ |
+| BIT-1 | BIT | <item> | ✅/⏳ |
+| FUNC-1 | FUNC | <item> | ✅/⏳ |
+
+---
+
+## 7. Deliverables
+
+| File | Path |
+|---|---|
+| <IP> RTL | `project/<phase>_<ip>/src/rtl/<ip>.v` |
+| <IP> Test Wrapper | `project/<phase>_<ip>/src/rtl/<ip>_test_wrapper.v` |
+| <IP> XDC | `project/<phase>_<ip>/src/constraints/<ip>.xdc` |
+| Build TCL | `project/<phase>_<ip>/src/build/...` |
+| Board Test TCL | `project/<phase>_<ip>/src/test/...` |
+| Python Golden | `project/<phase>_<ip>/golden/<ip>.py` |
+| Test Vectors | `project/<phase>_<ip>/tests/<ip>.yaml` |
+| Spec | `project/<phase>_<ip>/specs/<ip>.md` |
+| KPI Targets | `project/<phase>_<ip>/docs/kpi_target.yaml` |
+| Reports | `project/<phase>_<ip>/reports/` |
+
+---
+
+## 8. Known Limitations
+
+| # | Limitation | Mitigation | Follow-up |
+|---|---|---|---|
+| 1 | <limitation> | <workaround> | <next phase?> |
+
+---
+
+## 9. Next Phase Plan
+
+<Plan for Phase N+1>
+
+---
+
+## 10. Lessons Learned
+
+<Link to L<XXX>_<phase>_lessons.md>
+
+---
+
+## 11. Signatures
+
+**Phase Owner**（Phase N 验收人）：
+- Name: _______________
+- Date: _______________
+- Signature: _______________
+
+---
+
+**Maintainer**: VibeSilicon Phase Owner
+**Version**: v1.0
+**Date**: <ISO8601>

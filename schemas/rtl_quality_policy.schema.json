@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_quality_policy.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_id", "standard_version", "activation", "legacy_gate_thresholds", "readability_thresholds", "profile_rules", "tool_versions", "gate_requirements"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy_id": {"const": "vibesilicon-rtl-quality-v1"},
+    "standard_version": {"const": "1.0"},
+    "activation": {"enum": ["round1_legacy_gate_only", "round2_project_gate"]},
+    "legacy_gate_thresholds": {"type": "object", "additionalProperties": false, "required": ["lint_errors", "async_reg_missing", "bram_pct_csyn_warn", "bram_pct_csyn_fail", "wns_ns_warn", "wns_ns_fail", "cdc_critical"], "properties": {
+      "lint_errors": {"const": 0}, "async_reg_missing": {"const": 0},
+      "bram_pct_csyn_warn": {"type": "number", "minimum": 0, "maximum": 100},
+      "bram_pct_csyn_fail": {"type": "number", "minimum": 0, "maximum": 100},
+      "wns_ns_warn": {"type": "number"}, "wns_ns_fail": {"type": "number"},
+      "cdc_critical": {"const": 0}
+    }},
+    "readability_thresholds": {"type": "object", "additionalProperties": false, "required": ["module_lines_warn", "process_lines_warn", "nesting_depth_warn"], "properties": {
+      "module_lines_warn": {"type": "integer", "minimum": 1},
+      "process_lines_warn": {"type": "integer", "minimum": 1},
+      "nesting_depth_warn": {"type": "integer", "minimum": 1}
+    }},
+    "profile_rules": {"type": "object", "additionalProperties": false, "required": ["fpga", "asic", "handwritten", "generated"], "patternProperties": {"^(fpga|asic|handwritten|generated)$": {"type": "object", "additionalProperties": false, "required": ["required"], "properties": {"required": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}}}}},
+    "tool_versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python", "verilator", "iverilog"],
+      "patternProperties": {
+        "^(python|verilator|iverilog)$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted_major"],
+          "properties": {
+            "accepted_major": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
+            "minimum_minor": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "gate_requirements": {"type": "object", "additionalProperties": false, "required": ["g0", "g1", "g2"], "patternProperties": {"^g[012]$": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}}}
+  }
+}

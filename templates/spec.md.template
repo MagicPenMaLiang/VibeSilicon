@@ -1,0 +1,105 @@
+# IP 规格说明模板（per IP）
+#
+# 用法：cp docs/templates/spec.md.template docs/spec/<module>.md
+# 触发 Orchestrator 路由决策（按 module.type）
+# Phase 1 SPI Pilot 示例见计划 §3.4
+
+# <module_name> spec
+
+## 属性
+
+```yaml
+module:
+  name: <module_name>           # 例：counter, packet_filter
+  type: <phy/timing | algorithm | mixed | ai_model | testbench>
+  version: v1.0
+  owner: <human_name>
+  phase: <Phase X>
+  plan_ref: <计划章节引用>       # 例：§3.4 / §4.3
+```
+
+## 功能
+
+- <一句话核心功能描述>
+- <关键算法或接口>
+- <典型应用场景>
+
+## 接口
+
+| 信号 | 方向 | 位宽 | 说明 |
+|---|---|---|---|
+| `clk_i` | input | 1 | 主时钟 |
+| `rst_n_i` | input | 1 | 同步复位（低有效） |
+| `<sig_i>` | input | N | <信号说明> |
+| `<sig_o>` | output | N | <信号说明> |
+
+## 性能指标
+
+- **吞吐率**：<samples/clks per second>
+- **延迟**：<clock cycles>
+- **资源占用**：<LUT / FF / BRAM / DSP 目标值>
+- **时序裕量**：WNS ≥ +0.5ns
+- **质量**（图像类）：PSNR ≥ 45dB, SSIM ≥ 0.99
+
+## 约束
+
+- **时钟**：<频率> ± <抖动>
+- **复位**：<同步/异步> + <序列>
+- **CDC**：<单时钟域 / 多 CDC（如有，注明跨域信号）>
+- **位宽严格对应**：np.uintN ↔ ap_uint<N>（红线 2）
+- **Q_FRAC**：<Q<N>.<M> 量化方案>
+
+## Python 黄金参考
+
+- 路径：`reference/golden/<module>.py`
+- 位宽：`<np.uintN / np.intN>`
+- 量化：`<Q<N>.<M>>`
+- 测试用例：≥ <N> 个
+
+## KPI 预算
+
+| 资源类型 | 软上限（kpi_target.yaml） | 硬上限 |
+|---|---|---|
+| BRAM | <80% | 100% |
+| DSP | <90% | 100% |
+| LUT | <90% | 100% |
+| FF | <90% | 100% |
+| WNS | ≥ +0.5ns | ≥ 0ns |
+
+## 决策树路由（计划 §1.9）
+
+按 `module.type`：
+
+| type | 路线 | 加载 Skill | 加载 MCP |
+|---|---|---|---|
+| `algorithm` | 路线二（纯 HLS） | fpga-ip-design | vitis-hls-mcp + python-sim-mcp |
+| `phy/timing` | 路线一（纯 RTL） | fpga-ip-design + fpga-rtl-system | vivado-mcp |
+| `mixed`（推荐） | 混合路线 | fpga-ip-design + fpga-rtl-system | 全部 |
+| `ai_model` | 路线三 | fpga-ip-design + 工具链专属 | 工具链专属 |
+| `testbench` | （非 RTL） | fpga-ip-design | python-sim-mcp |
+
+## L3.3 签字项（PHY / RST / SECURITY）
+
+- [ ] PHY 黑盒配置（如适用）：<spec 引用>
+- [ ] 上电复位序列：<spec 引用>
+- [ ] 加密 / 安全模块（如适用）：<spec 引用>
+
+签字文件：`docs/signatures/<module>.signed`
+
+## 验证策略
+
+- **C-Sim**（HLS 路线）：与 `reference/golden/<module>.py` bit-match
+- **RTL 仿真**（RTL 路线）：cocotb / Verilator testbench
+- **Quality Gate 6 项**：① lint + ② ASYNC_REG + ③ 资源估算 + ④ 时序 + ⑤ CDC + ⑥ impl_1
+
+## 失败处理（计划 §1.10）
+
+- max_iterations: 3（Coder 返工上限）
+- escalate_after: 3（升级 Phase Owner + Reviewer L3.1）
+
+---
+
+**填表说明**：
+- `<尖括号>` 占位符必须替换为实际值
+- 删除不适用的章节（如非图像 IP 删除 PSNR/SSIM）
+- 提交前必须删除本说明段

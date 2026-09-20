@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/optimization_experiment.schema.json",
+  "title": "VibeSilicon Optimization Experiment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "experiment_id", "hypothesis", "baseline", "objectives", "guardrails", "non_regression", "invariants", "files", "required_gates", "max_iterations", "auto_rollback"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "experiment_id": {"type": "string", "pattern": "^OPT-[A-Za-z0-9][A-Za-z0-9-]{2,63}$"},
+    "hypothesis": {"type": "string", "minLength": 1},
+    "baseline": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evidence_id", "metrics"],
+      "properties": {
+        "evidence_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "metrics": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "number"}}
+      }
+    },
+    "objectives": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/objective"}},
+    "guardrails": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/guardrail"}},
+    "non_regression": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/nonRegression"}},
+    "invariants": {"$ref": "#/$defs/uniqueStrings"},
+    "files": {"$ref": "#/$defs/uniqueStrings"},
+    "required_gates": {"$ref": "#/$defs/uniqueStrings"},
+    "max_iterations": {"type": "integer", "minimum": 1, "maximum": 3},
+    "auto_rollback": {"const": true},
+    "min_improvement": {
+      "type": "object", "additionalProperties": false, "required": ["metric", "absolute"],
+      "properties": {"metric": {"type": "string"}, "absolute": {"type": "number", "minimum": 0}}
+    }
+  },
+  "$defs": {
+    "uniqueStrings": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "objective": {
+      "type": "object", "additionalProperties": false, "required": ["metric", "operator", "value"],
+      "properties": {"metric": {"type": "string"}, "operator": {"enum": [">=", "<=", ">", "<", "=="]}, "value": {"type": "number"}}
+    },
+    "guardrail": {
+      "type": "object", "additionalProperties": false, "required": ["metric", "max_delta_pct"],
+      "properties": {"metric": {"type": "string"}, "max_delta_pct": {"type": "number", "minimum": 0}}
+    },
+    "nonRegression": {
+      "type": "object", "additionalProperties": false, "required": ["metric", "direction"],
+      "properties": {"metric": {"type": "string"}, "direction": {"enum": ["higher", "lower"]}}
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_domain_evidence.schema.json",
+  "title": "RTL CDC/RDC evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "top", "manifest_sha256", "clocks", "resets", "tool", "cdc_status", "rdc_status", "evidence_id"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "top": {"$ref": "#/$defs/identifier"},
+    "manifest_sha256": {"$ref": "#/$defs/hash"},
+    "clocks": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "resets": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}},
+    "tool": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": {"name": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}}
+    },
+    "cdc_status": {"const": "PASS"},
+    "rdc_status": {"const": "PASS"},
+    "evidence_id": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "identifier": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]*$"}
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_readability.schema.json",
+  "title": "VibeSilicon RTL Readability Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ruleset_version", "status", "generated_at", "source", "summary", "violations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "ruleset_version": {"const": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "source": {"type": "string", "minLength": 1},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["violations", "blocking", "warnings", "waived"],
+      "properties": {
+        "violations": {"type": "integer", "minimum": 0},
+        "blocking": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "integer", "minimum": 0},
+        "waived": {"type": "integer", "minimum": 0}
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "severity", "file", "line", "evidence", "suggestion", "waiver_id", "waived"],
+        "properties": {
+          "rule_id": {"pattern": "^RTL-R00[1-9]$|^RTL-R010$", "type": "string"},
+          "severity": {"enum": ["ERROR", "WARNING"]},
+          "file": {"type": "string", "minLength": 1},
+          "line": {"type": "integer", "minimum": 1},
+          "evidence": {"type": "string"},
+          "suggestion": {"type": "string", "minLength": 1},
+          "waiver_id": {"type": ["string", "null"]},
+          "waived": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

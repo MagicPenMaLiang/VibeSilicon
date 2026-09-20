@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "review_id": "REPLACE_WITH_CONTENT_SHA256",
+  "status": "REQUIRED",
+  "profile_id": "orfs-sky130hd-gcd-v1",
+  "reviewed_by": "REPLACE_WITH_INDEPENDENT_REVIEWER",
+  "reviewed_at": "REPLACE_WITH_RFC3339_UTC_AFTER_BOTH_LVS_CHECKS",
+  "design": {
+    "source_origin": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts",
+    "source_revision": "d26bf27e1467d4ac903655694ac31e2ec3f85260",
+    "spdx_id": "REPLACE_WITH_REVIEWED_COMPONENT_SPDX",
+    "license_review_status": "REQUIRED",
+    "license_sha256": "REPLACE_WITH_SHA256",
+    "license_bytes": 0,
+    "source_manifest_sha256": "REPLACE_WITH_SHA256",
+    "constraints_sha256": "REPLACE_WITH_SHA256"
+  },
+  "pdk": {
+    "source_origin": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts",
+    "source_revision": "d26bf27e1467d4ac903655694ac31e2ec3f85260",
+    "spdx_id": "Apache-2.0",
+    "license_review_status": "REQUIRED",
+    "license_sha256": "REPLACE_WITH_SHA256",
+    "license_bytes": 0
+  },
+  "toolchain": {
+    "build_provenance_id": "REPLACE_WITH_SHA256",
+    "diagnostic_overrides": [],
+    "tools": [
+      {
+        "name": "yosys",
+        "version": "REPLACE_WITH_REVIEWED_VERSION",
+        "binary_sha256": "REPLACE_WITH_SHA256",
+        "source_revision": "a5af9d690a43744bf6b2cc3dea2717c16b54621c"
+      },
+      {
+        "name": "openroad",
+        "version": "REPLACE_WITH_REVIEWED_VERSION",
+        "binary_sha256": "REPLACE_WITH_SHA256",
+        "source_revision": "c3e680b01b8bc61eb1dfaf144594b371cc222efc"
+      },
+      {
+        "name": "strmrun",
+        "version": "REPLACE_WITH_REVIEWED_VERSION",
+        "binary_sha256": "REPLACE_WITH_SHA256",
+        "source_revision": null
+      }
+    ]
+  },
+  "retention": {
+    "raw_artifacts_mode": "EXTERNAL_ONLY",
+    "retention_days": 0,
+    "repository_content": "HASHES_AND_SANITIZED_EVIDENCE_ONLY",
+    "public_artifact_export": false,
+    "commercial_pdk_present": false,
+    "customer_rtl_present": false,
+    "model_context_export": false
+  }
+}

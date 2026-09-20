@@ -1,0 +1,191 @@
+# 风险登记模板（per IP / per Phase）
+#
+# 用法：cp docs/templates/risk_register.yaml.template docs/risk_register.yaml
+# 配合 Quality Gate 失败处理 + Reviewer L3.1 关注
+# Phase 0 + Phase 1+ 通用
+
+metadata:
+  phase: <Phase X>
+  module: <module_name | all>
+  version: v1.0
+  date: <ISO8601>
+  owner: <human_name>
+
+# 风险条目
+risks:
+
+  # 通用风险（适用于所有 IP）
+  - id: R001
+    category: bit_width
+    severity: critical
+    description: "位宽不严格对应导致 C-Sim diff != 0"
+    source: "计划 §1.8 红线 1 + 红线 2"
+    likelihood: medium
+    impact: high
+    detection: "Quality Gate ② ASYNC_REG + C-Sim 自动检查"
+    mitigation: |
+      - spec.md 强制包含 np.uintN + Q_FRAC 字段
+      - coder-fpga 翻译前对照黄金参考
+      - 测试向量覆盖边界值（0, max）
+    owner: coder-fpga
+    status: monitoring
+
+  - id: R002
+    category: cdc
+    severity: critical
+    description: "跨时钟域未正确同步导致亚稳态"
+    source: "计划 §6.5.1 ⑤ CDC 拓扑"
+    likelihood: high
+    impact: critical
+    detection: "Quality Gate ⑤ Vivado report_cdc"
+    mitigation: |
+      - 2 级 FF 同步器 + ASYNC_REG 标注
+      - 多 bit 数据用 XPM_FIFO_ASYNC
+      - L3.3 人工签字 PHY 配置
+    owner: coder-fpga + reviewer-fpga
+    status: monitoring
+
+  - id: R003
+    category: resource
+    severity: major
+    description: "片上存储利用率超过项目评审阈值"
+    source: "计划 §4.6 BRAM 资源危机 8 项"
+    likelihood: high
+    impact: high
+    detection: "Quality Gate ③ csynth 报告"
+    mitigation: |
+      ① 算法降阶（18-bit → 12-bit）
+      ② URAM 迁移（BIND_STORAGE impl=URAM）
+      ③ 分块 ARRAY_PARTITION（factor=2/4）
+      ④ DDR/SRAM 时间复用
+      ⑤ XPM_RAM 混合模式
+      ⑥ AP_MEMPORT 优化
+      ⑦ 抗亚稳态 XPM 宏
+      ⑧ 路由拥塞预警
+    owner: coder-fpga
+    status: monitored
+
+  - id: R004
+    category: timing
+    severity: major
+    description: "WNS < 0 时序违例"
+    source: "计划 §6.5.1 ④ 时序"
+    likelihood: medium
+    impact: high
+    detection: "Quality Gate ④ Vivado report_timing_summary"
+    mitigation: |
+      - 增加 Pipeline 深度
+      - 拆分组合逻辑路径
+      - 复核 create_clock 约束
+      - impl strategy 切换（Performance_Explore → Flow_RuntimeOptimized）
+    owner: coder-fpga
+    status: monitoring
+
+  - id: R005
+    category: ai_iteration
+    severity: minor
+    description: "Coder 3 次迭代仍 FAIL（计划 §6.3.1 + §1.10）"
+    source: "failure_handling.max_iterations"
+    likelihood: medium
+    impact: medium
+    detection: "subagent 内部计数器"
+    mitigation: |
+      - 升级 Phase Owner + Reviewer L3.1
+      - 检查 spec.md 完整性
+      - 检查 Python 黄金参考质量
+    owner: orchestrator-fpga
+    status: monitored
+
+  - id: R006
+    category: l33_signoff
+    severity: critical
+    description: "L3.3 关键结果未签字（PHY/复位/安全）"
+    source: "计划 §1.8 红线 5"
+    likelihood: low
+    impact: critical
+    detection: "检查 docs/signatures/<module>.signed 文件"
+    mitigation: |
+      - Orchestrator 阻塞直到人工签字
+      - 签字文件格式标准化（l33_signoff_checklist.md）
+      - AI 自动检查文件存在 + signed=true
+    owner: human (Phase Owner)
+    status: blocking
+
+  - id: R007
+    category: golden_ref
+    severity: major
+    description: "Python 黄金参考错误导致 C-Sim 假阳性"
+    source: "计划 §1.7 原则 1（输入已定点化）"
+    likelihood: low
+    impact: critical
+    detection: "Phase Owner + Reviewer L3.1 审查黄金参考"
+    mitigation: |
+      - 黄金参考由资深工程师签字
+      - 红线 10：不修改 reference/golden/（除非人工明确指令）
+      - reference/lessons/ 记录已知边界
+    owner: human (Phase Owner)
+    status: monitored
+
+  - id: R008
+    category: tool_chain
+    severity: minor
+    description: "Windows EDA 工具环境初始化失败"
+    source: "opencode.json mcpServers.*.env"
+    likelihood: medium
+    impact: high
+    detection: "MCP server 启动日志 + FileNotFoundError"
+    mitigation: |
+      - settings64.bat 路径硬编码检查
+      - opencode.json env 字段提供绝对路径
+      - MCP server.py 内部调用 settings64.bat
+    owner: coder-fpga + orchestrator-fpga
+    status: monitored
+
+  - id: R009
+    category: baseline_drift
+    severity: minor
+    description: "节省率计算口径不准确（baseline 类型选择错误）"
+    source: "计划 §3.5 + §8.5 baseline 降级方案"
+    likelihood: medium
+    impact: medium
+    detection: "Phase Owner 复核 baseline_report.md"
+    mitigation: |
+      - 6 种 baseline 类型按场景选
+      - 节省率按 §8.5 表调整
+      - 跨 AI 工具对照 baseline 验证方法论
+    owner: human (Phase Owner)
+    status: monitored
+
+  - id: R010
+    category: data_leak
+    severity: critical
+    description: "私有 spec 上传到公网 LLM API"
+    source: "计划 §1.8 红线 8"
+    likelihood: low
+    impact: critical
+    detection: "DLP 审计 + 私有部署检查"
+    mitigation: |
+      - OpenCode 本地部署（基线）
+      - 不向公网 LLM API 上传 spec
+      - 季度安全审计
+    owner: human (Security Owner)
+    status: monitored
+
+# 风险汇总
+summary:
+  total: 10
+  by_severity:
+    critical: 4
+    major: 3
+    minor: 3
+  by_status:
+    monitoring: 8
+    monitored: 0
+    blocking: 1
+    mitigated: 1
+
+# 升级路径
+escalation:
+  trigger: "任一 critical risk 触发 OR Quality Gate FAIL > 3 次"
+  path: "Coder → Reviewer L3.1 → Phase Owner"
+  max_iterations: 3

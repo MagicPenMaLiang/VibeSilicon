@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "profile_id": "orfs-sky130hd-gcd-v1",
+  "backend_id": "openroad-orfs-local",
+  "reference": {
+    "pdk_id": "sky130hd",
+    "pdk_source_origin": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts",
+    "pdk_source_revision": "d26bf27e1467d4ac903655694ac31e2ec3f85260",
+    "pdk_upstream_origin": "https://github.com/google/skywater-pdk",
+    "pdk_spdx_id": "Apache-2.0",
+    "design_id": "orfs-sky130hd-gcd",
+    "design_source_origin": "https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts",
+    "design_license_rule": "OWNER_REVIEWED_COMPONENT_LICENSE",
+    "top_module": "gcd",
+    "source_visibility": "PUBLIC",
+    "revision_rule": "FULL_40_HEX_COMMIT",
+    "orfs_revision": "d26bf27e1467d4ac903655694ac31e2ec3f85260",
+    "tool_source_revisions": {
+      "openroad": "c3e680b01b8bc61eb1dfaf144594b371cc222efc",
+      "yosys": "a5af9d690a43744bf6b2cc3dea2717c16b54621c"
+    }
+  },
+  "reproduction": {
+    "required_independent_runs": 2,
+    "max_area_delta_percent": 1.0,
+    "max_wns_delta_ns": 0.05,
+    "require_tns_zero": true,
+    "require_drc_zero": true,
+    "require_lvs_pass": true
+  },
+  "required_safety_cases": [
+    "gds_only",
+    "missing_constraint",
+    "missing_corner",
+    "missing_lvs_report",
+    "pdk_revision_drift",
+    "private_design_input"
+  ],
+  "retention": {
+    "raw_artifacts_mode": "EXTERNAL_ONLY",
+    "minimum_retention_days": 30,
+    "repository_content": "HASHES_AND_SANITIZED_EVIDENCE_ONLY",
+    "public_artifact_export": false,
+    "model_context_export": false
+  }
+}

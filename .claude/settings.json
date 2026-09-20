@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/scripts/quality_gate/post_edit_hook.py\" --platform claude",
+            "timeout": 30,
+            "statusMessage": "Running VibeSilicon RTL quality gate"
+          }
+        ]
+      }
+    ]
+  }
+}

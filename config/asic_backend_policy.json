@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "policy_id": "vibesilicon-asic-backend-v1",
+  "backend_id": "openroad-orfs-local",
+  "execution_mode": "LOCAL_ALLOWLIST_ONLY",
+  "allowlisted_actions": ["discover_capabilities", "validate_inputs", "synthesize", "sta", "floorplan", "place", "cts", "route", "drc", "lvs", "report", "export_gds"],
+  "required_tools": [
+    {"name": "yosys", "version_args": ["-V"], "stages": ["synthesize"]},
+    {"name": "openroad", "version_args": ["-version"], "stages": ["sta", "floorplan", "place", "cts", "route", "report"]},
+    {"name": "strmrun", "version_args": ["--version"], "stages": ["export_gds", "drc", "lvs"]}
+  ],
+  "pdk_contract": {
+    "storage": "EXTERNAL_ONLY",
+    "copied_into_repository": false,
+    "license_review_required": true,
+    "required_corner_fields": ["name", "process", "voltage_v", "temperature_c", "liberty_sha256", "rc_tech_sha256"],
+    "required_view_roles": ["tech_lef", "cell_lef", "gds", "spice", "sdc", "synthesis_rules", "tracks", "klayout_tech", "rcx_rules", "physical_rules", "lvs_rules", "drc_rules"]
+  },
+  "security": {
+    "arbitrary_shell": false,
+    "arbitrary_tcl": false,
+    "network_access": false,
+    "gui": false,
+    "telemetry": false,
+    "remote_execution": false,
+    "source_deletion": false,
+    "production_writeback": false
+  }
+}

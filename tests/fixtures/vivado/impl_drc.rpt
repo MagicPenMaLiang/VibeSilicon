@@ -1,0 +1,7 @@
+Report DRC
+| Tool Version : Vivado v2024.2 |
+| Design : counter |
+| Design State : Routed |
+Checks found: 5
+| NSTD-1 | Critical Warning | synthetic critical finding | 1 |
+| UCIO-1 | Warning | synthetic warning finding | 4 |

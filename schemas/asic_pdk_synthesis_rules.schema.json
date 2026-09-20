@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-pdk-synthesis-rules-v1.json",
+  "title": "VibeSilicon allowlisted PDK synthesis rules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dont_use_cells", "abc"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "dont_use_cells": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/cell"}
+    },
+    "abc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["driver_cell", "load_in_ff"],
+      "properties": {
+        "driver_cell": {"$ref": "#/$defs/cell"},
+        "load_in_ff": {"type": "number", "minimum": 0.001, "maximum": 1000}
+      }
+    }
+  },
+  "$defs": {
+    "cell": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_$]{0,127}$"}
+  }
+}

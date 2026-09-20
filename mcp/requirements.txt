@@ -1,0 +1,2 @@
+# Compatibility entry point. The reviewed dependency lock lives at repository root.
+-r ../requirements.lock

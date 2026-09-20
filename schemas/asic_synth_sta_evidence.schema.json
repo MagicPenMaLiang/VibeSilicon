@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-synth-sta-evidence-v1.json",
+  "title": "VibeSilicon A02 synthesis and STA evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_id", "policy_id", "backend_id", "backend_contract_id", "capability_id", "input_evidence_id", "approval_sha256", "executed_at", "status", "result_status", "tools", "commands", "metrics", "artifacts", "execution_mode", "execution_authorized", "network_access", "raw_paths_exposed", "source_copied_into_repository", "asic_metrics_mixed_with_fpga", "next_gate", "closure_status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evidence_id": {"$ref": "#/$defs/hash"},
+    "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+    "backend_id": {"const": "openroad-orfs-local"},
+    "backend_contract_id": {"$ref": "#/$defs/hash"},
+    "capability_id": {"$ref": "#/$defs/hash"},
+    "input_evidence_id": {"$ref": "#/$defs/hash"},
+    "approval_sha256": {"$ref": "#/$defs/hash"},
+    "executed_at": {"type": "string", "format": "date-time"},
+    "status": {"const": "A02_SYNTH_STA_COMPLETE"},
+    "result_status": {"enum": ["PASS", "TIMING_VIOLATION"]},
+    "tools": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/tool"}
+    },
+    "commands": {"const": ["synthesize", "sta"]},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cell_count", "synth_cell_area_um2", "standard_cell_area_um2", "wns_ns", "tns_ns", "timing_met"],
+      "properties": {
+        "cell_count": {"type": "integer", "minimum": 0},
+        "synth_cell_area_um2": {"type": "number", "minimum": 0},
+        "standard_cell_area_um2": {"type": "number", "minimum": 0},
+        "wns_ns": {"type": "number"},
+        "tns_ns": {"type": "number"},
+        "timing_met": {"type": "boolean"}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "execution_mode": {"const": "LOCAL_ALLOWLIST_ONLY"},
+    "execution_authorized": {"const": true},
+    "network_access": {"const": false},
+    "raw_paths_exposed": {"const": false},
+    "source_copied_into_repository": {"const": false},
+    "asic_metrics_mixed_with_fpga": {"const": false},
+    "next_gate": {"const": "A03_PHYSICAL_IMPLEMENTATION_ARTIFACTS"},
+    "closure_status": {"const": "A02_ENGINEERING_COMPLETE"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "binary_sha256"],
+      "properties": {
+        "name": {"enum": ["yosys", "openroad"]},
+        "version": {"type": "string", "minLength": 1},
+        "binary_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "sha256", "bytes"],
+      "properties": {
+        "role": {"enum": ["abc_constraints", "netlist", "openroad_stderr", "openroad_stdout", "sta_script", "synthesis_script", "synthesis_stat", "yosys_stderr", "yosys_stdout"]},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

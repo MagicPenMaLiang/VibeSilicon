@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "python-sim": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/mcp_launcher.py", "python-sim"]
+    },
+    "vitis-hls": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/mcp_launcher.py", "vitis-hls"]
+    },
+    "vivado": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/scripts/mcp_launcher.py", "vivado"]
+    }
+  }
+}

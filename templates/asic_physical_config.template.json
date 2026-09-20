@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "floorplan": {
+    "die_area_um": [0, 0, 100, 100],
+    "core_area_um": [10, 10, 90, 90],
+    "site": "REPLACE_ME"
+  },
+  "placement": {
+    "pin_horizontal_layer": "REPLACE_ME",
+    "pin_vertical_layer": "REPLACE_ME",
+    "filler_cells": ["REPLACE_ME"]
+  },
+  "optimization": {
+    "placement_density": 0.6,
+    "timing_driven_placement": true,
+    "routability_driven_placement": true,
+    "force_center_initial_place": true,
+    "min_phi_coefficient": 0.95,
+    "max_phi_coefficient": 1.05,
+    "match_cell_footprint": true,
+    "cts_sink_clustering": true,
+    "cts_repair_clock_nets": true,
+    "post_global_route_repair": true
+  },
+  "routing": {
+    "signal_layers": "REPLACE_ME-REPLACE_ME",
+    "clock_layers": "REPLACE_ME-REPLACE_ME",
+    "signal_wire_rc_layer": "REPLACE_ME",
+    "clock_wire_rc_layer": "REPLACE_ME",
+    "global_layer_adjustment": 0.0,
+    "via_in_pin_layer": "REPLACE_ME",
+    "detailed_route_end_iteration": 64,
+    "detailed_route_seed": 1,
+    "detailed_route_k": 1
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-reference-signoff-v1.json",
+  "title": "VibeSilicon A04 reference signoff diagnostic evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_id", "status", "profile_id", "profile_sha256", "toolchain_provenance_id", "flow", "metrics", "checks", "artifacts", "limitations", "repository_content"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evidence_id": {"$ref": "#/$defs/hash"},
+    "status": {"const": "A04_REFERENCE_SIGNOFF_DIAGNOSTIC_READY"},
+    "profile_id": {"const": "orfs-sky130hd-gcd-v1"},
+    "profile_sha256": {"$ref": "#/$defs/hash"},
+    "toolchain_provenance_id": {"$ref": "#/$defs/hash"},
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["design_id", "variant", "target", "diagnostic_overrides"],
+      "properties": {
+        "design_id": {"const": "orfs-sky130hd-gcd"},
+        "variant": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "target": {"const": "finish_drc_lvs"},
+        "diagnostic_overrides": {"type": "array", "maxItems": 0}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["setup_wns_ns", "setup_tns_ns", "setup_violation_count", "hold_tns_ns", "hold_violation_count", "standard_cell_area_um2", "total_power_w", "clock_period_ns"],
+      "properties": {
+        "setup_wns_ns": {"type": "number"},
+        "setup_tns_ns": {"type": "number", "maximum": 0},
+        "setup_violation_count": {"type": "integer", "minimum": 0},
+        "hold_tns_ns": {"type": "number", "maximum": 0},
+        "hold_violation_count": {"type": "integer", "minimum": 0},
+        "standard_cell_area_um2": {"type": "number", "exclusiveMinimum": 0},
+        "total_power_w": {"type": "number", "minimum": 0},
+        "clock_period_ns": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signoff_drc_count", "drc_clean", "lvs_clean", "timing_clean", "physical_signoff_clean"],
+      "properties": {
+        "signoff_drc_count": {"type": "integer", "minimum": 0},
+        "drc_clean": {"type": "boolean"},
+        "lvs_clean": {"type": "boolean"},
+        "timing_clean": {"type": "boolean"},
+        "physical_signoff_clean": {"type": "boolean"}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "limitations": {
+      "const": ["NOT_A03_OWNER_APPROVED_RUN", "NOT_A04_BASELINE_OR_REPLAY", "NOT_INDEPENDENTLY_REVIEWED", "NO_ACCEPTANCE_AUTHORITY"]
+    },
+    "repository_content": {"const": "HASHES_AND_SANITIZED_METRICS_ONLY"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes"],
+      "properties": {
+        "name": {"enum": ["clock_period", "drc_count_report", "final_gds", "final_odb", "lvs_db", "lvs_log", "metrics", "signoff_drc_db"]},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

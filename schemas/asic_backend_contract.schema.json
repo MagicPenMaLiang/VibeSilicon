@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-backend-contract-v1.json",
+  "title": "VibeSilicon ASIC Backend A01 Contract and Capabilities",
+  "oneOf": [
+    {"$ref": "#/$defs/contract"},
+    {"$ref": "#/$defs/capabilities"}
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "toolPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version_args", "stages"],
+      "properties": {
+        "name": {"enum": ["yosys", "openroad", "strmrun"]},
+        "version_args": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "stages": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    },
+    "toolCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "version", "binary_sha256", "version_args", "stages"],
+      "properties": {
+        "name": {"enum": ["yosys", "openroad", "strmrun"]},
+        "status": {"enum": ["PASS", "MISSING", "ERROR"]},
+        "version": {"type": ["string", "null"]},
+        "binary_sha256": {"anyOf": [{"$ref": "#/$defs/hash"}, {"type": "null"}]},
+        "version_args": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "stages": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "contract_id", "policy_id", "backend_id", "status", "execution_mode", "allowlisted_actions", "required_tools", "pdk_contract", "security", "execution_authorized", "pdk_configured", "design_configured", "asic_metrics_mixed_with_fpga", "next_gate", "closure_status"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "contract_id": {"$ref": "#/$defs/hash"},
+        "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+        "backend_id": {"const": "openroad-orfs-local"},
+        "status": {"const": "A01_PART_A_CONTRACT_READY"},
+        "execution_mode": {"const": "LOCAL_ALLOWLIST_ONLY"},
+        "allowlisted_actions": {"type": "array", "minItems": 12, "maxItems": 12, "items": {"type": "string"}},
+        "required_tools": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"$ref": "#/$defs/toolPolicy"}},
+        "pdk_contract": {"type": "object"},
+        "security": {"type": "object"},
+        "execution_authorized": {"const": false},
+        "pdk_configured": {"const": false},
+        "design_configured": {"const": false},
+        "asic_metrics_mixed_with_fpga": {"const": false},
+        "next_gate": {"const": "A01_PART_B_PDK_INPUT_EVIDENCE"},
+        "closure_status": {"const": "BLOCKED"}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "capability_id", "policy_id", "backend_id", "status", "platform", "tools", "execution_authorized", "pdk_configured", "next_gate", "closure_status"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "capability_id": {"$ref": "#/$defs/hash"},
+        "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+        "backend_id": {"const": "openroad-orfs-local"},
+        "status": {"enum": ["CAPABILITIES_PRESENT_UNQUALIFIED", "BLOCKED"]},
+        "platform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["os", "architecture"],
+          "properties": {"os": {"type": "string", "minLength": 1}, "architecture": {"type": "string", "minLength": 1}}
+        },
+        "tools": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"$ref": "#/$defs/toolCapability"}},
+        "execution_authorized": {"const": false},
+        "pdk_configured": {"const": false},
+        "next_gate": {"const": "A01_PART_B_PDK_INPUT_EVIDENCE"},
+        "closure_status": {"const": "BLOCKED"}
+      }
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-physical-artifact-v1.json",
+  "title": "VibeSilicon A03 physical run evidence and RTL-to-GDS manifest",
+  "oneOf": [
+    {"$ref": "#/$defs/run"},
+    {"$ref": "#/$defs/final"}
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "sha256", "bytes"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standard_cell_area_um2", "wns_ns", "tns_ns", "timing_met", "drc_count", "drc_rule_counts", "drc_clean"],
+      "properties": {
+        "standard_cell_area_um2": {"type": "number", "minimum": 0},
+        "wns_ns": {"type": "number"},
+        "tns_ns": {"type": "number", "maximum": 0},
+        "timing_met": {"type": "boolean"},
+        "drc_count": {"type": "integer", "minimum": 0},
+        "drc_rule_counts": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule", "count"],
+            "properties": {
+              "rule": {"type": "string", "minLength": 1, "maxLength": 128},
+              "count": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "drc_clean": {"type": "boolean"}
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "evidence_id", "policy_id", "backend_id", "backend_contract_id", "capability_id", "input_evidence_id", "a02_evidence_id", "approval_sha256", "physical_config_sha256", "executed_at", "status", "result_status", "tools", "commands", "metrics", "artifacts", "execution_mode", "execution_authorized", "network_access", "raw_paths_exposed", "source_copied_into_repository", "asic_metrics_mixed_with_fpga", "next_gate", "closure_status"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "evidence_id": {"$ref": "#/$defs/hash"},
+        "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+        "backend_id": {"const": "openroad-orfs-local"},
+        "backend_contract_id": {"$ref": "#/$defs/hash"},
+        "capability_id": {"$ref": "#/$defs/hash"},
+        "input_evidence_id": {"$ref": "#/$defs/hash"},
+        "a02_evidence_id": {"$ref": "#/$defs/hash"},
+        "approval_sha256": {"$ref": "#/$defs/hash"},
+        "physical_config_sha256": {"$ref": "#/$defs/hash"},
+        "executed_at": {"type": "string", "format": "date-time"},
+        "status": {"const": "A03_PHYSICAL_RUN_COMPLETE"},
+        "result_status": {"enum": ["PASS", "TIMING_VIOLATION", "DRC_VIOLATION", "TIMING_AND_DRC_VIOLATION"]},
+        "tools": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version", "binary_sha256"],
+              "properties": {
+                "name": {"const": "openroad"},
+                "version": {"type": "string", "minLength": 1},
+                "binary_sha256": {"$ref": "#/$defs/hash"}
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version", "binary_sha256"],
+              "properties": {
+                "name": {"const": "strmrun"},
+                "version": {"type": "string", "minLength": 1},
+                "binary_sha256": {"$ref": "#/$defs/hash"}
+              }
+            }
+          ],
+          "items": false
+        },
+        "commands": {"const": ["floorplan", "place", "cts", "route", "drc", "export_gds", "lvs"]},
+        "metrics": {"$ref": "#/$defs/metrics"},
+        "artifacts": {"type": "array", "minItems": 21, "maxItems": 21, "items": {"$ref": "#/$defs/artifact"}},
+        "execution_mode": {"const": "LOCAL_ALLOWLIST_ONLY"},
+        "execution_authorized": {"const": true},
+        "network_access": {"const": false},
+        "raw_paths_exposed": {"const": false},
+        "source_copied_into_repository": {"const": false},
+        "asic_metrics_mixed_with_fpga": {"const": false},
+        "next_gate": {"const": "A03_LVS_FINALIZATION"},
+        "closure_status": {"const": "A03_PHYSICAL_ENGINEERING_COMPLETE"}
+      }
+    },
+    "final": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "manifest_id", "policy_id", "backend_id", "input_evidence_id", "a02_evidence_id", "physical_evidence_id", "lvs_receipt_id", "status", "result_status", "checks", "metrics", "artifacts", "gds_alone_is_pass", "additional_execution_authorized", "raw_paths_exposed", "asic_metrics_mixed_with_fpga", "next_gate", "closure_status"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "manifest_id": {"$ref": "#/$defs/hash"},
+        "policy_id": {"const": "vibesilicon-asic-backend-v1"},
+        "backend_id": {"const": "openroad-orfs-local"},
+        "input_evidence_id": {"$ref": "#/$defs/hash"},
+        "a02_evidence_id": {"$ref": "#/$defs/hash"},
+        "physical_evidence_id": {"$ref": "#/$defs/hash"},
+        "lvs_receipt_id": {"$ref": "#/$defs/hash"},
+        "status": {"const": "A03_RTL_TO_GDS_FINALIZED"},
+        "result_status": {"enum": ["PASS", "BLOCKED"]},
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["timing", "drc", "lvs", "artifact_completeness"],
+          "properties": {
+            "timing": {"enum": ["PASS", "FAIL"]},
+            "drc": {"enum": ["PASS", "FAIL"]},
+            "lvs": {"enum": ["PASS", "FAIL"]},
+            "artifact_completeness": {"const": "PASS"}
+          }
+        },
+        "metrics": {"$ref": "#/$defs/metrics"},
+        "artifacts": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/artifact"}},
+        "gds_alone_is_pass": {"const": false},
+        "additional_execution_authorized": {"const": false},
+        "raw_paths_exposed": {"const": false},
+        "asic_metrics_mixed_with_fpga": {"const": false},
+        "next_gate": {"enum": ["A04_REPRODUCTION_ACCEPTANCE", "A03_REMEDIATE_AND_RERUN"]},
+        "closure_status": {"const": "A03_ENGINEERING_COMPLETE"}
+      }
+    }
+  }
+}

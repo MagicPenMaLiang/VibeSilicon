@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "project_root": "project/my_ip",
+  "target": "fpga",
+  "source_kinds": ["handwritten"],
+  "top": "my_ip_top",
+  "source_roots": ["project/my_ip/rtl"],
+  "sources": ["project/my_ip/rtl/my_ip_top.sv"],
+  "headers": [],
+  "include_dirs": ["project/my_ip/rtl"],
+  "defines": {},
+  "parameters": {},
+  "clocks": ["core_clk_i"],
+  "resets": ["core_rst_ni"]
+}

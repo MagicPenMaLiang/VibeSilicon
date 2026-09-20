@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "toolchain": "YosysHQ OSS CAD Suite",
+  "release": "2026-09-01",
+  "source": "https://github.com/YosysHQ/oss-cad-suite-build/releases/tag/2026-09-01",
+  "scope": "LOCAL_AND_CI_FORMAL_ONLY",
+  "platforms": {
+    "windows-x64": {
+      "asset": "oss-cad-suite-windows-x64-20260901.tgz",
+      "sha256": "9dcc45a182983c12ba34102eb039b5779d72b96dbd76b8c26159cf3ee4ce4867"
+    },
+    "linux-x64": {
+      "asset": "oss-cad-suite-linux-x64-20260901.tgz",
+      "sha256": "5fb1556cae02df9a01ebbd7d8a07d689a6d1e2cb5513235c19187cf5d41f700b"
+    }
+  }
+}

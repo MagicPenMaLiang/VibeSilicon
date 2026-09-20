@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "policy_id": "vibesilicon-rtl-quality-v1",
+  "standard_version": "1.0",
+  "activation": "round1_legacy_gate_only",
+  "legacy_gate_thresholds": {
+    "lint_errors": 0,
+    "async_reg_missing": 0,
+    "bram_pct_csyn_warn": 60,
+    "bram_pct_csyn_fail": 80,
+    "wns_ns_warn": 0.5,
+    "wns_ns_fail": 0.0,
+    "cdc_critical": 0
+  },
+  "readability_thresholds": {
+    "module_lines_warn": 500,
+    "process_lines_warn": 80,
+    "nesting_depth_warn": 4
+  },
+  "profile_rules": {
+    "fpga": {"required": ["RTL-FPGA-001"]},
+    "asic": {"required": ["RTL-ASIC-001"]},
+    "handwritten": {"required": ["RTL-R007", "RTL-NAM-001", "RTL-MNT-001"]},
+    "generated": {"required": ["RTL-GEN-002"]}
+  },
+  "tool_versions": {
+    "python": {"accepted_major": [3], "minimum_minor": 10},
+    "verilator": {"accepted_major": [5]},
+    "iverilog": {"accepted_major": [11, 12]}
+  },
+  "gate_requirements": {
+    "g0": ["catalog", "policy", "module_contract", "waiver_review"],
+    "g1": ["rtl_readability", "verilator_lint", "async_reg"],
+    "g2": ["project_elaboration", "protocol_regression", "cdc_review"]
+  }
+}

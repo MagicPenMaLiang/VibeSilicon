@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "receipt_id": "REPLACE_WITH_CONTENT_SHA256",
+  "status": "REQUIRED",
+  "checker_id": "REPLACE_ME",
+  "checker_version": "REPLACE_ME",
+  "checked_at": "REPLACE_WITH_RFC3339_UTC",
+  "reviewed_by": "REPLACE_ME",
+  "pdk_input_evidence_id": "REPLACE_WITH_SHA256",
+  "gds_sha256": "REPLACE_WITH_SHA256",
+  "reference_netlist_sha256": "REPLACE_WITH_SHA256",
+  "lvs_rules_sha256": "REPLACE_WITH_SHA256",
+  "top_cell": "REPLACE_ME",
+  "report_path": "lvs.lvsdb",
+  "report_sha256": "REPLACE_WITH_SHA256",
+  "report_bytes": 0,
+  "layout_instance_count": 0,
+  "schematic_instance_count": 0,
+  "mismatched_nets": 0,
+  "mismatched_devices": 0
+}

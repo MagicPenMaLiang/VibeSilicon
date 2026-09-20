@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "REQUIRED",
+  "scope": ["floorplan", "place", "cts", "route", "drc", "export_gds", "lvs"],
+  "approved_by": "REPLACE_ME",
+  "approved_at": "REPLACE_WITH_RFC3339_UTC",
+  "expires_at": "REPLACE_WITH_SHORT_RFC3339_UTC_EXPIRY",
+  "backend_contract_id": "REPLACE_WITH_SHA256",
+  "capability_id": "REPLACE_WITH_SHA256",
+  "input_evidence_id": "REPLACE_WITH_SHA256",
+  "a02_evidence_id": "REPLACE_WITH_SHA256",
+  "physical_config_sha256": "REPLACE_WITH_SHA256"
+}

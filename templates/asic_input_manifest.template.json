@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "pdk": {
+    "pdk_id": "REPLACE_ME",
+    "source_origin": "https://REPLACE_ME",
+    "source_revision": "REPLACE_WITH_40_HEX_COMMIT",
+    "storage_id": "REPLACE_ME",
+    "license": {
+      "spdx_id": "REPLACE_ME",
+      "review_status": "REQUIRED",
+      "reviewed_by": "REPLACE_ME",
+      "reviewed_at": "REPLACE_WITH_RFC3339_UTC",
+      "path": "relative/path/to/LICENSE"
+    },
+    "corner": {
+      "name": "REPLACE_ME",
+      "process": "REPLACE_ME",
+      "voltage_v": 0.0,
+      "temperature_c": 0.0,
+      "liberty_path": "relative/path/to/corner.lib",
+      "rc_tech_path": "relative/path/to/rc.tech"
+    },
+    "views": [
+      {"role": "tech_lef", "path": "relative/path/to/tech.lef"},
+      {"role": "cell_lef", "path": "relative/path/to/cells.lef"},
+      {"role": "gds", "path": "relative/path/to/cells.gds"},
+      {"role": "spice", "path": "relative/path/to/cells.spice"},
+      {"role": "sdc", "path": "relative/path/to/platform.sdc"},
+      {"role": "synthesis_rules", "path": "relative/path/to/synthesis_rules.json"},
+      {"role": "tracks", "path": "relative/path/to/make_tracks.tcl"},
+      {"role": "klayout_tech", "path": "relative/path/to/platform.lyt"},
+      {"role": "rcx_rules", "path": "relative/path/to/rcx_patterns.rules"},
+      {"role": "physical_rules", "path": "relative/path/to/physical_rules.json"},
+      {"role": "lvs_rules", "path": "relative/path/to/platform.lylvs"},
+      {"role": "drc_rules", "path": "relative/path/to/platform.lydrc"}
+    ]
+  },
+  "design": {
+    "design_id": "REPLACE_ME",
+    "top_module": "REPLACE_ME",
+    "rtl_languages": ["systemverilog"],
+    "source_visibility": "PUBLIC",
+    "sources": ["relative/path/to/top.sv"],
+    "constraints_path": "relative/path/to/design.sdc"
+  },
+  "security": {
+    "paths_are_relative": true,
+    "copy_into_repository": false,
+    "network_access": false,
+    "model_context_export": false
+  }
+}

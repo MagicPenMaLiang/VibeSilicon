@@ -1,0 +1,7 @@
+# Direct runtime dependency lock for Python 3.10-3.12.
+# Regenerate only through dependency review; CI installs this file verbatim.
+mcp==1.26.0
+numpy==1.26.4
+PyYAML==6.0
+fxpmath==0.4.9
+scikit-image==0.20.0

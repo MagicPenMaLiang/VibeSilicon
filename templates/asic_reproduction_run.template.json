@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "run_label": "REPLACE_WITH_baseline_OR_replay",
+  "repository_files": {
+    "policy": "config/asic_backend_policy.json",
+    "backend_contract": "REPLACE_WITH_A01_CONTRACT_JSON",
+    "capabilities": "REPLACE_WITH_A01_CAPABILITIES_JSON",
+    "input_manifest": "REPLACE_WITH_A01_INPUT_MANIFEST_JSON",
+    "input_evidence": "REPLACE_WITH_A01_INPUT_EVIDENCE_JSON",
+    "a02_evidence": "REPLACE_WITH_A02_EVIDENCE_JSON",
+    "a02_approval": "REPLACE_WITH_A02_APPROVAL_JSON",
+    "physical_config": "REPLACE_WITH_A03_CONFIG_JSON",
+    "physical_approval": "REPLACE_WITH_A03_APPROVAL_JSON",
+    "physical_evidence": "REPLACE_WITH_A03_RUN_EVIDENCE_JSON",
+    "lvs_receipt": "REPLACE_WITH_A03_LVS_RECEIPT_JSON",
+    "final_manifest": "REPLACE_WITH_A03_FINAL_MANIFEST_JSON"
+  },
+  "external_roots": {
+    "pdk_root": "REPLACE_WITH_ABSOLUTE_EXTERNAL_PDK_ROOT",
+    "design_root": "REPLACE_WITH_ABSOLUTE_EXTERNAL_PUBLIC_DESIGN_ROOT",
+    "a02_run_directory": "REPLACE_WITH_ABSOLUTE_EXTERNAL_A02_RUN",
+    "physical_run_directory": "REPLACE_WITH_ABSOLUTE_EXTERNAL_A03_RUN"
+  }
+}

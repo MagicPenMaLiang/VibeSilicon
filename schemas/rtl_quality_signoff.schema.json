@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_quality_signoff.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "module", "source_commit", "profiles", "standard_version", "policy_id", "proposed_by", "items"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "module": {"type": "string", "minLength": 1},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "profiles": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"enum": ["fpga", "asic", "handwritten", "generated"]}},
+    "standard_version": {"const": "1.0"},
+    "policy_id": {"const": "vibesilicon-rtl-quality-v1"},
+    "proposed_by": {"type": "string", "minLength": 1},
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "rule_ids", "scope", "evidence_ids", "decision", "risk", "approved_by", "approved_at_utc"],
+        "properties": {
+          "category": {"enum": ["ARCHITECTURE", "PHY", "RESET", "CDC_RDC", "CLOCK_TIMING", "SECURITY", "FPGA_IMPLEMENTATION", "ASIC_DFT_POWER", "ASIC_SIGNOFF", "RELEASE"]},
+          "rule_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^RTL-"}},
+          "scope": {"type": "string", "minLength": 1},
+          "evidence_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "decision": {"enum": ["PASS", "BLOCKED", "NOT_APPLICABLE"]},
+          "risk": {"type": "string", "minLength": 1},
+          "approved_by": {"type": "string", "minLength": 1},
+          "approved_at_utc": {"type": "string", "format": "date-time"}
+        }
+      }
+    }
+  }
+}

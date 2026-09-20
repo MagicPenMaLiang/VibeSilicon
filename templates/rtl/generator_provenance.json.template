@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "generator": {
+    "name": "REQUIRED_GENERATOR_NAME",
+    "version": "REQUIRED_PINNED_VERSION",
+    "input_sha256": "REQUIRED_SHA256"
+  },
+  "generated_sources": [
+    {"path": "project/REQUIRED_PROJECT/rtl/REQUIRED_OUTPUT.sv", "sha256": "REQUIRED_SHA256"}
+  ],
+  "reproducible": true,
+  "generated_by": "REQUIRED_GENERATOR_OWNER",
+  "approved_by": "REQUIRED_INDEPENDENT_REVIEWER",
+  "evidence_id": "REQUIRED_CONTENT_ID"
+}

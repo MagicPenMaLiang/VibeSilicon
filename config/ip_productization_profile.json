@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "profile_id": "vibesilicon-ip-productization-v1",
+  "capabilities": [
+    {"id": "C1", "name": "architecture_and_interface", "priority_stars": 5},
+    {"id": "C2", "name": "implementation_and_ip_reuse", "priority_stars": 5},
+    {"id": "C3", "name": "target_platform_verification", "priority_stars": 5},
+    {"id": "C4", "name": "asic_implementation_and_handoff", "priority_stars": 3},
+    {"id": "C5", "name": "system_acceptance", "priority_stars": 5},
+    {"id": "C6", "name": "vibesilicon_engineering_automation", "priority_stars": 3}
+  ],
+  "release_gates": {
+    "FPGA": ["C1", "C2", "C3", "C5"],
+    "ASIC": ["C1", "C2", "C3", "C4", "C5"]
+  },
+  "one_star_policy": {
+    "scope": "DEFERRED_OPTIONAL_CAPABILITY_ONLY",
+    "core_capability_allowed": false,
+    "release_gate": false
+  },
+  "security": {
+    "repository_content": "HASHES_AND_SANITIZED_SUMMARIES_ONLY",
+    "allow_customer_spec": false,
+    "allow_customer_rtl": false,
+    "allow_external_model_export": false
+  }
+}

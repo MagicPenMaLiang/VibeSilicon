@@ -1,0 +1,8 @@
+Utilization Design Information
+| Tool Version : Vivado v2024.2 |
+| Design : counter |
+| Design State : Routed |
+| CLB LUTs       | 1634 | 0 | 0 | 117120 | 1.40 |
+| CLB Registers  | 2048 | 0 | 0 | 234240 | 0.87 |
+| Block RAM Tile | 2    | 0 | 0 | 144    | 1.39 |
+| DSPs           | 8    | 0 | 0 | 1248   | 0.64 |

@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "command": ["python", "scripts/quality_gate/post_edit_hook.py", "--platform", "codex"],
+        "match": ["write", "edit", "apply_patch"]
+      }
+    ]
+  }
+}

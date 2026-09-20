@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "trace_id": "SPI-REPAIRED-PARTIAL-001",
+  "producer": "curated-fixture",
+  "protocol": "spi-mode0",
+  "config": {
+    "bit_order": "msb-first",
+    "expected_mosi_bytes": [160],
+    "expected_miso_bytes": [0],
+    "max_edge_gap_cycles": 3
+  },
+  "samples": [
+    {"cycle": 0, "signals": {"cs_n": 1, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 1, "signals": {"cs_n": 0, "sck": 0, "mosi": 1, "miso": 0}},
+    {"cycle": 2, "signals": {"cs_n": 0, "sck": 1, "mosi": 1, "miso": 0}},
+    {"cycle": 3, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 4, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 5, "signals": {"cs_n": 0, "sck": 0, "mosi": 1, "miso": 0}},
+    {"cycle": 6, "signals": {"cs_n": 0, "sck": 1, "mosi": 1, "miso": 0}},
+    {"cycle": 7, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 8, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 9, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 10, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 11, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 12, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 13, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 14, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 15, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 16, "signals": {"cs_n": 0, "sck": 1, "mosi": 0, "miso": 0}},
+    {"cycle": 17, "signals": {"cs_n": 0, "sck": 0, "mosi": 0, "miso": 0}},
+    {"cycle": 18, "signals": {"cs_n": 1, "sck": 0, "mosi": 0, "miso": 0}}
+  ]
+}

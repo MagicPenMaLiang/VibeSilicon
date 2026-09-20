@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/rtl_quality_waiver.schema.json",
+  "title": "VibeSilicon RTL rule waiver registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "standard_version", "waivers"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "standard_version": {"const": "1.0"},
+    "waivers": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "rule_id", "source", "module", "scope", "owner", "reason", "risk", "approved_by", "approved_at_utc", "expires_at_utc", "removal_condition", "compensating_verification", "source_sha256"], "properties": {
+      "id": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]{2,63}$"},
+      "rule_id": {"type": "string", "pattern": "^RTL-"},
+      "source": {"type": "string", "minLength": 1},
+      "module": {"type": "string", "minLength": 1},
+      "scope": {"type": "string", "minLength": 1},
+      "owner": {"type": "string", "minLength": 1},
+      "reason": {"type": "string", "minLength": 1},
+      "risk": {"type": "string", "minLength": 1},
+      "approved_by": {"type": "string", "minLength": 1},
+      "approved_at_utc": {"type": "string", "format": "date-time"},
+      "expires_at_utc": {"type": "string", "format": "date-time"},
+      "removal_condition": {"type": "string", "minLength": 1},
+      "compensating_verification": {"type": "string", "minLength": 1},
+      "source_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    }}}
+  }
+}

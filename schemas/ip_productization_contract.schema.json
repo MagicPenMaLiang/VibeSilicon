@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/ip_productization_contract.schema.json",
+  "title": "VibeSilicon generic IP productization contract assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "contract_id", "profile_id", "profile_sha256", "ip", "requested_state", "capabilities", "security", "assessment"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "profile_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{2,63}$"},
+    "profile_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "ip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ip_id", "release_candidate", "delivery_target", "owner", "author", "confidentiality"],
+      "properties": {
+        "ip_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{2,63}$"},
+        "release_candidate": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{2,63}$"},
+        "delivery_target": {"enum": ["FPGA", "ASIC"]},
+        "owner": {"type": "string", "minLength": 2, "maxLength": 80},
+        "author": {"type": "string", "minLength": 2, "maxLength": 80},
+        "confidentiality": {"enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL_HASH_ONLY"]}
+      }
+    },
+    "requested_state": {"enum": ["DRAFT", "READY_FOR_OWNER_REVIEW"]},
+    "capabilities": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {"$ref": "#/$defs/capability"}
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_customer_spec_present", "raw_customer_rtl_present", "external_model_export", "repository_content"],
+      "properties": {
+        "raw_customer_spec_present": {"const": false},
+        "raw_customer_rtl_present": {"const": false},
+        "external_model_export": {"const": false},
+        "repository_content": {"const": "HASHES_AND_SANITIZED_SUMMARIES_ONLY"}
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "next_gate", "required_capabilities", "passed_capabilities", "blocking_capabilities", "non_blocking_capabilities", "priority_policy", "human_release_required"],
+      "properties": {
+        "status": {"enum": ["BLOCKED", "READY_FOR_OWNER_REVIEW"]},
+        "next_gate": {"enum": ["COMPLETE_REQUIRED_CAPABILITY_EVIDENCE", "REQUEST_INDEPENDENT_OWNER_RELEASE_REVIEW"]},
+        "required_capabilities": {"type": "array", "items": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6"]}, "uniqueItems": true},
+        "passed_capabilities": {"type": "array", "items": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6"]}, "uniqueItems": true},
+        "blocking_capabilities": {"type": "array", "items": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6"]}, "uniqueItems": true},
+        "non_blocking_capabilities": {"type": "array", "items": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6"]}, "uniqueItems": true},
+        "priority_policy": {"const": "FIVE_STAR_PRODUCT_GATES_THREE_STAR_TRACKED_ONE_STAR_DEFERRED"},
+        "human_release_required": {"const": true}
+      }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "priority_stars", "status", "owner_approved", "reviewer", "evidence_ids", "acceptance_summary"],
+      "properties": {
+        "id": {"enum": ["C1", "C2", "C3", "C4", "C5", "C6"]},
+        "name": {"type": "string", "minLength": 3, "maxLength": 80},
+        "priority_stars": {"enum": [3, 5]},
+        "status": {"enum": ["PASS", "BLOCKED", "NOT_APPLICABLE"]},
+        "owner_approved": {"type": "boolean"},
+        "reviewer": {"type": "string", "minLength": 2, "maxLength": 80},
+        "evidence_ids": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "uniqueItems": true
+        },
+        "acceptance_summary": {"type": "string", "minLength": 8, "maxLength": 240}
+      }
+    }
+  }
+}

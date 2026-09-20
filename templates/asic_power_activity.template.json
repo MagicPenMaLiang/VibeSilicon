@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "mode": "VCD",
+  "activity_path": "external/path/to/gate-level.vcd",
+  "scope": "testbench/dut",
+  "default_activity": null,
+  "default_duty": null,
+  "note": "Use VCD or SAIF from gate-level simulation. ESTIMATED mode requires reviewed default_activity and default_duty and is never vector-backed."
+}

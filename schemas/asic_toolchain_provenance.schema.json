@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-toolchain-provenance-v1.json",
+  "title": "VibeSilicon A04 matched toolchain provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "provenance_id", "profile_id", "profile_sha256", "status", "source_build", "tools", "diagnostic_overrides", "compatibility_gate", "repository_content"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "provenance_id": {"$ref": "#/$defs/hash"},
+    "profile_id": {"const": "orfs-sky130hd-gcd-v1"},
+    "profile_sha256": {"$ref": "#/$defs/hash"},
+    "status": {"const": "A04_TOOLCHAIN_PROVENANCE_READY"},
+    "source_build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "orfs_revision", "openroad_revision", "yosys_revision", "build_launcher_sha256", "dependency_prefixes_sha256", "kepler_formal"],
+      "properties": {
+        "mode": {"const": "LOCAL_SOURCE_BUILD"},
+        "orfs_revision": {"$ref": "#/$defs/revision"},
+        "openroad_revision": {"$ref": "#/$defs/revision"},
+        "yosys_revision": {"$ref": "#/$defs/revision"},
+        "build_launcher_sha256": {"$ref": "#/$defs/hash"},
+        "dependency_prefixes_sha256": {"$ref": "#/$defs/hash"},
+        "kepler_formal": {"const": "NOT_REQUIRED_FOR_A04_RTL_TO_GDS"}
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/tool"}
+    },
+    "diagnostic_overrides": {"type": "array", "maxItems": 0},
+    "compatibility_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["design_id", "target", "result_status", "command_requirements", "vars_sha256", "floorplan_odb_sha256", "floorplan_sdc_sha256"],
+      "properties": {
+        "design_id": {"const": "orfs-sky130hd-gcd"},
+        "target": {"const": "floorplan"},
+        "result_status": {"const": "PASS"},
+        "command_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repair_tie_fanout", "replace_arith_modules"],
+          "properties": {
+            "repair_tie_fanout": {"const": true},
+            "replace_arith_modules": {"const": true}
+          }
+        },
+        "vars_sha256": {"$ref": "#/$defs/hash"},
+        "floorplan_odb_sha256": {"$ref": "#/$defs/hash"},
+        "floorplan_sdc_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "repository_content": {"const": "HASHES_AND_SANITIZED_EVIDENCE_ONLY"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "binary_sha256", "source_revision"],
+      "properties": {
+        "name": {"enum": ["yosys", "openroad", "strmrun"]},
+        "version": {"type": "string", "minLength": 1, "maxLength": 256},
+        "binary_sha256": {"$ref": "#/$defs/hash"},
+        "source_revision": {"oneOf": [{"$ref": "#/$defs/revision"}, {"type": "null"}]}
+      }
+    }
+  }
+}

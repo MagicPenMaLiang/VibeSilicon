@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/evidence-receipt-v1.json",
+  "title": "VibeSilicon Evidence Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "task_id",
+    "tool",
+    "inputs",
+    "command",
+    "command_hash",
+    "started_at",
+    "duration_s",
+    "status",
+    "metrics",
+    "artifacts",
+    "parser",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "evidence_id": {"$ref": "#/$defs/hash"},
+    "task_id": {"type": "string", "minLength": 1},
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "backend"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "backend": {"type": "string", "minLength": 1}
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[A-Za-z0-9_.-]+$"},
+      "additionalProperties": {"$ref": "#/$defs/hash"}
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "cwd"],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "cwd": {"type": "string", "minLength": 1}
+      }
+    },
+    "command_hash": {"$ref": "#/$defs/hash"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "duration_s": {"type": "number", "minimum": 0},
+    "status": {"enum": ["PASS", "FAIL", "ERROR", "BLOCKED"]},
+    "metrics": {"type": "object"},
+    "artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/artifact_ref"}
+    },
+    "parser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "schema_version"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "schema_version": {"type": "integer", "minimum": 1}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent"],
+      "properties": {
+        "agent": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "prompt_version": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "path", "sha256", "kind"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/hash"},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "kind": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+// Rename the module and instantiate the manifest top as `dut`.
+// Replace this placeholder with independent expected-value checks.
+// Keep the fatal below until every interface, corner case and pass criterion
+// has been reviewed; a copied template must never produce a false PASS.
+module my_ip_selfcheck_tb;
+    my_ip_top dut ();
+
+    initial begin
+        $fatal(1, "PLACEHOLDER_TESTBENCH_NOT_REVIEWED");
+        // After real checks pass, emit MY_IP_SELF_CHECK_PASS exactly once.
+    end
+endmodule

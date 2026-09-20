@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-signoff-localization-v1.json",
+  "title": "VibeSilicon non-authoritative ASIC signoff localization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "localization_id", "status", "top_cell", "sources", "drc", "lvs", "security"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "localization_id": {"$ref": "#/$defs/hash"},
+    "status": {"const": "DIAGNOSTIC_READY"},
+    "top_cell": {"type": "string", "minLength": 1},
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["drc_report_sha256", "lvs_report_sha256", "def_sha256"],
+      "properties": {
+        "drc_report_sha256": {"$ref": "#/$defs/hash"},
+        "lvs_report_sha256": {"$ref": "#/$defs/hash"},
+        "def_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "drc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["violation_count", "rule_counts", "violations"],
+      "properties": {
+        "violation_count": {"type": "integer", "minimum": 0},
+        "rule_counts": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/ruleCount"}},
+        "violations": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/violation"}}
+      }
+    },
+    "lvs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layout_top", "reference_top", "mismatch_count", "cross_reference", "messages"],
+      "properties": {
+        "layout_top": {"type": "string", "minLength": 1, "maxLength": 512},
+        "reference_top": {"type": "string", "minLength": 1, "maxLength": 512},
+        "mismatch_count": {"type": "integer", "minimum": 0},
+        "cross_reference": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/mismatch"}},
+        "messages": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/message"}}
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["storage_mode", "contains_design_identifiers", "contains_layout_coordinates", "repository_safe", "signoff_authority"],
+      "properties": {
+        "storage_mode": {"const": "EXTERNAL_RUN_DIRECTORY_ONLY"},
+        "contains_design_identifiers": {"const": true},
+        "contains_layout_coordinates": {"const": true},
+        "repository_safe": {"const": false},
+        "signoff_authority": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "number": {"type": "number"},
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instance", "pin"],
+      "properties": {
+        "instance": {"type": "string", "minLength": 1, "maxLength": 512},
+        "pin": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    },
+    "defMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["net", "connections", "connections_truncated"],
+      "properties": {
+        "net": {"type": "string", "minLength": 1, "maxLength": 512},
+        "connections": {"type": "array", "maxItems": 16, "items": {"$ref": "#/$defs/connection"}},
+        "connections_truncated": {"type": "boolean"}
+      }
+    },
+    "ruleCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "count"],
+      "properties": {
+        "rule": {"type": "string", "minLength": 1, "maxLength": 512},
+        "count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "instanceCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instance", "master", "placement_um", "distance_um"],
+      "properties": {
+        "instance": {"type": "string", "minLength": 1, "maxLength": 512},
+        "master": {"type": "string", "minLength": 1, "maxLength": 512},
+        "placement_um": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/number"}},
+        "distance_um": {"type": "number", "minimum": 0}
+      }
+    },
+    "netCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["net", "layer", "distance_um", "connections", "connections_truncated"],
+      "properties": {
+        "net": {"type": "string", "minLength": 1, "maxLength": 512},
+        "layer": {"type": "string", "minLength": 1, "maxLength": 512},
+        "distance_um": {"type": "number", "minimum": 0},
+        "connections": {"type": "array", "maxItems": 8, "items": {"$ref": "#/$defs/connection"}},
+        "connections_truncated": {"type": "boolean"}
+      }
+    },
+    "violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "rule", "cell", "multiplicity", "bbox_um", "centroid_um", "nearest_instances", "nearest_nets"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 1},
+        "rule": {"type": "string", "minLength": 1, "maxLength": 512},
+        "cell": {"type": "string", "minLength": 1, "maxLength": 512},
+        "multiplicity": {"type": "integer", "minimum": 1},
+        "bbox_um": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/number"}},
+        "centroid_um": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/number"}},
+        "nearest_instances": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"$ref": "#/$defs/instanceCandidate"}},
+        "nearest_nets": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/netCandidate"}}
+      }
+    },
+    "mismatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "layout_net", "reference_net", "def_matches"],
+      "properties": {
+        "kind": {"enum": ["REFERENCE_ONLY", "LAYOUT_ONLY", "MISMATCHED"]},
+        "layout_net": {"type": ["string", "null"], "maxLength": 512},
+        "reference_net": {"type": ["string", "null"], "maxLength": 512},
+        "def_matches": {"type": "array", "items": {"$ref": "#/$defs/defMatch"}}
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "message"],
+      "properties": {
+        "severity": {"enum": ["ERROR", "INFO"]},
+        "message": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    }
+  }
+}

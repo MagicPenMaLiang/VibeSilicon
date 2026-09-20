@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "project": "VibeSilicon",
+  "skill_count": 9,
+  "skills": [
+    {
+      "name": "fpga-dcp-analysis",
+      "dir": "fpga-dcp-analysis",
+      "path": "skills/fpga-dcp-analysis/SKILL.md"
+    },
+    {
+      "name": "fpga-cdc-check",
+      "dir": "fpga-cdc-check",
+      "path": "skills/fpga-cdc-check/SKILL.md"
+    },
+    {
+      "name": "fpga-design-reviewer",
+      "dir": "fpga-design-reviewer",
+      "path": "skills/fpga-design-reviewer/SKILL.md"
+    },
+    {
+      "name": "fpga-formal-verification",
+      "dir": "fpga-formal-verification",
+      "path": "skills/fpga-formal-verification/SKILL.md"
+    },
+    {
+      "name": "fpga-ip-design",
+      "dir": "fpga-ip-design",
+      "path": "skills/fpga-ip-design/SKILL.md"
+    },
+    {
+      "name": "fpga-micro-arch",
+      "dir": "fpga-micro-arch",
+      "path": "skills/fpga-micro-arch/SKILL.md"
+    },
+    {
+      "name": "fpga-ppa-analysis",
+      "dir": "fpga-ppa-analysis",
+      "path": "skills/fpga-ppa-analysis/SKILL.md"
+    },
+    {
+      "name": "fpga-rtl-system",
+      "dir": "fpga-rtl-system",
+      "path": "skills/fpga-rtl-system/SKILL.md"
+    },
+    {
+      "name": "fpga-timing-closure",
+      "dir": "fpga-timing-closure",
+      "path": "skills/fpga-timing-closure/SKILL.md"
+    }
+  ]
+}

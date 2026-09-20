@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "simulator": "verilator",
+  "top": "my_ip_selfcheck_tb",
+  "dut_instance": "dut",
+  "testbench": "project/my_ip/tests/my_ip_selfcheck_tb.sv",
+  "pass_token": "MY_IP_SELF_CHECK_PASS",
+  "timeout_seconds": 120
+}

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibesilicon.local/schemas/asic-pdk-physical-rules-v1.json",
+  "title": "VibeSilicon allowlisted PDK physical initialization rules",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "global_connections", "tapcell", "pdn"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "global_connections": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/globalConnection"}
+    },
+    "tapcell": {"$ref": "#/$defs/tapcell"},
+    "pdn": {"$ref": "#/$defs/pdn"}
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "positiveDistance": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 10000
+    },
+    "nonNegativeDistance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "globalConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["net", "pin", "type"],
+      "properties": {
+        "net": {"$ref": "#/$defs/identifier"},
+        "pin": {"$ref": "#/$defs/identifier"},
+        "type": {"enum": ["POWER", "GROUND", "SECONDARY"]}
+      }
+    },
+    "tapcell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distance_um", "tapcell_master"],
+      "properties": {
+        "distance_um": {"$ref": "#/$defs/positiveDistance"},
+        "tapcell_master": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "voltageDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "power_net", "ground_net"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "power_net": {"$ref": "#/$defs/identifier"},
+        "ground_net": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "standardGrid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "voltage_domain", "pins"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "STANDARD"},
+        "voltage_domain": {"$ref": "#/$defs/identifier"},
+        "pins": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      }
+    },
+    "macroGrid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "voltage_domain", "orientations", "halo_um", "default", "grid_over_boundary"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "kind": {"const": "MACRO"},
+        "voltage_domain": {"$ref": "#/$defs/identifier"},
+        "orientations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {"enum": ["R0", "R90", "R180", "R270", "MX", "MY", "MXR90", "MYR90"]}
+        },
+        "halo_um": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {"$ref": "#/$defs/nonNegativeDistance"}
+        },
+        "default": {"type": "boolean"},
+        "grid_over_boundary": {"type": "boolean"}
+      }
+    },
+    "stripe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grid", "layer", "width_um", "pitch_um", "offset_um", "followpins"],
+      "properties": {
+        "grid": {"$ref": "#/$defs/identifier"},
+        "layer": {"$ref": "#/$defs/identifier"},
+        "width_um": {"$ref": "#/$defs/positiveDistance"},
+        "pitch_um": {"$ref": "#/$defs/positiveDistance"},
+        "offset_um": {"$ref": "#/$defs/nonNegativeDistance"},
+        "followpins": {"type": "boolean"}
+      }
+    },
+    "connect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grid", "layers"],
+      "properties": {
+        "grid": {"$ref": "#/$defs/identifier"},
+        "layers": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        }
+      }
+    },
+    "pdn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["voltage_domains", "grids", "stripes", "connects"],
+      "properties": {
+        "voltage_domains": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {"$ref": "#/$defs/voltageDomain"}
+        },
+        "grids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {"oneOf": [{"$ref": "#/$defs/standardGrid"}, {"$ref": "#/$defs/macroGrid"}]}
+        },
+        "stripes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/stripe"}
+        },
+        "connects": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/connect"}
+        }
+      }
+    }
+  }
+}

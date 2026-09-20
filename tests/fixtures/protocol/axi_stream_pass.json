@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "trace_id": "AXIS-PASS-001",
+  "producer": "curated-fixture",
+  "protocol": "axi-stream",
+  "config": {
+    "data_width": 8,
+    "expected_beats": [{"tdata": 17, "tlast": 0}, {"tdata": 34, "tlast": 1}],
+    "max_stall_cycles": 3,
+    "require_complete_packet": true
+  },
+  "samples": [
+    {"cycle": 0, "signals": {"reset_n": 0, "tvalid": 0, "tready": 0, "tdata": 0, "tlast": 0}},
+    {"cycle": 1, "signals": {"reset_n": 1, "tvalid": 1, "tready": 0, "tdata": 17, "tlast": 0}},
+    {"cycle": 2, "signals": {"reset_n": 1, "tvalid": 1, "tready": 0, "tdata": 17, "tlast": 0}},
+    {"cycle": 3, "signals": {"reset_n": 1, "tvalid": 1, "tready": 1, "tdata": 17, "tlast": 0}},
+    {"cycle": 4, "signals": {"reset_n": 1, "tvalid": 1, "tready": 1, "tdata": 34, "tlast": 1}},
+    {"cycle": 5, "signals": {"reset_n": 1, "tvalid": 0, "tready": 1, "tdata": 0, "tlast": 0}}
+  ]
+}
