@@ -2,6 +2,22 @@
 
 VibeSilicon is an open, evidence-driven toolkit for agent-assisted FPGA and ASIC engineering. It combines reusable engineering skills, constrained MCP tool adapters, RTL quality gates, verification contracts, and ASIC PPA reporting without embedding a specific product design or proprietary process kit.
 
+## Quick install
+
+```bash
+git clone https://github.com/MagicPenMaLiang/VibeSilicon.git
+cd VibeSilicon
+./scripts/setup_env.sh        # Linux, macOS, WSL
+# scripts\setup_env.cmd       # Windows cmd
+# pwsh -File scripts\setup_env.ps1   # Windows PowerShell
+```
+
+The wrapper creates `.venv`, installs locked dependencies, runs the import
+smoke, the unit-test suite, and probes seven optional EDA tools on `PATH`.
+Use `--json` for a machine-readable report, `--audit` to opt in to the
+source-tree gate. See [docs/setup_env.md](docs/setup_env.md) for the full
+exit code table.
+
 ## What is included
 
 - Agent roles for architecture, implementation, review, and workflow orchestration.
