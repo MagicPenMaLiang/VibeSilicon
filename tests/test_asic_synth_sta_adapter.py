@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -108,6 +109,21 @@ class AsicSynthStaAdapterTests(unittest.TestCase):
     def tearDown(self):
         for item in reversed(self.temporaries):
             item.cleanup()
+
+    def test_artifact_normalizes_root_before_containment_check(self):
+        run_directory = self.run_parent / "run"
+        run_directory.mkdir()
+        artifact = run_directory / "result.txt"
+        artifact.write_bytes(b"result\n")
+        original_directory = Path.cwd()
+        try:
+            os.chdir(self.run_parent)
+            record = adapter._artifact(artifact, Path("run"), "test artifact")
+        finally:
+            os.chdir(original_directory)
+
+        self.assertEqual(record["bytes"], 7)
+        self.assertRegex(record["sha256"], r"^sha256:[0-9a-f]{64}$")
 
     def policy(self):
         return json.loads(

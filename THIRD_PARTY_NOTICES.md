@@ -10,9 +10,9 @@ Release owners must re-check the resolved dependency set before distribution.
 |---|---:|---|---|
 | Model Context Protocol Python SDK (`mcp`) | 1.26.0 | MIT | MCP server runtime |
 | NumPy | 1.26.4 | BSD-3-Clause | Numeric simulation and comparison |
-| PyYAML | 6.0 | MIT | Project/KPI configuration |
+| PyYAML | 6.0.2 | MIT | Project/KPI configuration |
 | fxpmath | 0.4.9 | MIT | Fixed-point simulation |
-| scikit-image | 0.20.0 | BSD-3-Clause | PSNR/SSIM metrics |
+| scikit-image | 0.24.0 | BSD-3-Clause | PSNR/SSIM metrics |
 
 ## Development and validation dependencies
 

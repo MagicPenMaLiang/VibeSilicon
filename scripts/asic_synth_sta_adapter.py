@@ -237,9 +237,10 @@ def _write_new(path: Path, text: str) -> None:
 
 def _artifact(path: Path, root: Path, label: str) -> dict[str, Any]:
     try:
+        resolved_root = root.resolve(strict=True)
         resolved = path.resolve(strict=True)
         if (
-            not inputs._within(resolved, root)
+            not inputs._within(resolved, resolved_root)
             or not resolved.is_file()
             or inputs._is_reparse(path)
         ):
