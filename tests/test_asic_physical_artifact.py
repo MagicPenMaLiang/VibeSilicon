@@ -294,12 +294,22 @@ class AsicPhysicalArtifactTests(unittest.TestCase):
         self.assertEqual(calls[0][0][1:], ["-no_init", "-exit", "physical.tcl"])
         self.assertEqual(
             calls[1][0][1:3],
-            ["-v", "tech_file=" + str(self.a02.pdk_root / "platform.lyt")],
+            [
+                "-v",
+                "tech_file="
+                + str((self.a02.pdk_root / "platform.lyt").resolve(strict=True)),
+            ],
         )
         self.assertEqual(calls[1][0][-1], "gds_export.py")
-        self.assertEqual(calls[2][0][-1], str(self.a02.pdk_root / "platform.lydrc"))
+        self.assertEqual(
+            calls[2][0][-1],
+            str((self.a02.pdk_root / "platform.lydrc").resolve(strict=True)),
+        )
         self.assertIn("report_file=signoff-drc.lyrdb", calls[2][0])
-        self.assertEqual(calls[3][0][-1], str(self.a02.pdk_root / "platform.lylvs"))
+        self.assertEqual(
+            calls[3][0][-1],
+            str((self.a02.pdk_root / "platform.lylvs").resolve(strict=True)),
+        )
         self.assertIn("top_cell=top", calls[3][0])
         self.assertIn("report_file=lvs.lvsdb", calls[3][0])
         self.assertFalse(calls[0][1]["shell"])
