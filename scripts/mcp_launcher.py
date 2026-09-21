@@ -129,6 +129,13 @@ def main() -> int:
 
     env = os.environ.copy()
     env["VIBESILICON_ROOT"] = str(ROOT)
+    # Server modules import repository packages (e.g. scripts.vivado_backend).
+    # When the interpreter runs a server script directly, sys.path[0] is the
+    # server's own directory, so the repository root must be provided explicitly.
+    existing_python_path = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        str(ROOT) if not existing_python_path else str(ROOT) + os.pathsep + existing_python_path
+    )
     completed = subprocess.run(
         [str(runtime), "-B", str(server)],
         cwd=ROOT,
