@@ -103,7 +103,9 @@ class RtlProjectSmokeTests(unittest.TestCase):
             self.assertEqual(destination.read_text(encoding="utf-8"), summary)
             with patch.dict(os.environ, {"GITHUB_STEP_SUMMARY": str(Path(directory) / "missing" / "summary.md")}):
                 with patch.object(rtl_project_smoke, "run_project", return_value=report):
-                    self.assertEqual(rtl_project_smoke.main([str(MANIFEST), str(CONTRACT)]), 2)
+                    with patch.object(rtl_project_smoke, "_annotate_failure") as annotate:
+                        self.assertEqual(rtl_project_smoke.main([str(MANIFEST), str(CONTRACT)]), 2)
+            annotate.assert_called_once_with("BLOCKED")
 
     def test_testbench_must_instantiate_manifest_top(self):
         manifest = json.loads((ROOT / MANIFEST).read_text(encoding="utf-8"))
