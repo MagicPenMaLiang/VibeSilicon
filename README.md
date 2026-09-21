@@ -31,6 +31,18 @@ python scripts/public_release_audit.py
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
+Or run the cross-platform wrapper that does the same plus optional EDA probing
+and emits a stable exit code:
+
+```bash
+scripts/setup_env.sh                # Linux, macOS, WSL
+scripts/setup_env.cmd               # Windows cmd
+pwsh -File scripts\setup_env.ps1    # Windows PowerShell
+python scripts/setup_env_core.py --json   # direct, CI-friendly
+```
+
+See [docs/setup_env.md](docs/setup_env.md) for the full exit code table.
+
 Create a project outside this repository or copy the neutral templates into a new directory. Start with [docs/new_project_inputs.md](docs/new_project_inputs.md).
 
 ## Core workflows
