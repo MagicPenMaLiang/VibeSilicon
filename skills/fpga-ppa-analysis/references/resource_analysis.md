@@ -1,45 +1,9 @@
-# TODO 占位（Phase 0 D5 填）
+# Resource attribution and comparison
 
-## 用途
+Require a target part, source/configuration hashes, tool version, stage and utilization report. Record LUT, register, BRAM, URAM where supported, DSP and clock resources with both used/available and percentages. Missing rows are unknown, never zero.
 
-资源分析详细流程 + 阈值表（Phase 2 stream-processing 99.6% 危机处理用）。
+Collect hierarchical utilization to find the dominant units. Reconcile hierarchy totals with the flat report; shared or optimized logic may prevent additive accounting. Inspect inferred memories, DSPs and large muxes before proposing an implementation change.
 
-## 待填内容
+Compare matching functionality, numeric width, parameters, throughput, latency and constraints. Post-synthesis and routed measurements have different meanings. Device utilization has no universal 90% failure threshold; use declared budgets and congestion/timing evidence.
 
-### 资源类型与关注点
-
-| 资源 | 关注点 | 典型阈值 | 优化策略 |
-|---|---|---|---|
-| BRAM | 18Kb/36Kb 双口存储 | < 60% 预警，< 80% 报警 | URAM 迁移、ARRAY_PARTITION |
-| URAM | 大容量 Line Buffer | 越多越好 | BIND_STORAGE impl=URAM |
-| DSP | 乘加密集算法 | < 90% PASS | 降精度、改用 LUT 实现 |
-| LUT | 控制逻辑 + 分布式 RAM | < 90% PASS | FSM 编码优化、状态压缩 |
-| FF | 流水线深度参考 | < 90% PASS | 寄存器合并、复位优化 |
-
-### csynth 报告解析
-
-```bash
-# 触发 csynth
-cd hls_build && vitis_hls -f csynth.tcl 2>&1 | tee ../reports/csynth.log
-
-# 解析 BRAM 使用率
-grep "BRAM" reports/csynth.log
-# 预期：BRAM_18K = X / 445 (X%)
-# 阈值：< 60% PASS
-```
-
-### impl_1 报告解析
-
-```bash
-# 触发 vivado impl
-vivado -mode batch -source scripts/vivado_impl.tcl 2>&1 | tee reports/impl.log
-
-# 解析资源
-grep -A 20 "Utilization Design" reports/impl.log
-```
-
-## 上游引用
-
-- `SKILL.md` → "资源分析（Area）"
-- 计划 §6.5.1 ③ 资源估算 + ⑥ 资源真实层
-- 计划 §4.6 BRAM 资源危机缓解策略（8 项）
+For actionable experiments use fpga-resource-optimization and the existing optimization experiment contract. Report absolute values, deltas, guardrails and rejected candidates; retain evidence hashes and stage labels.

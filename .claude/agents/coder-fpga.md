@@ -4,6 +4,11 @@ description: 按已签字微架构实现和优化 HLS C++ 或 RTL，并完成黄
 skills:
   - fpga-ip-design
   - fpga-rtl-system
+  - fpga-simulation
+  - fpga-lint-triage
+  - fpga-coverage
+  - fpga-resource-optimization
+  - fpga-power-optimization
 mcpServers:
   - python-sim
   - vitis-hls

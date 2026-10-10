@@ -1,17 +1,27 @@
 {
   "schema_version": "1.0",
   "project": "VibeSilicon",
-  "skill_count": 9,
+  "skill_count": 19,
   "skills": [
-    {
-      "name": "fpga-dcp-analysis",
-      "dir": "fpga-dcp-analysis",
-      "path": "skills/fpga-dcp-analysis/SKILL.md"
-    },
     {
       "name": "fpga-cdc-check",
       "dir": "fpga-cdc-check",
       "path": "skills/fpga-cdc-check/SKILL.md"
+    },
+    {
+      "name": "fpga-constraints",
+      "dir": "fpga-constraints",
+      "path": "skills/fpga-constraints/SKILL.md"
+    },
+    {
+      "name": "fpga-coverage",
+      "dir": "fpga-coverage",
+      "path": "skills/fpga-coverage/SKILL.md"
+    },
+    {
+      "name": "fpga-dcp-analysis",
+      "dir": "fpga-dcp-analysis",
+      "path": "skills/fpga-dcp-analysis/SKILL.md"
     },
     {
       "name": "fpga-design-reviewer",
@@ -19,9 +29,19 @@
       "path": "skills/fpga-design-reviewer/SKILL.md"
     },
     {
+      "name": "fpga-flow",
+      "dir": "fpga-flow",
+      "path": "skills/fpga-flow/SKILL.md"
+    },
+    {
       "name": "fpga-formal-verification",
       "dir": "fpga-formal-verification",
       "path": "skills/fpga-formal-verification/SKILL.md"
+    },
+    {
+      "name": "fpga-ila-debug",
+      "dir": "fpga-ila-debug",
+      "path": "skills/fpga-ila-debug/SKILL.md"
     },
     {
       "name": "fpga-ip-design",
@@ -29,9 +49,19 @@
       "path": "skills/fpga-ip-design/SKILL.md"
     },
     {
+      "name": "fpga-lint-triage",
+      "dir": "fpga-lint-triage",
+      "path": "skills/fpga-lint-triage/SKILL.md"
+    },
+    {
       "name": "fpga-micro-arch",
       "dir": "fpga-micro-arch",
       "path": "skills/fpga-micro-arch/SKILL.md"
+    },
+    {
+      "name": "fpga-power-optimization",
+      "dir": "fpga-power-optimization",
+      "path": "skills/fpga-power-optimization/SKILL.md"
     },
     {
       "name": "fpga-ppa-analysis",
@@ -39,9 +69,29 @@
       "path": "skills/fpga-ppa-analysis/SKILL.md"
     },
     {
+      "name": "fpga-programming",
+      "dir": "fpga-programming",
+      "path": "skills/fpga-programming/SKILL.md"
+    },
+    {
+      "name": "fpga-resource-optimization",
+      "dir": "fpga-resource-optimization",
+      "path": "skills/fpga-resource-optimization/SKILL.md"
+    },
+    {
       "name": "fpga-rtl-system",
       "dir": "fpga-rtl-system",
       "path": "skills/fpga-rtl-system/SKILL.md"
+    },
+    {
+      "name": "fpga-simulation",
+      "dir": "fpga-simulation",
+      "path": "skills/fpga-simulation/SKILL.md"
+    },
+    {
+      "name": "fpga-soc-bringup",
+      "dir": "fpga-soc-bringup",
+      "path": "skills/fpga-soc-bringup/SKILL.md"
     },
     {
       "name": "fpga-timing-closure",

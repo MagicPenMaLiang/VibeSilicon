@@ -1,18 +1,9 @@
-# TODO 占位（Phase 0 D5 填）
+# Fixed-point implementation contract
 
-## 用途
+For every value record signedness, width, fractional scaling, legal range, rounding and overflow/saturation mode. Derive full precision before a reviewed narrowing point: a product generally needs the sum of operand widths, while a sum may require growth determined by bounds. These are derivation aids, not permission to change the frozen contract.
 
-`np.uintN ↔ ap_uint<N>` 位宽严格对应规则表 + `Q_FRAC` 量化方案参考。
+Check SystemVerilog expression sizing and signed/unsigned mixing explicitly. Extend operands before arithmetic, document arithmetic versus logical shifts, and place casts/slices at declared quantization boundaries. Match ties, negative rounding and saturation order to the immutable golden model.
 
-## 待填内容
+HLS types must implement the same contract rather than default C integer behavior. Preserve intermediate widths and avoid undefined signed overflow. Test boundary values, negative extremes, ties, saturation, zero and multi-stage accumulation.
 
-1. 位宽对应表（来自计划 §4.4）
-2. Q_FRAC 命名规范（Q4.4 / Q2.8 / Q0.12 / Q8.8）
-3. np.int16 ↔ ap_int<16> 有符号运算注意事项
-4. 位宽溢出检测 + 截断/饱和策略
-5. 实际工程中遇到的位宽不匹配案例（来自 reference/lessons/）
-
-## 上游引用
-
-- `SKILL.md` → "核心内容" 第 1 项"位宽严格对应规则"
-- 计划 §4.4 表
+If the contract lacks a numeric decision, stop for architectural review. Compare output vectors bit-for-bit; a width-saving optimization needs reviewed requirements and new acceptance, not an edited golden reference.

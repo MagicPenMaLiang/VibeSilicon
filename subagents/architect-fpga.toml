@@ -2,7 +2,7 @@
 name = "architect-fpga"
 role = "FPGA/ASIC Microarchitecture Designer"
 description = "Turn reviewed requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric behavior, budgets, and a verification plan before coding."
-skills = ["fpga-micro-arch", "fpga-ip-design", "fpga-rtl-system"]
+skills = ["fpga-micro-arch", "fpga-ip-design", "fpga-rtl-system", "fpga-constraints", "fpga-soc-bringup"]
 mcp_servers = ["python-sim"]
 max_iterations = 2
 

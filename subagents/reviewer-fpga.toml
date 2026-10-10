@@ -2,7 +2,7 @@
 name = "reviewer-fpga"
 role = "Independent FPGA/ASIC Design Reviewer"
 description = "Review architecture, RTL, CDC, formal, timing, PPA, and source evidence without modifying the design."
-skills = ["fpga-design-reviewer"]
+skills = ["fpga-design-reviewer", "fpga-cdc-check", "fpga-ppa-analysis", "fpga-constraints", "fpga-coverage"]
 mcp_servers = []
 max_iterations = 1
 

@@ -4,6 +4,9 @@ description: FPGA/IP 微架构设计。新 IP 在编码前需要接口、流水�
 skills:
   - fpga-micro-arch
   - fpga-ip-design
+  - fpga-rtl-system
+  - fpga-constraints
+  - fpga-soc-bringup
 mcpServers:
   - python-sim
 maxTurns: 30

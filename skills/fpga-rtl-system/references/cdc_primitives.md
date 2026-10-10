@@ -1,39 +1,9 @@
-# TODO 占位（Phase 2 W5 填，stream-processing CDC 桥接实例驱动）
+# Portable crossing contracts
 
-## 用途
+Separate crossing behavior from technology implementation. A wrapper contract declares source/destination clocks, reset assertion/release, transfer semantics, loss/coherency requirements, latency and backpressure.
 
-CDC 原语使用指南（XPM_CDC / XPM_FIFO_ASYNC）。
+A level synchronizer transfers a persistent one-bit state with variable latency. A pulse synchronizer must satisfy a minimum inter-event spacing. A handshake holds data until acknowledgement and must recover from reset according to the interface contract. An asynchronous FIFO needs independent pointer synchronization and reviewed full/empty and reset behavior.
 
-## 待填内容
+Do not independently synchronize bits of a coherent bus. Do not feed combinational glitches into a level synchronizer or fan out its first stage. Avoid fabric clock gating; use enables or reviewed clock-control wrappers.
 
-### XPM_CDC 系列
-
-| 原语 | 用途 | 关键参数 |
-|---|---|---|
-| `xpm_cdc_single` | 单 bit 同步 | `DEST_SYNC_FF` (2-10) |
-| `xpm_cdc_handshake` | 握手同步 | `DEST_SYNC_FF`, `DEST_EXT_HSK` |
-| `xpm_cdc_gray` | 格雷码同步 | `WIDTH` (2-32) |
-| `xpm_cdc_sync_rst` | 异步复位同步 | `DEST_SYNC_FF` (2-10) |
-| `xpm_cdc_pulse` | 脉冲同步 | `REG_OUTPUT`, `RST_USED` |
-
-### XPM_FIFO 系列
-
-| 原语 | 用途 | 关键参数 |
-|---|---|---|
-| `xpm_fifo_sync` | 同步 FIFO | `FIFO_MEMORY_TYPE`, `FIFO_DEPTH` |
-| `xpm_fifo_async` | 异步 FIFO | `RELATED_CLOCKS=0` |
-| `xpm_fifo_axis` | AXI-Stream FIFO | `TDATA_WIDTH`, `FIFO_DEPTH` |
-| `xpm_fifo_AXI4` | AXI4 FIFO | `AXI_DATA_WIDTH` |
-
-### 选择决策
-
-- 单 bit 控制信号 → `xpm_cdc_single`
-- 多 bit 数据 + 吞吐高 → `xpm_fifo_async`
-- 异步复位 → `xpm_cdc_sync_rst`
-- AXI-Stream → `xpm_fifo_axis`
-
-## 上游引用
-
-- `SKILL.md` → "Vivado 原语使用" + "CDC 桥接模式"
-- 计划 §6.1.5 4 类内容
-- `fpga-cdc-check/references/xpm_primitives.md`（更详细的实例化代码）
+See the repository fpga-cdc-check skill for structural and functional evidence requirements. Simulate asynchronous ratios, phase shifts, reset sequencing and backpressure; use applicable formal properties. Keep FPGA and ASIC physical constraints separate.

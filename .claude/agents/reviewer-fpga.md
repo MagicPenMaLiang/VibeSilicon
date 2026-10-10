@@ -5,6 +5,8 @@ skills:
   - fpga-design-reviewer
   - fpga-cdc-check
   - fpga-ppa-analysis
+  - fpga-constraints
+  - fpga-coverage
 maxTurns: 25
 ---
 

@@ -1,34 +1,20 @@
-// TODO 占位（Phase 0 D5 填）
-//
-// 状态机模板（State Machine）
-// 适用：标准 FSM 模式（LLM 友好），如 SPI/UART/I2C
-// 计划 §6.1.1 references/hls_templates/state_machine.cpp
-// 计划 §3.2 Pilot 选择理由："标准 FSM 模式（LLM 友好）"
-
+// Control-only four-phase example. Each call advances one phase; nonzero
+// data_in starts the sequence and DONE pulses valid for one call. The caller
+// initializes state to IDLE. This is not a serial or streaming protocol core.
 #pragma once
 #include "ap_int.h"
 
 template<int STATE_W>
 ap_uint<1> state_machine(ap_uint<8> data_in, ap_uint<STATE_W>& state) {
-    enum { IDLE, READ, WRITE, DONE };
+    static_assert(STATE_W >= 2, "four states require two bits");
+    enum { IDLE, PHASE_A, PHASE_B, DONE };
     ap_uint<1> valid = 0;
-
     switch (state) {
-    case IDLE:
-        if (data_in != 0) state = READ;
-        break;
-    case READ:
-        // TODO: 读数据逻辑
-        state = WRITE;
-        break;
-    case WRITE:
-        // TODO: 写数据逻辑
-        state = DONE;
-        break;
-    case DONE:
-        valid = 1;
-        state = IDLE;
-        break;
+    case IDLE: if (data_in != 0) state = PHASE_A; break;
+    case PHASE_A: state = PHASE_B; break;
+    case PHASE_B: state = DONE; break;
+    case DONE: valid = 1; state = IDLE; break;
+    default: state = IDLE; break;
     }
     return valid;
 }

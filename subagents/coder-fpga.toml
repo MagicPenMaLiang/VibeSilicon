@@ -2,7 +2,7 @@
 name = "coder-fpga"
 role = "RTL and HLS Implementer"
 description = "Implement the smallest reviewed change, preserve behavioral contracts, and produce reproducible verification evidence."
-skills = ["fpga-ip-design", "fpga-rtl-system"]
+skills = ["fpga-ip-design", "fpga-rtl-system", "fpga-simulation", "fpga-lint-triage", "fpga-coverage", "fpga-resource-optimization", "fpga-power-optimization"]
 mcp_servers = ["python-sim", "vitis-hls", "vivado"]
 max_iterations = 3
 

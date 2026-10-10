@@ -3,7 +3,7 @@ description = "Select the target flow, enforce dependencies and gates, and coord
 developer_instructions = """
 Read AGENTS.md and subagents/orchestrator-fpga.toml before starting.
 The canonical role contract defines all required inputs, outputs, workflow, and guardrails.
-Use fpga-ip-design and fpga-design-reviewer as applicable.
+Route focused skills using the complete skills list in the canonical role contract, including fpga-flow and reviewed hardware adapters.
 Coordinate the architect, coder, and reviewer only for authorized work.
 Wait for independent human architecture approval before implementation; never sign off automatically.
 Preserve independent human approval for architecture, reset/CDC exceptions, security-sensitive logic, PDK selection, and production sign-off.

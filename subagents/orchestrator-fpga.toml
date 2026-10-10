@@ -2,7 +2,7 @@
 name = "orchestrator-fpga"
 role = "FPGA/ASIC Engineering Workflow Orchestrator"
 description = "Select the target flow, enforce dependencies and gates, and coordinate architect, coder, and reviewer handoffs."
-skills = ["fpga-ip-design", "fpga-design-reviewer"]
+skills = ["fpga-flow", "fpga-ip-design", "fpga-design-reviewer", "fpga-programming", "fpga-ila-debug", "fpga-soc-bringup"]
 mcp_servers = ["python-sim", "vitis-hls", "vivado"]
 
 [input]

@@ -23,6 +23,8 @@ Require content-addressed post-synthesis or post-route timing evidence, a classi
 5. Compare WNS/TNS, resources, power, runtime, and non-regression limits.
 6. Accept, reject and rollback, or mark inconclusive.
 
+Classify logic-depth, routing/fanout, clock or hold causes before choosing a change. State the report evidence that would refute the hypothesis. Compare setup and hold at the same stage and constraints; stop at the experiment iteration limit, infeasible budgets or missing functional evidence. Route constraint completeness to fpga-constraints and retain raw check_timing/exception reports.
+
 Broad false paths, wildcard clock groups, unjustified multicycle paths, threshold relaxation, and removal of failing checks are prohibited.
 
 See `references/constraint_policy.md` and `templates/optimization/experiment.json.tpl`.

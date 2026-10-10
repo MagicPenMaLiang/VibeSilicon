@@ -3,6 +3,11 @@ name: orchestrator-fpga
 description: 编排 VibeSilicon 的架构、编码、质量门禁、审查和人工签字流程。
 skills:
   - fpga-ip-design
+  - fpga-flow
+  - fpga-design-reviewer
+  - fpga-programming
+  - fpga-ila-debug
+  - fpga-soc-bringup
 mcpServers:
   - python-sim
   - vitis-hls

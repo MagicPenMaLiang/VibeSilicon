@@ -1,11 +1,6 @@
-// TODO 占位（Phase 2 W4 填，EOTF 查表实例驱动）
-//
-// LUT 流水线模板（LUT Pipeline）
-// 适用：BRAM/URAM 查表 + Pipeline，典型场景 stream-processing EOTF
-// 计划 §6.1.1 references/hls_templates/lut_pipeline.cpp
-// 计划 §4.3 选择 EOTF 查表模块的原因
-// 计划 §4.6 BRAM 资源危机缓解策略（8 项）
-
+// Lookup example with caller-owned initialized storage; no hidden RAM contents
+// or technology binding. The architecture declares the table port/latency and
+// FPGA/ASIC storage wrapper. Inference and achieved II need report evidence.
 #pragma once
 #include "hls_stream.h"
 #include "ap_int.h"
@@ -13,15 +8,12 @@
 template<int ADDR_W, int DATA_W>
 void lut_pipeline(hls::stream<ap_uint<ADDR_W>>& addr_in,
                   hls::stream<ap_uint<DATA_W>>& data_out,
-                  int n) {
-    // TODO: URAM 迁移 + 分块 PARTITION 优化
-    ap_uint<DATA_W> lut[1 << ADDR_W];
-#pragma HLS RESOURCE variable=lut core=RAM_1P_URAM  // 优先 URAM
-    // ... LUT 初始化 ...
-
-    for (int i = 0; i < n; i++) {
+                  const ap_uint<DATA_W>* table, unsigned n) {
+    static_assert(ADDR_W > 0 && ADDR_W < 31 && DATA_W > 0, "legal widths required");
+    // Caller guarantees a non-null table containing at least 2^ADDR_W entries.
+    for (unsigned i = 0; i < n; ++i) {
 #pragma HLS PIPELINE II=1
-        ap_uint<ADDR_W> addr = addr_in.read();
-        data_out.write(lut[addr]);
+        ap_uint<ADDR_W> address = addr_in.read();
+        data_out.write(table[address.to_uint()]);
     }
 }

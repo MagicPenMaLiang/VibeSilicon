@@ -24,6 +24,8 @@ Report cell area/count, macro area, WNS/TNS and violating endpoints by corner, c
 
 ## Comparison rules
 
+Collect flat and hierarchical utilization, clock/exception/methodology and route evidence using the fixed `collect_reports` MCP tool. Attribute hotspots before suggesting an optimization; use the separate resource/power optimization skills for changes. Collection success and read-only analysis do not authorize implementation edits.
+
 - Compare only equivalent functionality, vectors, constraints, corners, and tool settings.
 - Show absolute metrics, deltas, guardrails, and uncertainty.
 - Do not hide failed or cancelled candidates.

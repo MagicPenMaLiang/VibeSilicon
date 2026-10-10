@@ -1,22 +1,13 @@
-# TODO 占位（Phase 0 D5 填）
+# HLS scheduling decisions
 
-## 用途
+Read the selected Vitis HLS version's directive documentation. Record each pragma's intent, target loop/function and observed report result; a requested pipeline II is not an achieved II.
 
-HLS Pragma 速查手册。覆盖常用 Pragma 与适用场景。
-
-## 待填内容
-
-| Pragma | 用途 | 适用 |
+| Intent | Candidate technique | Required evidence |
 |---|---|---|
-| `#pragma HLS PIPELINE II=N` | 函数级流水线 | 计算密集循环 |
-| `#pragma HLS UNROLL factor=N` | 循环展开 | 小循环 + 资源充裕 |
-| `#pragma HLS ARRAY_PARTITION` | 数组分块 | 大数组 BRAM→LUTRAM |
-| `#pragma HLS RESOURCE variable=X core=RAM_1P` | 指定资源类型 | BRAM/URAM/LUTRAM 选择 |
-| `#pragma HLS DATA_PACK` | 结构体打包 | AXI 接口优化 |
-| `#pragma HLS INLINE` | 函数内联 | 减少调用开销 |
-| `#pragma HLS INTERFACE` | 接口协议 | m_axi / axis / bram 等 |
+| Sustained throughput | Pipeline reviewed loop | Achieved II, recurrence/port constraints, latency |
+| Parallel arithmetic | Bounded unroll | Resource growth, bandwidth, timing, exact results |
+| Concurrent stages | Dataflow with explicit FIFOs | Token rates, depth/deadlock, backpressure |
+| Memory bandwidth | Reviewed partition/banking | Port demand, RAM inference, neutral memory contract |
+| Resource sharing | Allocation/scheduling | II and latency guardrails |
 
-## 上游引用
-
-- `SKILL.md` → "核心内容" 第 1 项"HLS C++ 编写规范"
-- 计划 §4.5 HLS C++ 输出要求
+Do not erase real dependencies to satisfy scheduling. Do not partition all memories blindly or force DSP binding without target/resource evidence. Validate C simulation, synthesis reports, RTL co-simulation and appropriate implementation stages. Keep implementation-specific storage behind reviewed boundaries and record tool/version/configuration hashes.

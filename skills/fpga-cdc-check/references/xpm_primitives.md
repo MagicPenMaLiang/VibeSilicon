@@ -1,68 +1,9 @@
-# TODO 占位（Phase 2 W5 填）
+# Technology wrappers for XPM CDC
 
-## 用途
+XPM is a vendor implementation option behind a neutral target wrapper, not portable ASIC RTL. Declare the device/tool support and reviewed primitive parameters. Use the selected tool installation's primitive templates and documentation instead of assuming a stable parameter set.
 
-XPM_CDC / XPM_FIFO_ASYNC 使用示例与实例化模板。
+Choose level synchronizers for persistent single-bit levels, pulse synchronizers only within their documented spacing/reset requirements, and handshake/FIFO primitives for coherent words. A Gray synchronizer requires a source representation with valid Gray transitions; it cannot repair arbitrary multi-bit data.
 
-## 待填内容
+Record stage count, source registration, reset behavior, simulation assertions, latency and frequency assumptions. Compare wrapper behavior against the shared contract; review report_cdc and synthesis inference. Never suppress primitive assertion failures to make a run pass.
 
-### XPM_CDC 单 bit 同步
-
-```verilog
-xpm_cdc_single #(
-    .DEST_SYNC_FF(4),    // 同步级数 2-10
-    .INIT_SYNC_FF(0),
-    .SIM_ASSERT_CHK(0)
-) inst_xpm_cdc_single (
-    .src_clk(1'b0),      // 单 bit 可不需要 src_clk
-    .src_in(src_sig),
-    .dest_clk(dst_clk),
-    .dest_out(dst_sig)
-);
-```
-
-### XPM_FIFO_ASYNC 异步 FIFO
-
-```verilog
-xpm_fifo_async #(
-    .FIFO_MEMORY_TYPE("auto"),        // auto / block / distributed / ultra
-    .FIFO_DEPTH(1024),
-    .WRITE_DATA_WIDTH(64),
-    .READ_DATA_WIDTH(64),
-    .RELATED_CLOCKS(0)                // 0 = 不同时钟
-) inst_async_fifo (
-    .wr_clk(src_clk),
-    .wr_en(wr_en),
-    .din(wr_data),
-    .full(full),
-    .rd_clk(dst_clk),
-    .rd_en(rd_en),
-    .dout(rd_data),
-    .empty(empty),
-    .wr_data_count(wr_count),
-    .rd_data_count(rd_count)
-);
-```
-
-### AXI4-Stream Register Slice
-
-```verilog
-axis_register_slice #(
-    .TDATA_WIDTH(64)
-) inst_axis_slice (
-    .aclk(aclk),
-    .aresetn(aresetn),
-    .s_axis_tvalid(s_valid),
-    .s_axis_tready(s_ready),
-    .s_axis_tdata(s_data),
-    .m_axis_tvalid(m_valid),
-    .m_axis_tready(m_ready),
-    .m_axis_tdata(m_data)
-);
-```
-
-## 上游引用
-
-- `SKILL.md` → "Vivado 原语使用"
-- 计划 §6.1.3 核心内容
-- 计划 §4.6 ⑦ 抗亚稳态设计
+For ASIC use an independently reviewed equivalent wrapper with technology reliability evidence. Keep golden vectors and numeric behavior unchanged.

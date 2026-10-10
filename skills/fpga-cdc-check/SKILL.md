@@ -29,6 +29,8 @@ Use this skill when a design has multiple clocks, asynchronous inputs, generated
 
 ## Output
 
+Enumerate crossings before triage, classify the transfer contract, select one reviewed repair and rerun structural plus functional evidence. Keep source/destination reset assumptions explicit. For FIFO pointers, inspect effective skew/delay constraints: asynchronous clock groups can override max-delay constraints on the same paths.
+
 For every crossing report source, destination, scheme, structural result, functional evidence, remaining assumptions, and status. Missing/inconclusive evidence is `BLOCKED`, not `PASS`.
 
 References: `references/async_reg_guide.md`, `references/cdc_levels.md`, and `references/xpm_primitives.md`.
