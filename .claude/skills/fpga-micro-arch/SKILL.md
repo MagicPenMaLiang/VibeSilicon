@@ -29,3 +29,5 @@ When one IP targets FPGA and ASIC, share behavioral contracts only. Maintain sep
 Coding begins only after an independent reviewer approves interfaces, numeric behavior, clock/reset strategy, memory semantics, target split, and acceptance criteria.
 
 References: `references/algorithm_profiling.md`, `references/axi4_lite_slave.md`, `references/register_file_pattern.md`, `references/rtl_fsm_design.md`, and `templates/micro_arch_template.md`.
+
+For HLS scheduling decisions, read the shared HLS scheduling reference at repository path `skills/fpga-ip-design/references/pragma_cheatsheet.md`. Record intent and achieved results in the architecture rather than maintaining a separate directive catalog.

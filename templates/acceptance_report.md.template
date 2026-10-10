@@ -1,165 +1,80 @@
-# Phase Acceptance Report Template
-# ===========================================
-#
-# Purpose:  Phase closeout验收报告模板
-# Usage:    cp templates/acceptance_report.md.template project/<phase>_<ip>/docs/phase<N>_acceptance_report.md
-#           Fill in actual values from reports/ + L3.3 sign-off
-# Reference: docs/process/phase_closeout.md
-#
-# Important:  This is the PROJECT-LEVEL acceptance report (per IP / per phase).
-#             The global docs/ only contains TEMPLATES and OVERALL STATUS
-#             (see docs/CHANGELOG.md for cross-phase changes).
-#
-# Sections (7 required):
-# 1. Executive Summary
-# 2. Verification Matrix (7 quality gates)
-# 3. Resource Utilization (IP + wrapper)
-# 4. Timing (WNS/TNS/WHS)
-# 5. CDC Analysis
-# 6. L3.3 Sign-off
-# 7. Deliverables
-# 8. Known Limitations
-# 9. Next Phase Plan
-# 10. Lessons Learned (link)
-# 11. Signatures
+# <module_name> acceptance report
 
-# Phase <N> 验收报告 — <Module Name>
+Status: DRAFT. This project-level report summarizes source-bound evidence; it
+neither supplies missing evidence nor constitutes production sign-off.
 
-> **Executive Summary**: ✅/⚠️/❌ <one-line: all gates status>
-> **项目**：Phase <N> — <Module Name>
-> **目标器件**：<part number, e.g. xck26-sfvc784-2LV-c>
-> **报告日期**：<ISO8601>
-> **版本**：v1.0
+## Scope and result
 
----
+- Project, target flow, owner and revision: <values>
+- FPGA device or external ASIC PDK views: <approved manifest>
+- Source, golden model, constraints and configuration hashes: <bindings>
+- Report date and intended acceptance boundary: <values>
+- Verdict: <PASS / FAIL / BLOCKED / NOT_APPLICABLE, with reason>
 
-## 1. Verification Matrix
+## Verification matrix
 
-| # | Gate | 标准 | 结果 | 证据路径 |
+| Requirement/gate | Applicability | Acceptance criterion | Result | Raw evidence ID/location |
 |---|---|---|---|---|
-| L1 | verilator lint | 0 errors | ✅/❌ | `<path>` |
-| L2 | Python golden | 12/12 PASS | ✅/❌ | `<path>` |
-| L3.1 | AI auto-review | 8/8 PASS | ✅/❌ | `<path>` |
-| L3.2 | AI multi-scheme | RETAIN_A | ✅/❌ | `<path>` |
-| L4 | Protocol trace | PASS | ✅/❌ | `<path>` |
-| L5 | Synth + Impl + bitstream | 0 errors | ✅/❌ | `<path>` |
-| Board | Board loopback | data_o = expected | ✅/❌ | `<path>` |
+| G0 manifest | <scope> | <complete inventory> | <status> | <ID> |
+| G1 static/readability | <scope> | <reviewed policy> | <status> | <ID> |
+| G2 simulation/protocol/formal | <scope> | <golden/properties/coverage> | <status> | <ID> |
+| Target synthesis/implementation | <scope> | <reviewed constraints> | <status> | <ID> |
+| CDC/reset | <crossings> | <approved topology/proof> | <status> | <ID> |
+| FPGA hardware validation | <scope or reason> | <test plan> | <status> | <ID> |
+| ASIC STA/DRC/LVS | <scope or reason> | <reviewed sign-off contract> | <status> | <ID> |
 
----
+A missing tool, skipped check, inconclusive proof or absent evidence is not PASS.
+Declare test/vector/property counts from the current run instead of copying sample
+counts. Separate raw observations, estimates and engineering interpretations.
 
-## 2. Resource Utilization (IP + Wrapper)
+## Resources, timing and power
 
-### 2.1 IP Core (u_<ip>, IP-only)
-| Resource | Synthesized | KPI | Status |
-|---|---|---|---|
-| CLB LUTs | <N> | ≤ <N> | ✅/❌ |
-| CLB Registers | <N> | ≤ <N> | ✅/❌ |
-| Block RAM | <N> | 0 | ✅/❌ |
-| DSP | <N> | 0 | ✅/❌ |
-
-### 2.2 Test Wrapper (with debug)
-| Resource | Synthesized | Post-Route | Available | Util% |
+| Metric/unit | Core | Wrapper/system | Target/non-regression limit | Evidence |
 |---|---|---|---|---|
-| CLB LUTs | <N> | <N> | <N> | <N>% |
-| CLB Registers | <N> | <N> | <N> | <N>% |
+| LUT/FF/BRAM/URAM/DSP or ASIC area | <value> | <value> | <limit> | <ID> |
+| Setup WNS/TNS and failing endpoints | <value> | <value> | <limit> | <ID> |
+| Hold WHS/THS and failing endpoints | <value> | <value> | <limit> | <ID> |
+| Unconstrained paths | <value> | <value> | <limit> | <ID> |
+| Frequency/latency/throughput | <value> | <value> | <limit> | <ID> |
+| Power/activity assumptions | <value> | <value> | <limit> | <ID> |
 
----
+Identify tool/version, design state, device, clocks, constraints and activity.
+Negative slack, unresolved hold failures or unconstrained paths cannot be reported
+as timing closure. Record CDC endpoints, severities, topology, reviewed exceptions
+and functional evidence; structural scan results alone do not prove safe crossings.
 
-## 3. Timing
+## Hardware and physical evidence
 
-| Metric | Value | KPI | Status |
+List the exact board/device, bitstream/probe or configuration-image hashes,
+approved operation, test inputs, expected outputs and measured outcomes where
+applicable. Programming completion does not prove board functionality. For ASIC,
+identify reviewed external views, synthesis/STA/physical artifacts and DRC/LVS
+scope. Mark unexecuted stages explicitly.
+
+## Human approval and waivers
+
+| Decision/risk | Authorized independent reviewer | Evidence/source binding | Verdict/date |
 |---|---|---|---|
-| WNS (Setup) | +<N> ns | ≥ 0 | ✅/❌ |
-| TNS (Setup) | 0 ns | > -1.0 | ✅/❌ |
-| WHS (Hold) | +<N> ns | ≥ 0 | ✅/❌ |
-| THS (Hold) | 0 ns | > -0.5 | ✅/❌ |
-| Clock freq | <N> MHz | — | ✅ |
+| Architecture | <name/role> | <IDs> | <status> |
+| PHY/reset/CDC/security/PDK/release, as applicable | <name/role> | <schema-bound records> | <status> |
 
----
+Use `schemas/rtl_quality_signoff.schema.json` and applicable target contracts.
+Record waiver owner, expiry, compensating checks and removal condition. Reassess
+approval when source, constraints or evidence changes. Agents cannot sign for humans.
 
-## 4. CDC Analysis
+## Deliverables and reproduction
 
-| Metric | Value | Status |
-|---|---|---|
-| CDC endpoints | <N> | ✅ |
-| UNSAFE endpoints | 0 | ✅ |
-| Sync type | 2-FF + ASYNC_REG | ✅ |
+List source RTL/HLS, manifests, specifications, immutable golden/vector bindings,
+constraints, build scripts, tool versions, commands, expected outcomes and report
+IDs. Keep customer assets, licenses, PDKs, generated vendor IP, bitstreams,
+checkpoints, GDS and raw run directories in the approved private evidence store;
+public records contain permitted metadata and hashes only.
 
----
+## Limitations and follow-up
 
-## 5. Board Verification
-
-| Item | Result | Evidence |
-|---|---|---|
-| Bitstream generation | ✅ | `<path>.bit` |
-| Board programming | ✅ | Hardware Manager |
-| SPI/<protocol> loopback | ✅ | data_o = 0x<N> |
-| Self-contained | ✅ | no jumper, no external clock |
-
----
-
-## 6. L3.3 Sign-off
-
-✅/⏳ **<N>/<N> items signed** (<date>, <signer>). 签字文件：`<path>`
-
-| # | Category | Item | Status |
+| Open item/limitation | Impact | Owner | Next action and acceptance evidence |
 |---|---|---|---|
-| PHY-1 | PHY | <item> | ✅/⏳ |
-| PHY-2 | PHY | <item> | ✅/⏳ |
-| RST-1 | RST | <item> | ✅/⏳ |
-| RST-2 | RST | <item> | ✅/⏳ |
-| CDC-1 | CDC | <item> | ✅/⏳ |
-| BIT-1 | BIT | <item> | ✅/⏳ |
-| FUNC-1 | FUNC | <item> | ✅/⏳ |
+| <item> | <scope> | <name> | <action> |
 
----
-
-## 7. Deliverables
-
-| File | Path |
-|---|---|
-| <IP> RTL | `project/<phase>_<ip>/src/rtl/<ip>.v` |
-| <IP> Test Wrapper | `project/<phase>_<ip>/src/rtl/<ip>_test_wrapper.v` |
-| <IP> XDC | `project/<phase>_<ip>/src/constraints/<ip>.xdc` |
-| Build TCL | `project/<phase>_<ip>/src/build/...` |
-| Board Test TCL | `project/<phase>_<ip>/src/test/...` |
-| Python Golden | `project/<phase>_<ip>/golden/<ip>.py` |
-| Test Vectors | `project/<phase>_<ip>/tests/<ip>.yaml` |
-| Spec | `project/<phase>_<ip>/specs/<ip>.md` |
-| KPI Targets | `project/<phase>_<ip>/docs/kpi_target.yaml` |
-| Reports | `project/<phase>_<ip>/reports/` |
-
----
-
-## 8. Known Limitations
-
-| # | Limitation | Mitigation | Follow-up |
-|---|---|---|---|
-| 1 | <limitation> | <workaround> | <next phase?> |
-
----
-
-## 9. Next Phase Plan
-
-<Plan for Phase N+1>
-
----
-
-## 10. Lessons Learned
-
-<Link to L<XXX>_<phase>_lessons.md>
-
----
-
-## 11. Signatures
-
-**Phase Owner**（Phase N 验收人）：
-- Name: _______________
-- Date: _______________
-- Signature: _______________
-
----
-
-**Maintainer**: VibeSilicon Phase Owner
-**Version**: v1.0
-**Date**: <ISO8601>
+Include next-phase work and reusable lessons. Final handoff must state the achieved
+validation boundary and outstanding human acceptance decisions.

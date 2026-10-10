@@ -6,33 +6,81 @@
       "description": "Select the FPGA or ASIC flow, enforce gates, and coordinate reviewed handoffs.",
       "mode": "primary",
       "prompt": "Read AGENTS.md and subagents/orchestrator-fpga.toml. Do not treat skipped or unavailable gates as PASS.",
-      "permission": {"edit": "ask", "bash": "ask", "external_directory": "deny"}
+      "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "external_directory": "deny"
+      }
     },
     "architect-fpga": {
       "description": "Create reviewed interfaces, microarchitecture, budgets, and verification plans before implementation.",
       "mode": "subagent",
       "prompt": "Read subagents/architect-fpga.toml and the relevant canonical skills. Stop if required inputs or architecture approval are missing.",
-      "permission": {"edit": "ask", "bash": "ask", "external_directory": "deny"}
+      "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "external_directory": "deny"
+      }
     },
     "coder-fpga": {
       "description": "Implement a reviewed RTL or HLS change and produce reproducible evidence.",
       "mode": "subagent",
       "prompt": "Read subagents/coder-fpga.toml. Keep golden references read-only and run all applicable gates after each change.",
-      "permission": {"edit": "allow", "bash": "ask", "external_directory": "deny"}
+      "permission": {
+        "edit": "allow",
+        "bash": "ask",
+        "external_directory": "deny"
+      }
     },
     "reviewer-fpga": {
       "description": "Independently review architecture, RTL, CDC, formal, timing, PPA, and evidence.",
       "mode": "subagent",
       "prompt": "Read subagents/reviewer-fpga.toml. Remain read-only and verify source evidence directly.",
-      "permission": {"edit": "deny", "bash": "ask", "external_directory": "deny"}
+      "permission": {
+        "edit": "deny",
+        "bash": "ask",
+        "external_directory": "deny"
+      }
     }
   },
   "mcp": {
-    "python-sim": {"type": "local", "command": ["python", "scripts/mcp_launcher.py", "python-sim"]},
-    "vitis-hls": {"type": "local", "command": ["python", "scripts/mcp_launcher.py", "vitis-hls"]},
-    "vivado": {"type": "local", "command": ["python", "scripts/mcp_launcher.py", "vivado"]}
+    "python-sim": {
+      "type": "local",
+      "command": [
+        "python",
+        "scripts/mcp_launcher.py",
+        "python-sim"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    },
+    "vitis-hls": {
+      "type": "local",
+      "command": [
+        "python",
+        "scripts/mcp_launcher.py",
+        "vitis-hls"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    },
+    "vivado": {
+      "type": "local",
+      "command": [
+        "python",
+        "scripts/mcp_launcher.py",
+        "vivado"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    }
   },
-  "skills": {"paths": ["skills/"]},
-  "instructions": ["AGENTS.md"],
-  "plugin": ["./.opencode/plugins/vibesilicon-quality-gate.js"]
+  "skills": {
+    "paths": [
+      "skills/"
+    ]
+  },
+  "instructions": [
+    "AGENTS.md"
+  ]
 }

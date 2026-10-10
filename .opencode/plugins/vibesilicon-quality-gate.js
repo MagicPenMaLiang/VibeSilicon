@@ -1,11 +1,12 @@
 import { spawn } from "node:child_process";
-import { appendFileSync, mkdirSync } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
+import { appendFileSync, existsSync, mkdirSync, realpathSync } from "node:fs";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const WATCH_EXTS = new Set([".v", ".sv", ".svh"]);
 const CHECK_SCRIPT = "scripts/quality_gate/post_run_check.py";
 const TIMEOUT_MS = 15000;
-const LOG_FILE = "scripts/quality_gate/reports/l1_sandbox.log";
+const LOG_FILE = ".vibesilicon/logs/opencode-quality-gate.log";
 
 function logToFile(workdir, line) {
   try {
@@ -24,7 +25,9 @@ function shouldWatch(filePath) {
 function resolveWorkspaceFile(workdir, filePath) {
   const candidate = resolve(workdir, isAbsolute(filePath) ? filePath : join(workdir, filePath));
   const rel = relative(resolve(workdir), candidate);
-  if (rel.startsWith("..") || isAbsolute(rel)) {
+  const outside = (path) => path === ".." || path.startsWith(`..${sep}`) || isAbsolute(path);
+  const realRel = existsSync(candidate) ? relative(realpathSync(workdir), realpathSync(candidate)) : rel;
+  if (outside(rel) || outside(realRel)) {
     throw new Error(`quality gate rejected path outside workspace: ${candidate}`);
   }
   return candidate;
@@ -38,8 +41,12 @@ function extractEditedFiles(toolName, args = {}) {
   if (toolName !== "apply_patch" || typeof args.patchText !== "string") return [];
 
   const paths = [];
-  const marker = /^\*\*\* (?:Add|Update|Move to) File: (.+)$/gm;
-  for (const match of args.patchText.matchAll(marker)) paths.push(match[1].trim());
+  for (const line of args.patchText.split(/\r?\n/)) {
+    const file = line.match(/^\*\*\* (?:Add|Update) File: (.+)$/);
+    const moved = line.match(/^\*\*\* Move to: (.+)$/);
+    if (file) paths.push(file[1].trim());
+    else if (moved && paths.length) paths[paths.length - 1] = moved[1].trim();
+  }
   return [...new Set(paths)];
 }
 
@@ -81,12 +88,15 @@ function resultExcerpt(result) {
 }
 
 async function runQualityGate(workdir, filePath) {
-  const python = process.env.VIBESILICON_PYTHON || "python";
-  return runProcess(workdir, python, [CHECK_SCRIPT, "--fast", "--source", filePath]);
+  const localPython = join(workdir, ".venv", process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
+  const python = process.env.VIBESILICON_PYTHON ||
+    (existsSync(localPython) ? localPython : process.env.VIBESILICON_MCP_PYTHON || "python");
+  const report = join(workdir, ".vibesilicon", "reports", `opencode-l1-${randomUUID()}.json`);
+  return runProcess(workdir, python, [CHECK_SCRIPT, "--fast", "--source", filePath, "--output", report]);
 }
 
 /**
- * OpenCode 1.17.9 plugin: run the L1 gate after write/edit has completed.
+ * Run the L1 gate after an OpenCode write, edit, or patch has completed.
  * A failed required check throws, so the agent cannot treat the edit as verified.
  */
 export const VibeSiliconQualityGate = async ({ directory }) => {
@@ -94,8 +104,8 @@ export const VibeSiliconQualityGate = async ({ directory }) => {
   logToFile(workdir, `PLUGIN loaded cwd=${workdir}`);
 
   return {
-    "tool.execute.after": async (input, output) => {
-      const editedFiles = extractEditedFiles(input.tool, output?.args).filter(shouldWatch);
+    "tool.execute.after": async (input) => {
+      const editedFiles = extractEditedFiles(input.tool, input.args).filter(shouldWatch);
       for (const rawPath of editedFiles) {
         const filePath = resolveWorkspaceFile(workdir, rawPath);
         logToFile(workdir, `HOOK after ${input.tool} ${filePath}`);
@@ -112,5 +122,3 @@ export const VibeSiliconQualityGate = async ({ directory }) => {
     },
   };
 };
-
-export { extractEditedFiles, resolveWorkspaceFile, shouldWatch };

@@ -1,18 +1,21 @@
-# 时序指标汇总与路由
+# Timing summaries and task routing
 
-本参考只负责解释 canonical `report_timing_summary` 指标，不做关键路径深度诊断或设计修改。
+This reference interprets canonical `report_timing_summary` metrics. Critical-path
+diagnosis and design changes belong to the focused skills below.
 
-| 指标 | 判定 |
+| Metric | Interpretation |
 |---|---|
-| WNS | `< 0` setup FAIL；`0~0.5ns` WARN |
-| TNS | `< 0` 表示存在 setup 违例集合 |
-| WHS/THS | `< 0` 或 hold failing endpoints 非零即 FAIL |
-| unconstrained paths | 非零时不能签核 timing PASS |
+| WNS | Negative values indicate a setup failure |
+| TNS | Negative values indicate a set of setup violations |
+| WHS/THS | Negative values or nonzero failing hold endpoints mean FAIL |
+| Unconstrained paths | Nonzero paths prevent timing sign-off as PASS |
 
-路由规则：
+1. Resource, power and summary timing trends: use `fpga-ppa-analysis`.
+2. Existing `.dcp` with critical-path, clock-interaction or root-cause questions:
+   use read-only `fpga-dcp-analysis` (R0).
+3. RTL, XDC or implementation changes: complete DCP diagnosis first, then use
+   `fpga-timing-closure` with R2 approval and a controlled optimization experiment.
 
-1. 只需资源/功耗/汇总时序趋势：留在 `fpga-ppa-analysis`。
-2. 已有 `.dcp`，需要查看关键路径、时钟交互或根因：转 `fpga-dcp-analysis`，仅 R0。
-3. 需要改 RTL、XDC 或实现策略：必须先完成 DCP 分析，再转 `fpga-timing-closure`，按 R2 批准与优化实验闭环执行。
-
-禁止从 WNS 单值推断“加流水”“放宽时钟”或“加 false path”。这些结论至少需要关键路径、clock interaction、CDC/协议证据和功能不变量。
+Do not infer pipelining, clock relaxation or false paths from WNS alone. These
+proposals require critical-path, clock-interaction, CDC/protocol evidence and
+explicit functional invariants.

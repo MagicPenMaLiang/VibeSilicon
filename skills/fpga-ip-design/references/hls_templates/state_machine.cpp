@@ -1,9 +1,9 @@
-// TODO 占位（Phase 0 D5 填）
+// TODO: unfinished scaffold; review and verify before use.
 //
-// 状态机模板（State Machine）
-// 适用：标准 FSM 模式（LLM 友好），如 SPI/UART/I2C
-// 计划 §6.1.1 references/hls_templates/state_machine.cpp
-// 计划 §3.2 Pilot 选择理由："标准 FSM 模式（LLM 友好）"
+// State machine template
+// Scope: illustrative FSM; this is not a complete peripheral protocol.
+// Reference: references/hls_templates/state_machine.cpp
+// TODO: define reset, illegal-state recovery and the accepted state contract.
 
 #pragma once
 #include "ap_int.h"
@@ -18,11 +18,11 @@ ap_uint<1> state_machine(ap_uint<8> data_in, ap_uint<STATE_W>& state) {
         if (data_in != 0) state = READ;
         break;
     case READ:
-        // TODO: 读数据逻辑
+        // TODO: read data logic
         state = WRITE;
         break;
     case WRITE:
-        // TODO: 写数据逻辑
+        // TODO: write data logic
         state = DONE;
         break;
     case DONE:

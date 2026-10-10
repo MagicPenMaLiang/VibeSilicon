@@ -15,7 +15,7 @@ class VitisHlsMcpSecurityTests(unittest.TestCase):
             old_root = vitis_hls.PROJECT_ROOT
             vitis_hls.PROJECT_ROOT = Path(root).resolve()
             try:
-                with self.assertRaisesRegex(ValueError, "项目根目录"):
+                with self.assertRaisesRegex(ValueError, "project root"):
                     vitis_hls._resolve_project_dir(outside)
             finally:
                 vitis_hls.PROJECT_ROOT = old_root

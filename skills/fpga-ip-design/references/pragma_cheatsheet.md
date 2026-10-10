@@ -1,22 +1,37 @@
-# TODO 占位（Phase 0 D5 填）
+# HLS scheduling decisions
 
-## 用途
+Read the selected Vitis HLS version's directive documentation. Record each pragma's intent, target loop/function and observed report result; a requested pipeline II is not an achieved II.
 
-HLS Pragma 速查手册。覆盖常用 Pragma 与适用场景。
-
-## 待填内容
-
-| Pragma | 用途 | 适用 |
+| Intent | Candidate technique | Required evidence |
 |---|---|---|
-| `#pragma HLS PIPELINE II=N` | 函数级流水线 | 计算密集循环 |
-| `#pragma HLS UNROLL factor=N` | 循环展开 | 小循环 + 资源充裕 |
-| `#pragma HLS ARRAY_PARTITION` | 数组分块 | 大数组 BRAM→LUTRAM |
-| `#pragma HLS RESOURCE variable=X core=RAM_1P` | 指定资源类型 | BRAM/URAM/LUTRAM 选择 |
-| `#pragma HLS DATA_PACK` | 结构体打包 | AXI 接口优化 |
-| `#pragma HLS INLINE` | 函数内联 | 减少调用开销 |
-| `#pragma HLS INTERFACE` | 接口协议 | m_axi / axis / bram 等 |
+| Sustained throughput | Pipeline reviewed loop | Achieved II, recurrence/port constraints, latency |
+| Parallel arithmetic | Bounded unroll | Resource growth, bandwidth, timing, exact results |
+| Concurrent stages | Dataflow with explicit FIFOs | Token rates, depth/deadlock, backpressure |
+| Memory bandwidth | Reviewed partition/banking | Port demand, RAM inference, neutral memory contract |
+| Resource sharing | Allocation/scheduling | II and latency guardrails |
 
-## 上游引用
+## Architecture record
 
-- `SKILL.md` → "核心内容" 第 1 项"HLS C++ 编写规范"
-- 计划 §4.5 HLS C++ 输出要求
+For each candidate directive, record the target loop/function, work per iteration,
+recurrence distance, required memory ports, resource budget, intended II/latency
+and tool version. In the report, distinguish requested values from achieved
+values and bind the measured result to the source/configuration hashes.
+
+- `PIPELINE` requests overlapped scheduling; dependencies and port pressure can
+  prevent the requested II. II and end-to-end latency are separate quantities.
+- `UNROLL` increases spatial work; confirm arithmetic and memory bandwidth costs
+  before selecting a factor. Reductions require a reviewed numeric and scheduling plan.
+- `DATAFLOW` requires compatible producer/consumer rates and bounded buffering;
+  test stalls, reset and deadlock rather than assuming automatic FIFOs suffice.
+- `ARRAY_PARTITION` or banking changes memory organization. Check port demand,
+  inferred storage and the FPGA/ASIC wrapper boundary.
+- `LOOP_TRIPCOUNT` supplies reporting information for loop bounds; it does not
+  replace the functional bound or prove latency.
+- Storage/operator binding and interface directives are tool/version dependent.
+  Use the selected release's documentation and preserve the reviewed contract.
+
+Do not erase real dependencies to satisfy scheduling. Do not partition all memories blindly or force DSP binding without target/resource evidence. Validate C simulation, synthesis reports, RTL co-simulation and appropriate implementation stages. Keep implementation-specific storage behind reviewed boundaries and record tool/version/configuration hashes.
+
+Consult the selected release of [AMD UG1399](https://docs.amd.com/r/en-US/ug1399-vitis-hls/Loop_tripcount)
+for directive semantics; the linked LOOP_TRIPCOUNT entry explicitly distinguishes
+analysis information from synthesis behavior.

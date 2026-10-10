@@ -217,3 +217,42 @@ python -m unittest discover -s tests -p "test_*.py"
 The three wrappers wrap those four commands plus the EDA probe and produce
 a structured report plus a stable exit code, which is useful for CI and
 for repeated local verification.
+
+## OpenCode integration
+
+Start OpenCode from the repository root after preparing the Python environment.
+`opencode.json` selects `orchestrator-fpga`, declares the four FPGA roles,
+and starts the three local MCP servers through `scripts/mcp_launcher.py`.
+The project enables these servers with a bounded 30-second startup timeout.
+Vendor executable paths can be supplied through the ignored
+`.vibesilicon/mcp-env.json` file using `VIVADO_BIN`, `VIVADO_SETTINGS` and
+`VITIS_RUN_BIN`; explicit environment variables take precedence.
+
+OpenCode automatically discovers `.opencode/plugins/vibesilicon-quality-gate.js`;
+the project does not need a second explicit plugin entry. The plugin checks RTL
+paths from the input of `tool.execute.after`, including patch move destinations.
+Failures are reported to the agent after the edit; the hook does not roll back
+the edit or supply engineering sign-off. Logs and JSON reports stay under the
+ignored `.vibesilicon/` directory.
+
+The gate selects `VIBESILICON_PYTHON`, then the project `.venv`, then
+`VIBESILICON_MCP_PYTHON`, then `python` from PATH. Keep interpreter overrides
+machine-local. OpenCode's project MCP settings also merge with user settings;
+inspect the resolved configuration when diagnosing inherited entries.
+
+Run these checks from the repository root:
+
+```bash
+opencode --version
+opencode debug config
+opencode debug skill
+opencode debug agent orchestrator-fpga
+opencode mcp list
+python -m unittest discover -s tests -p "test_opencode_plugin.py"
+```
+
+The plugin regression tests require Node.js and exercise successful and failed
+checks, patch moves, missing tools and workspace boundaries. Configuration, MCP
+connectivity and RTL gates are separate from model-provider authentication and
+from vendor synthesis, implementation or hardware validation. Treat resolved
+configuration output as local diagnostic data; it can include user settings.

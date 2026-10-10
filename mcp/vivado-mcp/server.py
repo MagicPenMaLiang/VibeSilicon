@@ -59,7 +59,7 @@ def _inside_root(path: Path, root: Path | None = None) -> Path:
     try:
         path.relative_to(root)
     except ValueError as exc:
-        raise ValueError(f"路径超出允许的项目根目录：{path}") from exc
+        raise ValueError(f"path escapes the allowed project root: {path}") from exc
     return path
 
 
@@ -68,7 +68,7 @@ def _resolve_project_path(arg: str) -> Path:
     path = (raw if raw.is_absolute() else PROJECT_ROOT / raw).resolve(strict=True)
     _inside_root(path)
     if not path.is_file() or path.suffix.lower() != ".xpr":
-        raise ValueError(f"project_path 必须是项目根目录内的 .xpr 文件：{path}")
+        raise ValueError(f"project_path must be a .xpr file within project root: {path}")
     return path
 
 
@@ -77,7 +77,7 @@ def _resolve_project_file(arg: str, suffix: str) -> Path:
     path = (raw if raw.is_absolute() else PROJECT_ROOT / raw).resolve(strict=True)
     _inside_root(path)
     if not path.is_file() or path.suffix.lower() != suffix:
-        raise ValueError(f"脚本必须是项目根目录内的 {suffix} 文件：{path}")
+        raise ValueError(f"script must be a {suffix} file within project root: {path}")
     return path
 
 
@@ -86,47 +86,47 @@ def _resolve_output_path(arg: str | None, default: Path, suffix: str) -> Path:
     path = (raw if raw.is_absolute() else PROJECT_ROOT / raw).resolve(strict=False)
     _inside_root(path)
     if path.suffix.lower() != suffix:
-        raise ValueError(f"输出文件必须使用 {suffix} 后缀：{path}")
+        raise ValueError(f"output file must use the {suffix} suffix: {path}")
     return path
 
 
 def _validate_identifier(value: str, field: str) -> str:
     if not isinstance(value, str) or not IDENTIFIER_RE.fullmatch(value):
-        raise ValueError(f"{field} 包含非法 Tcl 字符：{value!r}")
+        raise ValueError(f"{field} contains invalid Tcl characters: {value!r}")
     return value
 
 
 def _validate_run(value: str) -> str:
     if not isinstance(value, str) or not RUN_RE.fullmatch(value):
-        raise ValueError(f"run 名称非法：{value!r}")
+        raise ValueError(f"invalid run name: {value!r}")
     return value
 
 
 def _validate_part(value: str) -> str:
     if not isinstance(value, str) or not PART_RE.fullmatch(value):
-        raise ValueError(f"器件 part 名称非法：{value!r}")
+        raise ValueError(f"invalid device part name: {value!r}")
     return value
 
 
 def _validate_strategy(value: str) -> str:
     if value not in ALLOWED_STRATEGIES:
-        raise ValueError(f"不允许的实现策略：{value!r}")
+        raise ValueError(f"implementation strategy is not allowed: {value!r}")
     return value
 
 
 def _validate_bitstream_name(value: str) -> str:
     name = Path(value)
     if name.name != value or name.suffix.lower() != ".bit":
-        raise ValueError("bitstream_name 必须是无目录的 .bit 文件名")
+        raise ValueError("bitstream_name must be a .bit filename without directories")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+\.bit", value, re.IGNORECASE):
-        raise ValueError(f"bitstream_name 包含非法字符：{value!r}")
+        raise ValueError(f"bitstream_name contains invalid characters: {value!r}")
     return value
 
 
 def _tcl_path(path: Path) -> str:
     value = path.as_posix()
     if any(char in value for char in "{}\n\r"):
-        raise ValueError(f"路径不能安全表示为 Tcl：{path}")
+        raise ValueError(f"path cannot be represented safely in Tcl: {path}")
     return "{" + value + "}"
 
 
@@ -241,7 +241,7 @@ async def list_tools() -> list[Tool]:
     tools = [
         Tool(
             name="backend_capabilities",
-            description="发现所选 Vivado backend 能力、隐私默认值和实际可用性",
+            description="Discover selected Vivado backend capabilities, privacy defaults and actual availability",
             inputSchema={
                 "type": "object",
                 "properties": {"probe": {"type": "boolean", "default": False}},
@@ -249,7 +249,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="synth_design",
-            description="Vivado 综合：synth_design + 资源报告",
+            description="Run Vivado synthesis and collect resource reports",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -262,7 +262,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="place_route",
-            description="Vivado 实现：place + route + 报告",
+            description="Run Vivado placement and routing and collect reports",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -288,7 +288,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="analyze_checkpoint",
-            description="只读打开综合后/实现后 DCP，生成时序摘要、关键路径和时钟交互证据",
+            description="Open a synthesis/implementation DCP read-only and collect timing summary, critical paths and clock interaction evidence",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -319,7 +319,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="write_bitstream",
-            description="Vivado 生成 bitstream",
+            description="Generate a Vivado bitstream",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -334,7 +334,7 @@ async def list_tools() -> list[Tool]:
         tools.append(
             Tool(
                 name="run_script",
-                description="运行项目内、SHA-256 allowlist 已批准的 Tcl 脚本",
+                description="Run a project-local Tcl script approved by the SHA-256 allowlist",
                 inputSchema={
                     "type": "object",
                     "properties": {
@@ -364,7 +364,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if ALLOW_RUN_SCRIPT:
         allowed.add("run_script")
     if name not in allowed:
-        return _error(f"未知或被策略禁用的 tool: {name}")
+        return _error(f"unknown or policy-disabled tool: {name}")
 
     try:
         if name == "backend_capabilities":
@@ -384,7 +384,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 or not isinstance(max_paths, int)
                 or not 1 <= max_paths <= 100
             ):
-                raise ValueError("max_paths 必须是 1 到 100 的整数")
+                raise ValueError("max_paths must be an integer from 1 to 100")
             work_dir = checkpoint.parent / ".vibesilicon" / "vivado" / "dcp_analysis"
             work_dir.mkdir(parents=True, exist_ok=True)
             timing_report = work_dir / "timing_summary.rpt"
@@ -412,7 +412,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 raw_artifacts = (timing_report, paths_report, clocks_report)
                 missing = [str(path) for path in raw_artifacts if not path.is_file()]
                 if missing:
-                    return _error("DCP 分析报告不完整", status="ERROR", missing=missing)
+                    return _error("DCP analysis reports are incomplete", status="ERROR", missing=missing)
                 receipt = result["report_evidence"]["timing_report"]
                 analysis = {
                     "schema_version": 1,
@@ -555,10 +555,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         supplied_hash = str(arguments["sha256"]).lower()
         actual_hash = hashlib.sha256(script_path.read_bytes()).hexdigest()
         if supplied_hash != actual_hash or actual_hash not in SCRIPT_HASH_ALLOWLIST:
-            return _error("Tcl 脚本 SHA-256 未获批准", actual_sha256=actual_hash)
+            return _error("Tcl script SHA-256 is not approved", actual_sha256=actual_hash)
         content = script_path.read_text(encoding="utf-8", errors="strict")
         if re.search(r"(?im)^\s*(exec\b|file\s+(delete|rename)\b)", content):
-            return _error("批准脚本仍包含策略禁止的外部执行或文件破坏命令")
+            return _error("approved script still contains prohibited external execution or destructive file commands")
         timeout = arguments.get("timeout", 3600)
         return _json_text(_run_vivado(script_path, project_path.parent, timeout=timeout))
     except BackendBlockedError as exc:

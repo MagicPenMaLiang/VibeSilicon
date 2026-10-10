@@ -1,18 +1,8 @@
-# TODO 占位（Phase 0 D5 填）
+# Numeric width mapping reference scaffold
 
-## 用途
+This reference is unfinished. The project's accepted numeric contract is the
+authority for signedness, widths, fractional bits, rounding and overflow.
 
-`np.uintN ↔ ap_uint<N>` 位宽严格对应规则表 + `Q_FRAC` 量化方案参考。
-
-## 待填内容
-
-1. 位宽对应表（来自计划 §4.4）
-2. Q_FRAC 命名规范（Q4.4 / Q2.8 / Q0.12 / Q8.8）
-3. np.int16 ↔ ap_int<16> 有符号运算注意事项
-4. 位宽溢出检测 + 截断/饱和策略
-5. 实际工程中遇到的位宽不匹配案例（来自 reference/lessons/）
-
-## 上游引用
-
-- `SKILL.md` → "核心内容" 第 1 项"位宽严格对应规则"
-- 计划 §4.4 表
+TODO: document NumPy-to-HLS type mappings, explicit intermediate widths,
+fixed-point naming, truncation and saturation, and verified boundary vectors.
+Do not infer a numeric contract from an illustrative type name or template.

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-vitis-hls-mcp: Vitis HLS 工具集成 MCP 服务器
+vitis-hls-mcp: Bounded Vitis HLS integration MCP server.
 
-按计划 §6.2.1 暴露 4 个工具：
-- csim：C-Sim（与 Python 黄金参考 diff==0）
-- csynth：C-Synth（生成 RTL + 资源报告）
-- co_sim：RTL co-simulation
-- export：导出 IP-XACT / Vivado IP / Vitis Kernel
+Exposes four tools:
+- csim: C simulation against a project-supplied self-checking testbench.
+- csynth: C synthesis producing RTL and resource reports.
+- co_sim: RTL co-simulation
+- export: Export IP-XACT, Vivado IP or Vitis kernel artifacts.
 
-用法（opencode.json 已注册）：
+Usage (registered in opencode.json):
   python mcp/vitis-hls-mcp/server.py
 
-环境变量（来自 opencode.json mcpServers.vitis-hls.env）：
-  VITIS_HLS_BIN  ：vitis_hls.bat 绝对路径
-  VITIS_HLS_PATH ：Vitis HLS 安装根目录
+Tool selection comes from the launcher environment or PATH:
+  VITIS_RUN_BIN: Selected vitis-run or legacy vitis_hls executable.
+  VITIS_HLS_PATH: Optional HLS installation root used by the launcher.
 """
 
 import asyncio
@@ -52,21 +52,21 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="csim",
-            description="HLS C-Sim：编译并运行 .cpp testbench，bit-match Python 黄金参考即 PASS",
+            description="Run HLS C simulation; correctness requires independent checks against the frozen golden reference",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "project_dir": {
                         "type": "string",
-                        "description": "HLS 工程目录（绝对路径或相对 cwd）",
+                        "description": "HLS project directory within the declared project root",
                     },
                     "top_function": {
                         "type": "string",
-                        "description": "顶层函数名（set_top 的目标）",
+                        "description": "Top-level function name used by set_top",
                     },
                     "testbench": {
                         "type": "string",
-                        "description": "testbench .cpp 路径（相对 project_dir）",
+                        "description": "Testbench .cpp path relative to project_dir",
                         "default": "testbench.cpp",
                     },
                 },
@@ -75,7 +75,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="csynth",
-            description="HLS C-Synth：综合生成 RTL + 资源报告（BRAM/URAM/DSP/LUT/FF）",
+            description="Run HLS C synthesis to produce RTL and BRAM/URAM/DSP/LUT/FF reports",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -84,11 +84,11 @@ async def list_tools() -> list[Tool]:
                     "clock_period_ns": {
                         "type": "number",
                         "default": DEFAULT_CLOCK_NS,
-                        "description": "时钟周期（ns），默认 100 MHz",
+                        "description": "Clock period in ns (default 10 ns, equivalent to 100 MHz)",
                     },
                     "part": {
                         "type": "string",
-                        "description": "完整 FPGA part 名称；不得依赖仓库内默认器件",
+                        "description": "Complete reviewed FPGA part name; no repository-default device",
                     },
                 },
                 "required": ["project_dir", "top_function", "part"],
@@ -96,7 +96,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="co_sim",
-            description="RTL Co-Sim：用 Vivado XSim 验证 C-Synth 生成的 RTL 与 C++ 等价",
+            description="Run RTL co-simulation against the C++ testbench using the configured simulation flow",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -108,7 +108,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="export",
-            description="导出 IP：ipxact（Vivado 通用）/ vivado_ip（Vivado IP-XACT 打包）/ vitis_kernel（Vitis .xo）",
+            description="Export IP: ipxact, vivado_ip or vitis_kernel (.xo)",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -127,7 +127,7 @@ async def list_tools() -> list[Tool]:
 
 
 def _run_vitis_hls(tcl_path: Path, cwd: Path) -> dict[str, Any]:
-    """执行 vitis_hls -f <tcl>，捕获 stdout/stderr 尾部避免上下文爆炸。"""
+    """Execute the selected HLS tool and capture bounded stdout/stderr excerpts."""
     arguments = [VITIS_RUN_BIN, "--mode", "hls", "--tcl", str(tcl_path)]
     cmd = ["cmd", "/c", *arguments] if os.name == "nt" and VITIS_RUN_BIN.lower().endswith((".bat", ".cmd")) else arguments
     try:
@@ -136,7 +136,7 @@ def _run_vitis_hls(tcl_path: Path, cwd: Path) -> dict[str, Any]:
             cwd=str(cwd),
             capture_output=True,
             text=True,
-            timeout=900,  # 15 分钟（csynth 可能较慢）
+            timeout=900,  # 15 minutes; synthesis can take longer than C simulation.
             shell=False,
         )
         return {
@@ -177,23 +177,23 @@ def _resolve_project_dir(arg: str) -> Path:
     try:
         path.relative_to(PROJECT_ROOT)
     except ValueError as exc:
-        raise ValueError("project_dir 超出允许的项目根目录") from exc
+        raise ValueError("project_dir escapes the allowed project root") from exc
     if not path.is_dir():
-        raise ValueError("project_dir 必须是目录")
+        raise ValueError("project_dir must be a directory")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", path.name):
-        raise ValueError("project_dir 名称包含不安全的 Tcl 字符")
+        raise ValueError("project_dir name contains unsafe Tcl characters")
     return path
 
 
 def _identifier(value: Any, field: str) -> str:
     if not isinstance(value, str) or not IDENTIFIER_RE.fullmatch(value):
-        raise ValueError(f"{field} 包含不安全字符")
+        raise ValueError(f"{field} contains unsafe characters")
     return value
 
 
 def _part(value: Any) -> str:
     if not isinstance(value, str) or not PART_RE.fullmatch(value):
-        raise ValueError("part 名称无效")
+        raise ValueError("invalid part name")
     return value
 
 
@@ -206,7 +206,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         return [
             TextContent(
                 type="text",
-                text=f"ERROR: project_dir 不存在：{project_dir}",
+                text=f"ERROR: project_dir does not exist: {project_dir}",
             )
         ]
 
@@ -227,7 +227,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     elif name == "csynth":
         clock_ns = arguments.get("clock_period_ns", DEFAULT_CLOCK_NS)
         if isinstance(clock_ns, bool) or not isinstance(clock_ns, (int, float)) or not math.isfinite(clock_ns) or clock_ns <= 0:
-            return [TextContent(type="text", text="ERROR: clock_period_ns 必须是正有限数")]
+            return [TextContent(type="text", text="ERROR: clock_period_ns must be a positive finite number")]
         part = _part(arguments["part"])
         tcl = (
             f"open_project {project_dir.name}\n"
@@ -242,7 +242,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         tcl_path = _write_tcl(project_dir, tcl)
         result = _run_vitis_hls(tcl_path, project_dir)
 
-        # 解析 csynth 报告（计划 §11.2 ③ 命令 + 预期输出）
+        # Preserve a bounded synthesis-report excerpt for review.
         csynth_report = project_dir / "solution1" / "syn" / "report" / "csynth.rpt"
         if csynth_report.exists():
             result["csynth_report_excerpt"] = csynth_report.read_text(
@@ -272,7 +272,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             cmd = "export_design -format vitis_kernel"
         else:
             return [
-                TextContent(type="text", text=f"ERROR: 未知 format: {fmt}")
+                TextContent(type="text", text=f"ERROR: unknown format: {fmt}")
             ]
 
         tcl = (
@@ -286,7 +286,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         result = _run_vitis_hls(tcl_path, project_dir)
         return [TextContent(type="text", text=str(result))]
 
-    return [TextContent(type="text", text=f"ERROR: 未知 tool: {name}")]
+    return [TextContent(type="text", text=f"ERROR: unknown tool: {name}")]
 
 
 async def main():

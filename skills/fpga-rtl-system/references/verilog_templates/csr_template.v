@@ -1,8 +1,8 @@
-// TODO 占位（Phase 0 D5 填）
+// TODO: unfinished scaffold; review and verify before use.
 //
-// CSR（Configuration and Status Register）模板
-// 适用：APB/AXI-Lite 从机接口的标准寄存器组
-// 计划 §6.1.5 4 类常见模式 → CSR
+// Configuration and status register scaffold
+// Scope: register-bank interface only; outputs and bus behavior are not implemented.
+// TODO: define the register and transaction contract.
 
 module csr_template #(
     parameter ADDR_WIDTH = 8,
@@ -18,9 +18,9 @@ module csr_template #(
     output reg                     irq_o
 );
 
-    // TODO: 寄存器地址映射
-    // TODO: 写脉冲 + 读组合
-    // TODO: 中断状态寄存器 + 清中断
-    // TODO: 位域访问宏（CSRF_FIELD 之类）
+    // TODO: register address map
+    // TODO: write strobes and read behavior
+    // TODO: interrupt status and clearing semantics
+    // TODO: reviewed field access definitions
 
 endmodule
