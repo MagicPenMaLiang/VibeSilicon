@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Exact-target FPGA operation request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "operation",
+    "device",
+    "artifacts",
+    "options",
+    "timeout_seconds"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "operation": {
+      "enum": [
+        "program",
+        "capture",
+        "flash"
+      ]
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "name",
+        "part"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "pattern": "^localhost:3121/[A-Za-z0-9_./:-]+$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./:-]+$"
+        },
+        "part": {
+          "type": "string",
+          "pattern": "^xc[a-z0-9-]+$"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bitstream": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        },
+        "probes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          }
+        }
+      },
+      "required": [
+        "bitstream",
+        "build"
+      ]
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "core": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./:-]+$"
+        },
+        "depth": {
+          "type": "integer",
+          "enum": [
+            16,
+            32,
+            64,
+            128,
+            256,
+            512,
+            1024,
+            2048,
+            4096,
+            8192,
+            16384,
+            32768,
+            65536,
+            131072
+          ]
+        },
+        "flash_part": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./:-]+$"
+        }
+      }
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 600
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "program"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "maxProperties": 2
+          },
+          "options": {
+            "maxProperties": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "required": [
+              "probes"
+            ],
+            "maxProperties": 3
+          },
+          "options": {
+            "required": [
+              "core",
+              "depth"
+            ],
+            "maxProperties": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "flash"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "required": [
+              "image"
+            ],
+            "maxProperties": 3
+          },
+          "options": {
+            "required": [
+              "flash_part"
+            ],
+            "maxProperties": 1
+          }
+        }
+      }
+    }
+  ]
+}

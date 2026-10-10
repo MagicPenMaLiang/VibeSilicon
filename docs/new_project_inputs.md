@@ -21,6 +21,12 @@ VibeSilicon distinguishes FPGA and ASIC targets at project intake. Use separate 
 - Synthesis/implementation strategy and required reports.
 - Hardware test plan, safe programming procedure, and human approval boundary.
 
+For the bounded adapters, declare report/coverage acceptance separately from
+hardware validation. Use `schemas/rtl_coverage_contract.schema.json` for supported
+line coverage, `templates/fpga_board_request.json.tpl` for exact-target operations,
+and `templates/fpga_soc_plan.json.tpl` for PS7/MPSoC input preflight. See
+`docs/fpga_skill_rollout.md` for artifact binding and operation-specific approvals.
+
 ## ASIC target
 
 - External PDK root and an allowlisted manifest of liberty, LEF, RC, SDC, GDS, and rule-deck views.

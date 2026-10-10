@@ -21,7 +21,7 @@ exit code table.
 ## What is included
 
 - Agent roles for architecture, implementation, review, and workflow orchestration.
-- Skills for RTL/HLS design, CDC, formal verification, timing closure, and PPA analysis.
+- 19 skills covering RTL/HLS, constraints, simulation, coverage, CDC, formal, timing/PPA optimization and reviewed board operations.
 - MCP servers for Python simulation, Vitis HLS, and Vivado.
 - Deterministic RTL manifest, lint, readability, waiver, protocol, and smoke-test gates.
 - ASIC synthesis, STA, physical-flow evidence, and PPA report contracts.
@@ -75,9 +75,22 @@ The gate validates the selected source manifest, performs configured lint/readab
 
 The ASIC adapters consume a reviewed manifest and external PDK views. They emit content-addressed synthesis, STA, physical-flow, and PPA evidence. PDK and design assets remain outside the repository. See [docs/asic_ppa.md](docs/asic_ppa.md).
 
+### FPGA report, coverage and board adapters
+
+Use the fixed `collect_reports` Vivado MCP tool for a source-bound DCP report
+bundle and `python -m scripts.quality_gate.rtl_coverage` for declared Verilator
+line coverage with preserved logs. Board requests default to preview and require
+exact device/artifact binding plus external operation-specific approval for
+execution. PS7/MPSoC support currently validates bring-up inputs; board checks
+remain explicit. See [docs/fpga_skill_rollout.md](docs/fpga_skill_rollout.md).
+
 ### Agent integrations
 
 Canonical instructions live in `AGENTS.md`, `skills/`, and `subagents/`. Thin adapters are provided for Claude Code, Codex, and OpenCode. MCP configuration uses environment variables or commands available on `PATH`; no machine-specific path is committed.
+
+Native Codex/Claude skill copies include the complete supporting resources.
+Run `python scripts/sync_skills.py --write` after canonical edits, followed by
+`--check`; CI rejects missing or divergent resources.
 
 ## Security model
 
