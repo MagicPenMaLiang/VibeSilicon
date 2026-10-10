@@ -29,6 +29,8 @@ jobs:
         run: python scripts/public_release_audit.py
       - name: Python lint
         run: python -m ruff check scripts mcp tests
+      - name: Skill resources and native adapter parity
+        run: python scripts/sync_skills.py --check
       - name: Unit and contract tests
         run: python -m unittest discover -s tests -p "test_*.py"
 
@@ -45,3 +47,5 @@ jobs:
         run: verilator --lint-only --Wall examples/rtl/counter/rtl/counter.sv
       - name: Run neutral G0-G2 RTL gate
         run: python -m scripts.quality_gate.rtl_project_gate examples/rtl/counter/rtl_project_manifest.json
+      - name: Run declared counter line coverage
+        run: python -m scripts.quality_gate.rtl_coverage examples/rtl/counter/rtl_project_manifest.json examples/rtl/counter/rtl_coverage_contract.json

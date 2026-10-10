@@ -117,8 +117,18 @@ def _contract(root: Path, manifest: dict, path: Path) -> tuple[dict, Path]:
     return data, testbench
 
 
-def _run(root: Path, manifest: dict, contract: dict, testbench: Path, tool: dict) -> dict:
+def _run(root: Path, manifest: dict, contract: dict, testbench: Path, tool: dict,
+         *, artifact_dir: Path | None = None, coverage: bool = False) -> dict:
     timeout = contract["timeout_seconds"]
+    def log(name: str, result) -> None:
+        if artifact_dir is not None:
+            stdout = getattr(result, "stdout", "") or ""
+            stderr = getattr(result, "stderr", "") or ""
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode("utf-8", errors="replace")
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode("utf-8", errors="replace")
+            (artifact_dir / f"{name}.log").write_text(stdout + "\n" + stderr, encoding="utf-8")
     with tempfile.TemporaryDirectory(prefix="vibesilicon-project-smoke-") as directory:
         object_dir = Path(directory) / "obj"
         source_paths = [root / path for path in manifest["sources"]] + [testbench]
@@ -132,25 +142,57 @@ def _run(root: Path, manifest: dict, contract: dict, testbench: Path, tool: dict
             include_args = [str(path) for path in include_paths]
             object_arg = str(object_dir)
         args = [
-            "--binary", "--timing", "--assert", "--top-module", contract["top"],
+            *(["--cc", "--exe", "--build"] if coverage else ["--binary"]),
+            "--timing", "--assert", "--top-module", contract["top"],
             "--Mdir", object_arg, "-Wno-fatal",
         ]
+        if coverage:
+            if artifact_dir is None:
+                raise ManifestError("coverage requires persistent artifact directory")
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", contract["top"]):
+                raise ManifestError("coverage top requires a C++ compatible identifier")
+            # Older supported Verilator 5 releases do not dump coverage from
+            # --binary's generated main. Use a fixed owned harness instead.
+            harness = artifact_dir / "coverage_main.cpp"
+            harness.write_text(
+                '#include "verilated.h"\n#include "verilated_cov.h"\n'
+                f'#include "V{contract["top"]}.h"\n'
+                'int main(int argc, char** argv) {\n'
+                '  if (argc != 2) return 2;\n'
+                '  VerilatedContext context;\n  context.commandArgs(argc, argv);\n'
+                f'  V{contract["top"]} model{{&context}};\n'
+                '  while (!context.gotFinish()) {\n    model.eval();\n'
+                '    if (!model.eventsPending()) break;\n'
+                '    context.time(model.nextTimeSlot());\n  }\n'
+                '  model.final();\n  context.coveragep()->write(argv[1]);\n'
+                '  return context.gotFinish() && !context.gotError() ? 0 : 1;\n}\n',
+                encoding="utf-8",
+            )
+            args.append("--coverage-line")
+            args.extend(["-CFLAGS", "-DVL_TIME_CONTEXT"])
+            args.append(_msys_path(harness) if tool["kind"] == "MSYS2_FIXED_BRIDGE" else str(harness))
         args.extend(f"-I{path}" for path in include_args)
         args.extend(f"+define+{key}={value}" for key, value in sorted(manifest["defines"].items()))
         args.extend(f"-G{key}={value}" for key, value in sorted(manifest["parameters"].items()))
         if os.name == "nt":
             args.extend(["-CFLAGS", "-D_GLIBCXX_USE_CXX11_ABI=0"])
         args.extend(source_args)
+        if artifact_dir is not None:
+            (artifact_dir / "compile.command.json").write_text(
+                json.dumps({"argv": list(tool["command"]) + args, "cwd": str(root)}), encoding="utf-8")
         try:
             built = subprocess.run(
                 list(tool["command"]) + args, cwd=root, capture_output=True,
                 text=True, encoding="utf-8", errors="replace", timeout=timeout,
                 check=False,
             )
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as exc:
+            log("compile", exc)
             return {"compile": "TIMEOUT", "run": "NOT_RUN", "pass_token_count": 0}
-        except OSError:
+        except OSError as exc:
+            log("compile", exc)
             return {"compile": "ERROR", "run": "NOT_RUN", "pass_token_count": 0}
+        log("compile", built)
         if built.returncode:
             return {"compile": "FAIL", "run": "NOT_RUN", "pass_token_count": 0}
         binary = object_dir / (f"V{contract['top']}.exe" if os.name == "nt" else f"V{contract['top']}")
@@ -162,15 +204,28 @@ def _run(root: Path, manifest: dict, contract: dict, testbench: Path, tool: dict
             if wrapper:
                 environment["PATH"] = str(Path(wrapper).parent) + os.pathsep + environment.get("PATH", "")
         try:
+            run_args = [str(binary)]
+            if coverage:
+                destination = artifact_dir / "coverage.dat"
+                # The generated executable is native even when compilation
+                # uses the MSYS bridge; its file argument needs a native path.
+                value = destination.as_posix()
+                run_args.append(value)
+            if artifact_dir is not None:
+                (artifact_dir / "run.command.json").write_text(
+                    json.dumps({"argv": run_args, "cwd": str(root)}), encoding="utf-8")
             ran = subprocess.run(
-                [str(binary)], cwd=root, env=environment, capture_output=True,
+                run_args, cwd=root, env=environment, capture_output=True,
                 text=True, encoding="utf-8", errors="replace", timeout=timeout,
                 check=False,
             )
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as exc:
+            log("run", exc)
             return {"compile": "PASS", "run": "TIMEOUT", "pass_token_count": 0}
-        except OSError:
+        except OSError as exc:
+            log("run", exc)
             return {"compile": "PASS", "run": "ERROR", "pass_token_count": 0}
+        log("run", ran)
         return {
             "compile": "PASS", "run": "PASS" if ran.returncode == 0 else "FAIL",
             "pass_token_count": (ran.stdout or "").count(contract["pass_token"]),

@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ from mcp.types import TextContent, Tool
 
 from scripts.vivado_backend import BackendBlockedError
 from scripts.vivado_backend_selector import close_vivado_backend, select_vivado_backend
+from scripts.fpga_reports import report_plan, collect_bundle
 
 
 VIVADO_BIN = os.environ.get("VIVADO_BIN") or shutil.which("vivado") or "vivado"
@@ -329,6 +331,16 @@ async def list_tools() -> list[Tool]:
                 "required": ["project_path"],
             },
         ),
+        Tool(
+            name="collect_reports",
+            description="只读 DCP 报告集：时序、CDC、资源、层次、功耗、约束、DRC、方法和布线；内容哈希绑定",
+            inputSchema={
+                "type": "object",
+                "properties": {"checkpoint_path": {"type": "string"}},
+                "required": ["checkpoint_path"],
+                "additionalProperties": False,
+            },
+        ),
     ]
     if ALLOW_RUN_SCRIPT:
         tools.append(
@@ -360,6 +372,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         "analyze_checkpoint",
         "report_cdc",
         "write_bitstream",
+        "collect_reports",
     }
     if ALLOW_RUN_SCRIPT:
         allowed.add("run_script")
@@ -367,6 +380,22 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         return _error(f"未知或被策略禁用的 tool: {name}")
 
     try:
+        if name == "collect_reports":
+            if set(arguments) != {"checkpoint_path"}:
+                raise ValueError("collect_reports accepts only checkpoint_path")
+            checkpoint = _resolve_project_file(arguments["checkpoint_path"], ".dcp")
+            relative = checkpoint.relative_to(PROJECT_ROOT).as_posix()
+            directory = f".vibesilicon/reports/{uuid.uuid4().hex}"
+            plan = report_plan(PROJECT_ROOT, relative, directory)
+            work = PROJECT_ROOT / directory
+            work.mkdir(parents=True, exist_ok=False)
+            tcl = work / "collect.tcl"
+            tcl.write_text(plan["tcl"], encoding="utf-8")
+            result = _run_vivado(tcl, work, timeout=600, risk_class="R0")
+            bundle = collect_bundle(PROJECT_ROOT, plan, result)
+            output = work / "bundle.json"
+            output.write_text(json.dumps(bundle, indent=2, ensure_ascii=False), encoding="utf-8")
+            return _json_text({"status": bundle["status"], "bundle": bundle, "output": str(output)})
         if name == "backend_capabilities":
             backend = _selected_backend()
             try:

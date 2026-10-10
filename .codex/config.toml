@@ -26,5 +26,5 @@ command = "python"
 args = ["scripts/mcp_launcher.py", "vivado"]
 cwd = "."
 env_vars = ["VIVADO_BIN", "VIVADO_SETTINGS", "VIBESILICON_ALLOW_RUN_SCRIPT", "VIBESILICON_TCL_ALLOWLIST"]
-enabled_tools = ["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream"]
+enabled_tools = ["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream", "collect_reports"]
 default_tools_approval_mode = "writes"

@@ -176,7 +176,7 @@ class PlatformAdapterTests(unittest.TestCase):
         self.assertIn('["fxp_sim", "numpy_diff", "load_vectors", "psnr_ssim"]', config)
         self.assertIn('["csim", "csynth", "co_sim", "export"]', config)
         self.assertIn(
-            '["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream"]',
+            '["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream", "collect_reports"]',
             config,
         )
         self.assertNotIn('"run_script"', config)
