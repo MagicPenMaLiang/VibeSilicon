@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import re
 import shlex
@@ -88,6 +89,42 @@ class PlatformAdapterTests(unittest.TestCase):
             with self.subTest(server=name):
                 self.assertEqual(completed.returncode, 0, completed.stderr)
                 self.assertEqual(json.loads(completed.stdout)["status"], "PASS")
+
+    def test_claude_mcp_configured_commands_can_find_runtime(self):
+        config = json.loads((ROOT / ".mcp.json").read_text(encoding="utf-8"))
+        environment = os.environ.copy()
+        # The test runtime has the locked dependencies even in a checkout
+        # without its own .venv (for example CI or an isolated worktree).
+        environment["VIBESILICON_MCP_PYTHON"] = sys.executable
+        for name, server in config["mcpServers"].items():
+            # Claude expands the default when its own environment has no
+            # CLAUDE_PROJECT_DIR; it injects that variable only in the child.
+            args = [arg.replace("${CLAUDE_PROJECT_DIR:-.}", ".") for arg in server["args"]]
+            completed = subprocess.run(
+                [server["command"], *args, "--probe"], cwd=ROOT,
+                env=environment, capture_output=True, text=True, timeout=30,
+            )
+            with self.subTest(server=name):
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertEqual(json.loads(completed.stdout)["status"], "PASS")
+
+    def test_claude_configured_hook_checks_edit_payload(self):
+        config = json.loads((ROOT / ".claude/settings.json").read_text(encoding="utf-8"))
+        group = config["hooks"]["PostToolUse"][0]
+        self.assertRegex("Edit", group["matcher"])
+        command = shlex.split(group["hooks"][0]["command"])
+        command[0] = sys.executable
+        command = [arg.replace("${CLAUDE_PROJECT_DIR}", str(ROOT)) for arg in command]
+        for filename, expected_exit in [("rtl/definitely_missing.sv", 2), ("docs/example.md", 0)]:
+            payload = {
+                "cwd": str(ROOT), "tool_name": "Edit",
+                "tool_input": {"file_path": filename},
+            }
+            completed = subprocess.run(
+                command, cwd=ROOT, input=json.dumps(payload), capture_output=True, text=True, timeout=10,
+            )
+            with self.subTest(filename=filename):
+                self.assertEqual(completed.returncode, expected_exit, completed.stderr)
 
     def test_codex_configured_hook_checks_apply_patch_payload(self):
         config = json.loads((ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))

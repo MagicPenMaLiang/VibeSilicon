@@ -35,9 +35,12 @@ build/
 .env
 .env.*
 *.local
+.claude/settings.local.json
 secrets/
 licenses/
 pdks/
 runner-work/
 artifacts/
+.tmp/
+.Xil/
 reports/private/

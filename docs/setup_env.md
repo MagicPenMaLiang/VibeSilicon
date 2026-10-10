@@ -143,6 +143,31 @@ These are listed in the report under `eda:<name>` with a `WARN` status when
 missing. The launcher does not fail on optional tools; CI agents can opt in
 by checking the `--json` output and the `exit_code == 10` signal.
 
+## Claude Code integration
+
+Start Claude Code from the repository root after preparing `.venv`. The
+project `.mcp.json` starts all three servers through `scripts/mcp_launcher.py`,
+which selects a Python runtime with the required MCP dependencies. A local
+`VIBESILICON_MCP_PYTHON` environment variable can select a preferred runtime;
+do not put machine-specific interpreter paths into shared settings.
+
+The shared `.claude/settings.json` enables only `python-sim`, `vitis-hls`,
+and `vivado`, and retains the RTL edit hook. Claude Code applies shared
+project MCP approvals after workspace trust; accept its workspace trust
+dialog when opening the project. See the
+[Claude Code MCP trust documentation](https://code.claude.com/docs/en/mcp#project-server-approvals-and-workspace-trust).
+This server list does not bypass tool permissions or engineering sign-off.
+
+Use the ignored `.vibesilicon/mcp-env.json` described below for local EDA
+paths shared by Claude Code and Codex. Claude-only overrides may be stored
+in `.claude/settings.local.json`, which is also ignored by Git. Keep any
+existing local overrides when updating the shared configuration.
+
+Restart Claude Code after updating configuration. Run `claude mcp get`
+for each of the three server names, or inspect `/mcp` in the session, to
+verify connection status. A connected server does not prove that an EDA
+license or a hardware run is available.
+
 ## Codex integration
 
 Start Codex with the repository root as the working directory. The project

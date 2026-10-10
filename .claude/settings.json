@@ -1,4 +1,9 @@
 {
+  "enabledMcpjsonServers": [
+    "python-sim",
+    "vitis-hls",
+    "vivado"
+  ],
   "hooks": {
     "PostToolUse": [
       {
