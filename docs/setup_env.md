@@ -143,6 +143,39 @@ These are listed in the report under `eda:<name>` with a `WARN` status when
 missing. The launcher does not fail on optional tools; CI agents can opt in
 by checking the `--json` output and the `exit_code == 10` signal.
 
+## Codex integration
+
+Start Codex with the repository root as the working directory. The project
+`.codex/config.toml` uses `cwd = "."` for the three MCP launchers. Trust the
+project so its config and `.agents/skills/` are available. The native Codex
+agents in `.codex/agents/` reference the canonical contracts in `subagents/`;
+the reviewer additionally uses a read-only sandbox.
+
+For machine-specific EDA paths, create `.vibesilicon/mcp-env.json` locally:
+
+```json
+{
+  "VIVADO_BIN": "/absolute/path/to/vivado",
+  "VITIS_RUN_BIN": "/absolute/path/to/vitis-run"
+}
+```
+
+On Windows, use the installed `.bat` or `.exe` launcher paths. Optional
+`VIVADO_SETTINGS` may point to the installation's settings script. Only these
+three keys are accepted, paths must be absolute existing files, and explicit
+process environment variables take precedence. `.vibesilicon/` is ignored by
+Git; do not copy personal tool paths into the tracked Codex configuration.
+
+After changing configuration, reload MCP or restart the Codex session.
+Check `codex doctor --json` for malformed role warnings and
+`codex mcp list` for registered servers. Registration does not prove a
+successful MCP handshake or an available EDA license.
+
+The edit hook uses Codex's `matcher`/`hooks` format. Review and trust its
+definition through Codex's hook controls (`/hooks` in the CLI); project trust
+alone does not authorize a non-managed hook. The PostToolUse check reports
+RTL gate failures after an edit and does not undo the edit.
+
 ## Relationship to the README quickstart
 
 The README quickstart is still valid for first-time bootstrap on any OS:

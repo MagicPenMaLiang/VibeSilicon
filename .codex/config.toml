@@ -10,13 +10,13 @@ max_concurrent_threads_per_session = 3
 [mcp_servers.python-sim]
 command = "python"
 args = ["scripts/mcp_launcher.py", "python-sim"]
-cwd = ".."
+cwd = "."
 enabled_tools = ["fxp_sim", "numpy_diff", "load_vectors", "psnr_ssim"]
 
 [mcp_servers.vitis-hls]
 command = "python"
 args = ["scripts/mcp_launcher.py", "vitis-hls"]
-cwd = ".."
+cwd = "."
 env_vars = ["VITIS_RUN_BIN", "VITIS_HLS_PATH", "VITIS_UNIFIED_PATH"]
 enabled_tools = ["csim", "csynth", "co_sim", "export"]
 default_tools_approval_mode = "writes"
@@ -24,7 +24,7 @@ default_tools_approval_mode = "writes"
 [mcp_servers.vivado]
 command = "python"
 args = ["scripts/mcp_launcher.py", "vivado"]
-cwd = ".."
+cwd = "."
 env_vars = ["VIVADO_BIN", "VIVADO_SETTINGS", "VIBESILICON_ALLOW_RUN_SCRIPT", "VIBESILICON_TCL_ALLOWLIST"]
 enabled_tools = ["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream"]
 default_tools_approval_mode = "writes"

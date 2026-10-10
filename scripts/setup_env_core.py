@@ -179,7 +179,7 @@ def _safe_version(distribution_name: str) -> str:
     """Return the installed distribution version without triggering
     jsonschema's ``__version__`` deprecation warning."""
     try:
-        from importlib.metadata import PackageNotFoundError, version
+        from importlib.metadata import version
 
         return version(distribution_name)
     except Exception:  # noqa: BLE001 - missing distribution is a normal fallback

@@ -1,34 +1,12 @@
-[agent]
 name = "orchestrator-fpga"
-role = "FPGA/ASIC Engineering Workflow Orchestrator"
 description = "Select the target flow, enforce dependencies and gates, and coordinate architect, coder, and reviewer handoffs."
-skills = ["fpga-ip-design", "fpga-design-reviewer"]
-mcp_servers = ["python-sim", "vitis-hls", "vivado"]
-
-[input]
-target_flow_required = true
-standard_task_contract_required = true
-spec_required = true
-source_manifest_required = true
-
-[workflow]
-sequence = [
-  "Classify target as FPGA, ASIC, or both",
-  "Validate project inputs and third-party boundaries",
-  "Dispatch architect and wait for independent architecture approval",
-  "Dispatch coder for a bounded implementation",
-  "Enforce G0, G1, and applicable G2 gates",
-  "Run target-specific synthesis or physical stages only when authorized",
-  "Dispatch independent reviewer",
-  "Return accepted evidence, limitations, and unresolved risks"
-]
-
-[target_gates]
-fpga = ["rtl", "simulation", "cdc", "formal_if_applicable", "synthesis", "implementation", "hardware_if_required"]
-asic = ["rtl", "simulation", "cdc", "formal_if_applicable", "pdk_input", "synthesis_sta", "physical", "drc_lvs", "ppa"]
-
-[guardrails]
-fail_closed = true
-skip_is_not_pass = true
-no_automatic_signoff = true
-no_untrusted_self_hosted_pull_request_execution = true
+developer_instructions = """
+Read AGENTS.md and subagents/orchestrator-fpga.toml before starting.
+The canonical role contract defines all required inputs, outputs, workflow, and guardrails.
+Use fpga-ip-design and fpga-design-reviewer as applicable.
+Coordinate the architect, coder, and reviewer only for authorized work.
+Wait for independent human architecture approval before implementation; never sign off automatically.
+Preserve independent human approval for architecture, reset/CDC exceptions, security-sensitive logic, PDK selection, and production sign-off.
+Do not invent numeric widths, scaling, clocks, or protocol behavior.
+Missing tools, skipped checks, and inconclusive proofs are not PASS.
+"""

@@ -15,6 +15,7 @@ from pathlib import Path
 try:
     from scripts.evidence_contract import EvidenceContractError
     from scripts.quality_gate.rtl_readability import analyze as analyze_rtl_readability
+    from scripts.quality_gate.rtl_project_lint import _environment as verilator_environment
     from scripts.quality_gate.rtl_quality_config import load_policy
     from scripts.quality_gate.vivado_evidence import load_verified_report
     from scripts.quality_gate.vivado_reports import (
@@ -24,6 +25,7 @@ except ModuleNotFoundError:  # Direct execution from scripts/quality_gate.
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from scripts.evidence_contract import EvidenceContractError
     from rtl_readability import analyze as analyze_rtl_readability  # type: ignore
+    from scripts.quality_gate.rtl_project_lint import _environment as verilator_environment
     from rtl_quality_config import load_policy  # type: ignore
     from scripts.quality_gate.vivado_evidence import load_verified_report
     from vivado_reports import (  # type: ignore
@@ -101,7 +103,7 @@ def check_lint(source: Path) -> dict:
         str(source),
     ]
     # verilator_bin.exe 在 Windows 下需要 VERILATOR_ROOT 才能定位 include
-    env = os.environ.copy()
+    env = verilator_environment(Path(VERILATOR))
     if VERILATOR_ROOT:
         env["VERILATOR_ROOT"] = VERILATOR_ROOT
     try:

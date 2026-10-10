@@ -1,6 +1,10 @@
 import json
+from pathlib import Path
+import re
+import shlex
 import subprocess
 import sys
+import tempfile
 import unittest
 
 from tests.support import ROOT, load_module
@@ -68,6 +72,67 @@ class PlatformAdapterTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, result)
         self.assertEqual(result["status"], "PASS")
         self.assertTrue(result["runtime"])
+
+    def test_codex_mcp_configured_working_directory_can_find_launcher(self):
+        config = (ROOT / ".codex/config.toml").read_text(encoding="utf-8")
+        for section in config.split("[mcp_servers.")[1:]:
+            name = section.split("]", 1)[0]
+            cwd = re.search(r'^cwd = "([^"]+)"$', section, re.MULTILINE).group(1)
+            completed = subprocess.run(
+                [sys.executable, "scripts/mcp_launcher.py", name, "--probe"],
+                cwd=ROOT / cwd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            with self.subTest(server=name):
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertEqual(json.loads(completed.stdout)["status"], "PASS")
+
+    def test_codex_configured_hook_checks_apply_patch_payload(self):
+        config = json.loads((ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))
+        group = config["hooks"]["PostToolUse"][0]
+        self.assertRegex("apply_patch", group["matcher"])
+        command = shlex.split(group["hooks"][0]["command"])
+        command[0] = sys.executable
+        for filename, expected_exit in [("rtl/definitely_missing.sv", 2), ("docs/example.md", 0)]:
+            payload = {
+                "cwd": str(ROOT),
+                "tool_name": "apply_patch",
+                "tool_input": {"command": f"*** Begin Patch\n*** Add File: {filename}\n*** End Patch"},
+            }
+            completed = subprocess.run(
+                command, cwd=ROOT, input=json.dumps(payload), capture_output=True, text=True, timeout=10,
+            )
+            with self.subTest(filename=filename):
+                self.assertEqual(completed.returncode, expected_exit, completed.stderr)
+
+    def test_local_tool_paths_preserve_explicit_environment(self):
+        with tempfile.TemporaryDirectory() as temp:
+            tool = Path(temp) / "tool.exe"
+            tool.touch()
+            config = Path(temp) / "mcp-env.json"
+            config.write_text(json.dumps({"VIVADO_BIN": str(tool), "VITIS_RUN_BIN": str(tool)}))
+            original = {"VIVADO_BIN": "explicit-choice", "PATH": "unchanged"}
+            environment = launcher.load_tool_environment(config, original)
+            self.assertEqual(environment["VIVADO_BIN"], "explicit-choice")
+            self.assertEqual(environment["VITIS_RUN_BIN"], str(tool))
+            self.assertEqual(original, {"VIVADO_BIN": "explicit-choice", "PATH": "unchanged"})
+
+    def test_local_tool_config_rejects_unsupported_or_invalid_values(self):
+        with tempfile.TemporaryDirectory() as temp:
+            config = Path(temp) / "mcp-env.json"
+            for values in [[], {"PYTHONPATH": temp}, {"VIVADO_BIN": 42},
+                           {"VIVADO_BIN": "relative.exe"}, {"VIVADO_BIN": str(Path(temp) / "missing.exe")}]:
+                with self.subTest(values=values):
+                    config.write_text(json.dumps(values))
+                    with self.assertRaises(ValueError):
+                        launcher.load_tool_environment(config, {})
+
+    def test_missing_local_tool_config_is_optional(self):
+        with tempfile.TemporaryDirectory() as temp:
+            original = {"PATH": "unchanged"}
+            self.assertEqual(launcher.load_tool_environment(Path(temp) / "missing.json", original), original)
 
     def test_codex_mcp_allowlists_match_server_contracts(self):
         config = (ROOT / ".codex/config.toml").read_text(encoding="utf-8")

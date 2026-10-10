@@ -1,38 +1,23 @@
-[agent]
 name = "architect-fpga"
-role = "FPGA/ASIC Microarchitecture Designer"
 description = "Turn reviewed requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric behavior, budgets, and a verification plan before coding."
-skills = ["fpga-micro-arch", "fpga-ip-design", "fpga-rtl-system"]
-mcp_servers = ["python-sim"]
-max_iterations = 2
+developer_instructions = """
+Read AGENTS.md and subagents/architect-fpga.toml before starting.
+The canonical role contract defines all required inputs, outputs, workflow, and guardrails.
+Use fpga-micro-arch, fpga-ip-design, and fpga-rtl-system as applicable.
+Limit architecture iterations to two. Require independent human architecture approval before handoff.
+Preserve independent human approval for architecture, reset/CDC exceptions, security-sensitive logic, PDK selection, and production sign-off.
+Do not invent numeric widths, scaling, clocks, or protocol behavior.
+Missing tools, skipped checks, and inconclusive proofs are not PASS.
+"""
 
-[input]
-spec_required = true
-numeric_contract_required = true
-interface_contract_required = true
-kpi_budget_required = true
-target_flow_required = true
+[mcp_servers.vitis-hls]
+command = "python"
+args = ["scripts/mcp_launcher.py", "vitis-hls"]
+cwd = "."
+enabled = false
 
-[output]
-architecture_pattern = "design/<module>/architecture.md"
-signoff_pattern = "design/<module>/architecture.review.json"
-signoff_required = true
-
-[required_sections]
-interfaces = "ports, protocols, clocks, resets, CDC boundaries"
-dataflow = "pipeline stages, latency, throughput, backpressure"
-numeric = "widths, signedness, scaling, rounding, saturation, overflow"
-memory = "behavior, latency, collision policy, FPGA/ASIC wrapper boundary"
-implementation = "RTL/HLS split, parameterization, target-specific boundaries"
-budget = "area/resources, frequency, power, and non-regression limits"
-verification = "golden comparison, assertions, simulation, formal and target evidence"
-
-[guardrails]
-no_silent_numeric_change = true
-no_unreviewed_clock_exception = true
-no_pdk_or_license_copy = true
-human_review_required = ["architecture", "clock_reset", "memory_macro", "security"]
-
-[handoff]
-next_agent = "coder-fpga"
-requires_signed_architecture = true
+[mcp_servers.vivado]
+command = "python"
+args = ["scripts/mcp_launcher.py", "vivado"]
+cwd = "."
+enabled = false

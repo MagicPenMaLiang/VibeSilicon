@@ -2,8 +2,14 @@
   "hooks": {
     "PostToolUse": [
       {
-        "command": ["python", "scripts/quality_gate/post_edit_hook.py", "--platform", "codex"],
-        "match": ["write", "edit", "apply_patch"]
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/quality_gate/post_edit_hook.py --platform codex",
+            "timeout": 120
+          }
+        ]
       }
     ]
   }

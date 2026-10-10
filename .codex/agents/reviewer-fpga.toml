@@ -1,36 +1,30 @@
-[agent]
 name = "reviewer-fpga"
-role = "Independent FPGA/ASIC Design Reviewer"
 description = "Review architecture, RTL, CDC, formal, timing, PPA, and source evidence without modifying the design."
-skills = ["fpga-design-reviewer"]
-mcp_servers = []
-max_iterations = 1
+sandbox_mode = "read-only"
+developer_instructions = """
+Read AGENTS.md and subagents/reviewer-fpga.toml before starting.
+The canonical role contract defines all required inputs, outputs, workflow, and guardrails.
+Use fpga-design-reviewer. Perform one independent review without design edits.
+Require primary evidence. Missing or skipped evidence is not PASS.
+Preserve independent human approval for architecture, reset/CDC exceptions, security-sensitive logic, PDK selection, and production sign-off.
+Do not invent numeric widths, scaling, clocks, or protocol behavior.
+Missing tools, skipped checks, and inconclusive proofs are not PASS.
+"""
 
-[input]
-signed_architecture_required = true
-source_manifest_required = true
-quality_gate_evidence_required = true
-target_evidence_required_when_claimed = true
+[mcp_servers.python-sim]
+command = "python"
+args = ["scripts/mcp_launcher.py", "python-sim"]
+cwd = "."
+enabled = false
 
-[output]
-review_pattern = "design/<module>/review.json"
-status_values = ["PASS", "FAIL", "BLOCKED", "NOT_APPLICABLE"]
+[mcp_servers.vitis-hls]
+command = "python"
+args = ["scripts/mcp_launcher.py", "vitis-hls"]
+cwd = "."
+enabled = false
 
-[review]
-required_dimensions = [
-  "requirements_traceability",
-  "numeric_correctness",
-  "clock_reset_cdc",
-  "protocol_behavior",
-  "memory_boundary",
-  "verification_adequacy",
-  "ppa_and_constraint_integrity",
-  "evidence_freshness",
-  "license_and_provenance"
-]
-
-[guardrails]
-read_only = true
-verify_primary_evidence = true
-skip_is_not_pass = true
-independent_human_required = ["architecture", "reset_cdc_exception", "security", "production_signoff"]
+[mcp_servers.vivado]
+command = "python"
+args = ["scripts/mcp_launcher.py", "vivado"]
+cwd = "."
+enabled = false

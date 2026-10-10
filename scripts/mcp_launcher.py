@@ -19,6 +19,26 @@ SERVER_PATHS = {
     "vivado": ROOT / "mcp" / "vivado-mcp" / "server.py",
 }
 PROBE_IMPORTS = "import mcp.server, numpy, yaml"
+LOCAL_TOOL_ENV = ROOT / ".vibesilicon" / "mcp-env.json"
+LOCAL_TOOL_KEYS = {"VIVADO_BIN", "VIVADO_SETTINGS", "VITIS_RUN_BIN"}
+
+
+def load_tool_environment(path: Path, environment: dict[str, str]) -> dict[str, str]:
+    """Merge ignored, machine-local tool paths without overriding explicit env vars."""
+    result = environment.copy()
+    if not path.is_file():
+        return result
+    values = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(values, dict) or set(values) - LOCAL_TOOL_KEYS:
+        raise ValueError("local MCP environment must contain only supported tool-path keys")
+    for key, value in values.items():
+        if not isinstance(value, str) or not value or not Path(value).is_absolute():
+            raise ValueError(f"{key} must be an absolute tool path")
+        if key not in result:
+            if not Path(value).is_file():
+                raise ValueError(f"configured tool path does not exist: {key}")
+            result[key] = value
+    return result
 
 
 def _conda_python(prefix: str | None) -> Path | None:
@@ -96,6 +116,12 @@ def main() -> int:
     parser.add_argument("--probe", action="store_true", help="print selection result without launching")
     args = parser.parse_args()
 
+    try:
+        tool_env = load_tool_environment(LOCAL_TOOL_ENV, dict(os.environ))
+    except (OSError, ValueError) as exc:
+        print(f"VibeSilicon MCP local configuration failed: {exc}", file=sys.stderr)
+        return 1
+
     runtime, attempts = select_runtime()
     server = SERVER_PATHS[args.server]
     if args.probe:
@@ -107,6 +133,7 @@ def main() -> int:
                     "server_path": str(server),
                     "runtime": str(runtime) if runtime else None,
                     "attempts": attempts,
+                    "tool_paths": {key: tool_env[key] for key in sorted(LOCAL_TOOL_KEYS) if key in tool_env},
                 },
                 indent=2,
                 ensure_ascii=False,
@@ -127,7 +154,7 @@ def main() -> int:
         print(f"VibeSilicon MCP server is missing: {server}", file=sys.stderr)
         return 1
 
-    env = os.environ.copy()
+    env = tool_env
     env["VIBESILICON_ROOT"] = str(ROOT)
     # Server modules import repository packages (e.g. scripts.vivado_backend).
     # When the interpreter runs a server script directly, sys.path[0] is the

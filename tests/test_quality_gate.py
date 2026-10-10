@@ -52,6 +52,12 @@ class QualityGateStatusTests(unittest.TestCase):
         result = qg.check_readability(source)
         self.assertEqual(result["status"], qg.PASS, result)
 
+    @unittest.skipUnless(qg.VERILATOR, "Verilator is not installed on this host")
+    def test_fast_lint_can_find_installed_standard_library(self):
+        source = ROOT / "tests/fixtures/rtl_readability/readable_counter.sv"
+        result = qg.check_lint(source)
+        self.assertEqual(result["status"], qg.PASS, result)
+
     def test_warning_does_not_block(self):
         result = qg.summarize(
             {"checks": {"lint": qg._required(qg._result(qg.PASS, level="WARN"), True)}}
