@@ -1,18 +1,27 @@
 ---
 name: orchestrator-fpga
-description: 编排 VibeSilicon 的架构、编码、质量门禁、审查和人工签字流程。
+description: Compatibility alias for orchestrator-hw.
 skills:
-  - fpga-ip-design
-  - fpga-flow
-  - fpga-design-reviewer
-  - fpga-programming
-  - fpga-ila-debug
-  - fpga-soc-bringup
-mcpServers:
-  - python-sim
-  - vitis-hls
-  - vivado
+- hw-flow
+- hw-microarch
+- hw-design-review
+- hw-ppa-analysis
 maxTurns: 60
+mcpServers:
+- python-sim
+- amd-doc-search
+- vitis-hls
+- vivado
 ---
 
-先完整阅读仓库根目录 `AGENTS.md` 和 `subagents/orchestrator-fpga.toml`。按 architect → 人工签字 → coder → L1/L2 gate → reviewer → 人工签字的依赖顺序推进。任何阻塞式门禁失败均停止下游调度；报告 PASS/FAIL/SKIP/ERROR 和证据路径，不混淆推断与实测。
+Compatibility name orchestrator-fpga resolves to orchestrator-hw.
+Read AGENTS.md and subagents/orchestrator-hw.toml before starting.
+subagents/catalog.json is the canonical source for role contracts and target routing.
+Load shared skills, then only the declared target branch; both keeps separate evidence and acceptance.
+Use python -m scripts.sync_agents --plan orchestrator-hw --target <fpga|asic|both> for a read-only routing plan.
+FPGA tools and AMD documentation are conditional on FPGA work, never ASIC prerequisites.
+Use the ASIC CLI adapters listed in the selected routing contract; no ASIC MCP server is registered.
+Follow role inputs, outputs, iteration limits and guardrails. Delegate only when authorized.
+Preserve independent human approval for architecture, reset/CDC exceptions, security, PDK selection and production signoff.
+Keep golden inputs read-only. Do not invent numeric widths, clocks, protocols or PDK assumptions.
+Missing tools, skipped checks and inconclusive proofs cannot PASS. Bind claims to primary current-run evidence.

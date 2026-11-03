@@ -39,6 +39,14 @@
 
 - G0: manifest, provenance, path safety, and configuration completeness.
 - G1: lint, readability, CDC-shape checks, and approved waiver validation.
+  The project gate requires Verilator, readability, and the heuristic ASYNC_REG
+  scan on the same source bytes. A static error fails G1 even if Verilator exits
+  successfully; an unreadable or changed input blocks the gate. Sources and
+  headers share the reviewed waiver registry. Bundle v2 records the static
+  result and content ID alongside the actual Verilator return code. Regenerate
+  older bundles before using them as evidence for these required checks.
+  Declaration range arithmetic is an elaboration expression; unsized datapath
+  arithmetic and arithmetic initializers still require explicit sizing.
 - G2: elaboration, self-checking simulation, protocol assertions, mutation/fault checks, and formal verification as applicable.
 - G3/G4: target synthesis, implementation or physical design, PPA evidence, and independent sign-off.
 

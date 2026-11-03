@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-python-sim-mcp: Python 定点仿真 + numpy diff MCP 服务器
+python-sim-mcp: Fixed-point simulation and NumPy comparison MCP server.
 
-按计划 §6.2.2 暴露 4 个工具：
-- fxp_sim：fxpmath 定点模拟（与 HLS C-Sim 对照）
-- numpy_diff：numpy 数组 bit-match 检查
-- load_vectors：从 test_vectors.yaml 加载测试输入/黄金输出
-- psnr_ssim：图像质量评估（PSNR/SSIM，针对图像 IP）
+Exposes four bounded tools:
+- fxp_sim: fxpmath simulation for comparison with HLS C simulation.
+- numpy_diff: NumPy array comparison with declared tolerances.
+- load_vectors: Load test inputs and golden outputs from YAML.
+- psnr_ssim: PSNR/SSIM evaluation for image-processing IP.
 
-用法（opencode.json 已注册）：
+Usage (registered in opencode.json):
   python mcp/python-sim-mcp/server.py
 """
 
 import asyncio
 import json
+import math
 import os
+from fractions import Fraction
 from pathlib import Path
 
 import numpy as np
@@ -50,29 +52,29 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="fxp_sim",
-            description="fxpmath 定点模拟：将 Python float 转 Q_FRAC 定点（与 HLS C-Sim 对照）",
+            description="fxpmath fixed-point simulation: quantize floating-point inputs for comparison with HLS C simulation",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "values": {
                         "type": "array",
                         "items": {"type": "number"},
-                        "description": "浮点输入列表",
+                        "description": "List of floating-point inputs",
                     },
                     "n_word": {
                         "type": "integer",
                         "default": 16,
-                        "description": "总位宽",
+                        "description": "Total bit width",
                     },
                     "n_frac": {
                         "type": "integer",
                         "default": 8,
-                        "description": "小数位数（Q_FRAC）",
+                        "description": "Fractional bit count (Q_FRAC)",
                     },
                     "signed": {
                         "type": "boolean",
                         "default": False,
-                        "description": "是否带符号",
+                        "description": "Whether values are signed",
                     },
                 },
                 "required": ["values"],
@@ -80,27 +82,27 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="numpy_diff",
-            description="numpy 数组 bit-match 检查（两个 numpy 数组是否完全相等）",
+            description="Compare numeric arrays; zero tolerances preserve exact integer values and nonzero tolerances are explicit",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "array_a": {"type": "string", "description": "数组 A 文件路径（.npy）或内联数组"},
-                    "array_b": {"type": "string", "description": "数组 B 文件路径（.npy）或内联数组"},
-                    "rtol": {"type": "number", "default": 0, "description": "相对容差"},
-                    "atol": {"type": "number", "default": 0, "description": "绝对容差"},
+                    "array_a": {"type": "string", "description": "Array A: root-confined .npy path or inline JSON array"},
+                    "array_b": {"type": "string", "description": "Array B: root-confined .npy path or inline JSON array"},
+                    "rtol": {"type": "number", "minimum": 0, "default": 0, "description": "Finite nonnegative relative tolerance"},
+                    "atol": {"type": "number", "minimum": 0, "default": 0, "description": "Finite nonnegative absolute tolerance"},
                 },
                 "required": ["array_a", "array_b"],
             },
         ),
         Tool(
             name="load_vectors",
-            description="从 test_vectors.yaml 加载测试用例 + 黄金参考数据",
+            description="Load test cases and golden-reference data from test_vectors.yaml",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "yaml_path": {
                         "type": "string",
-                        "description": "test_vectors.yaml 路径",
+                        "description": "Path to test_vectors.yaml",
                     },
                 },
                 "required": ["yaml_path"],
@@ -108,22 +110,22 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="psnr_ssim",
-            description="图像质量评估：PSNR / SSIM（针对图像处理 IP）",
+            description="Evaluate image quality using PSNR and SSIM",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "image_ref": {
                         "type": "string",
-                        "description": "参考图像路径（.npy 或 .png）",
+                        "description": "Reference image: root-confined .npy path or inline JSON array",
                     },
                     "image_test": {
                         "type": "string",
-                        "description": "待评估图像路径（.npy 或 .png）",
+                        "description": "Test image: root-confined .npy path or inline JSON array",
                     },
                     "data_range": {
                         "type": "number",
                         "default": 255,
-                        "description": "像素值范围（默认 8bit）",
+                        "description": "Pixel-value range (255 for the default 8-bit range)",
                     },
                 },
                 "required": ["image_ref", "image_test"],
@@ -138,56 +140,111 @@ def _resolve_project_file(arg: str, suffixes: set[str]) -> Path:
     try:
         candidate = (raw if raw.is_absolute() else PROJECT_ROOT / raw).resolve(strict=True)
     except (FileNotFoundError, OSError) as exc:
-        raise ValueError(f"输入文件不存在或无法访问：{arg}") from exc
+        raise ValueError(f"input file does not exist or is inaccessible: {arg}") from exc
     try:
         candidate.relative_to(PROJECT_ROOT)
     except ValueError as exc:
-        raise ValueError(f"路径超出项目根目录：{candidate}") from exc
+        raise ValueError(f"path escapes project root: {candidate}") from exc
     if not candidate.is_file():
-        raise ValueError(f"不是普通文件：{candidate}")
+        raise ValueError(f"not a regular file: {candidate}")
     if candidate.suffix.lower() not in suffixes:
-        raise ValueError(f"不支持的文件类型：{candidate.suffix}")
+        raise ValueError(f"unsupported file type: {candidate.suffix}")
     return candidate
 
 
 def _validate_array(array: np.ndarray) -> np.ndarray:
     if array.dtype.kind not in "biufc":
-        raise ValueError(f"只允许数值数组，实际 dtype={array.dtype}")
+        raise ValueError(f"only numeric arrays are allowed; dtype={array.dtype}")
     if array.ndim > 4:
-        raise ValueError(f"数组维度过高：{array.ndim} > 4")
+        raise ValueError(f"too many array dimensions: {array.ndim} > 4")
     if array.size > MAX_ARRAY_ELEMENTS:
-        raise ValueError(f"数组元素过多：{array.size} > {MAX_ARRAY_ELEMENTS}")
+        raise ValueError(f"too many array elements: {array.size} > {MAX_ARRAY_ELEMENTS}")
     return array
 
 
 def _reject_json_constant(value: str):
-    raise ValueError(f"JSON 不允许非常量数值：{value}")
+    raise ValueError(f"non-finite JSON numeric constant is not allowed: {value}")
 
 
 def _load_array(arg: str) -> np.ndarray:
     """Load a root-confined .npy file or a strict JSON numeric array."""
     if not isinstance(arg, str):
-        raise ValueError("数组输入必须是 .npy 路径或 JSON 数组字符串")
+        raise ValueError("array input must be a .npy path or a JSON array string")
 
     stripped = arg.strip()
     if stripped.startswith("["):
         try:
             data = json.loads(stripped, parse_constant=_reject_json_constant)
         except (json.JSONDecodeError, ValueError) as exc:
-            raise ValueError("无法解析严格 JSON 数组") from exc
+            raise ValueError("cannot parse strict JSON array") from exc
         if not isinstance(data, list):
-            raise ValueError("内联输入必须是 JSON 数组")
+            raise ValueError("inline input must be a JSON array")
         return _validate_array(np.asarray(data))
 
     path = _resolve_project_file(stripped, {".npy"})
     return _validate_array(np.load(path, allow_pickle=False))
 
 
+def _tolerance(value, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite nonnegative number")
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"{name} must be a finite nonnegative number")
+    return float(value)
+
+
+def _compare_arrays(a: np.ndarray, b: np.ndarray, rtol: float, atol: float) -> dict:
+    """Keep integer comparisons and differences out of floating-point arithmetic."""
+    integers = a.dtype.kind in "biu" and b.dtype.kind in "biu"
+    if integers:
+        left, right = a.astype(object), b.astype(object)
+        diff = np.abs(left - right)
+        relative, absolute = Fraction(rtol), Fraction(atol)
+        denominator = relative.denominator * absolute.denominator
+        limit = absolute.numerator * relative.denominator
+        factor = relative.numerator * absolute.denominator
+        close = diff * denominator <= limit + np.abs(right) * factor
+    elif rtol == atol == 0:
+        # Python scalar equality avoids lossy promotion of int64/uint64 to float.
+        close = a.astype(object) == b.astype(object)
+        dtype = np.result_type(a.dtype, b.dtype, np.float64)
+        diff = np.abs(a.astype(dtype) - b.astype(dtype))
+        if a.dtype.kind in "biu" or b.dtype.kind in "biu":
+            # Compute mixed-type diagnostics without rounding the integer operand.
+            def distance(x, y):
+                if not np.isfinite(x) or not np.isfinite(y):
+                    return abs(x - y)
+                real = Fraction(x.real) - Fraction(y.real)
+                imag = Fraction(x.imag) - Fraction(y.imag)
+                return math.hypot(float(real), float(imag))
+
+            diff = np.fromiter(
+                (distance(x, y) for x, y in zip(a.astype(object).flat, b.astype(object).flat)),
+                dtype=np.float64, count=a.size,
+            ).reshape(a.shape)
+    else:
+        for array in (a, b):
+            if array.dtype.kind in "iu" and any(abs(int(x)) > 2**53 for x in array.flat):
+                raise ValueError("mixed integer/floating comparison above 2**53 requires zero tolerances")
+        close = np.isclose(a, b, rtol=rtol, atol=atol)
+        dtype = np.result_type(a.dtype, b.dtype, np.float64)
+        diff = np.abs(a.astype(dtype) - b.astype(dtype))
+    result = {"pass": bool(np.all(close)), "shape": a.shape, "rtol": rtol, "atol": atol}
+    if not result["pass"]:
+        result.update(
+            max_abs_diff=int(diff.max()) if integers else float(diff.max()),
+            mean_abs_diff=float(sum(diff.flat) / diff.size) if integers else float(diff.mean()),
+            mismatch_count=int(np.count_nonzero(~close)),
+            total_elements=int(a.size),
+        )
+    return result
+
+
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if name == "fxp_sim":
         if not HAS_FXPMATH:
-            return [TextContent(type="text", text="ERROR: fxpmath 未安装（pip install fxpmath）")]
+            return [TextContent(type="text", text="ERROR: fxpmath is not installed (pip install fxpmath)")]
         values = arguments["values"]
         n_word = arguments.get("n_word", 16)
         n_frac = arguments.get("n_frac", 8)
@@ -205,25 +262,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             a = _load_array(arguments["array_a"])
             b = _load_array(arguments["array_b"])
-            rtol = arguments.get("rtol", 0)
-            atol = arguments.get("atol", 0)
+            rtol = _tolerance(arguments.get("rtol", 0), "rtol")
+            atol = _tolerance(arguments.get("atol", 0), "atol")
             if a.shape != b.shape:
                 return [TextContent(type="text", text=(
                     f"FAIL: shape mismatch {a.shape} vs {b.shape}"
                 ))]
-            if np.allclose(a, b, rtol=rtol, atol=atol):
-                return [TextContent(type="text", text=str({
-                    "pass": True, "shape": a.shape, "rtol": rtol, "atol": atol,
-                }))]
-            diff = np.abs(a.astype(int) - b.astype(int))
-            return [TextContent(type="text", text=str({
-                "pass": False,
-                "shape": a.shape,
-                "max_abs_diff": int(diff.max()),
-                "mean_abs_diff": float(diff.mean()),
-                "mismatch_count": int((diff > 0).sum()),
-                "total_elements": int(a.size),
-            }))]
+            return [TextContent(type="text", text=str(_compare_arrays(a, b, rtol, atol)))]
         except Exception as e:
             return [TextContent(type="text", text=f"ERROR: {e}")]
 
@@ -238,7 +283,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
     elif name == "psnr_ssim":
         if not HAS_SKIMAGE:
-            return [TextContent(type="text", text="ERROR: scikit-image 未安装（pip install scikit-image）")]
+            return [TextContent(type="text", text="ERROR: scikit-image is not installed (pip install scikit-image)")]
         try:
             ref = _load_array(arguments["image_ref"])
             test = _load_array(arguments["image_test"])
@@ -254,7 +299,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         except Exception as e:
             return [TextContent(type="text", text=f"ERROR: {e}")]
 
-    return [TextContent(type="text", text=f"ERROR: 未知 tool: {name}")]
+    return [TextContent(type="text", text=f"ERROR: unknown tool: {name}")]
 
 
 async def main():

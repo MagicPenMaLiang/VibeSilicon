@@ -14,7 +14,7 @@ Repository paths below are relative to the VibeSilicon project root. Read AGENTS
 
 ## Procedure
 
-1. Require normalized utilization and timing evidence, hierarchy attribution, allowed files and non-regression budgets. Use fpga-ppa-analysis before selecting a change.
+1. Require normalized utilization and timing evidence, hierarchy attribution, allowed files and non-regression budgets. Use hw-ppa-analysis before selecting a change.
 
 2. Classify replicated arithmetic, failed RAM/DSP inference, wide control, mux depth or over-buffering. Prefer sharing, reviewed memory wrappers or changed scheduling only when latency and throughput permit.
 

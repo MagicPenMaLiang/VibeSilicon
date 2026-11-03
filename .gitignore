@@ -11,6 +11,8 @@ dist/
 build/
 *.egg-info/
 .vibesilicon/
+.vd1/
+.vd2/
 *.log
 *.jou
 *.str
@@ -44,3 +46,18 @@ artifacts/
 .tmp/
 .Xil/
 reports/private/
+
+# Local design work and tool output; these are not toolkit source.
+/projects/
+/prj/
+/output/
+/tmp/
+/-p/
+/.qoder/
+/xsim.dir/
+*.pb
+*.dmp
+/*.txt
+/rtl_readability.json
+/runhls.tcl
+/random

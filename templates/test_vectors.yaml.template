@@ -1,50 +1,50 @@
-# 测试向量 + 黄金参考模板（per IP）
+# Test-vector and golden-reference template (per IP).
 #
-# 用法：cp docs/templates/test_vectors.yaml.template tests/vectors/<module>.yaml
-# 配合 python-sim-mcp load_vectors 工具读取
-# SPI Pilot 示例见计划 §3.4（≥ 10 个测试向量）
+# Usage: copy templates/test_vectors.yaml.template into the private project vector directory.
+# The python-sim-mcp load_vectors tool loads YAML as data; it does not execute expressions.
+# Example vectors below are illustrative; select coverage from the accepted verification plan.
 
 metadata:
-  module: <module_name>          # 例：counter, packet_filter
+  module: <module_name>          # Example: counter, packet_filter
   type: <phy/timing | algorithm | mixed>
   version: v1.0
-  test_count: <N>                # 必须 ≥ 10（计划 §3.5 验收）
+  test_count: <N>                # Replace with the actual reviewed vector count
   golden_ref: reference/golden/<module>.py
 
-# 输入约束（与 spec.md 接口表对齐）
+# Input contract: align it with the specification's numeric and interface tables.
 input_schema:
   signals:
     - name: x
       bit_width: 8
-      q_frac: 0                  # Q0.8 整数
+      q_frac: 0                  # Unsigned integer input storage in this example
     - name: g
       bit_width: 8
       q_frac: 0
-  # 其他信号...
+  # Add other declared input signals.
 
-# 输出约束
+# Output contract.
 output_schema:
   signals:
     - name: y
       bit_width: 8
       q_frac: 0
-  # 其他信号...
+  # Add other declared output signals.
 
-# 测试用例（黄金参考数据）
+# Test cases containing frozen expected values.
 test_cases:
   - id: tc_01_basic
-    description: 基础乘法（100 * 128 = 12800 >> 8 = 50）
+    description: Basic multiply and shift (100 * 128 = 12800 >> 8 = 50)
     inputs:
       x: 100
       g: 128
     expected_outputs:
       y: 50
     golden_source: |
-      # 与 reference/golden/<module>.py 等价
+      # Equivalent to the reviewed reference/golden/<module>.py expression.
       (x * g) >> 8
 
   - id: tc_02_boundary_zero
-    description: 边界：x = 0
+    description: Boundary x = 0
     inputs:
       x: 0
       g: 128
@@ -52,7 +52,7 @@ test_cases:
       y: 0
 
   - id: tc_03_boundary_max
-    description: 边界：x = 255
+    description: Boundary x = 255
     inputs:
       x: 255
       g: 255
@@ -60,16 +60,16 @@ test_cases:
       y: 254
 
   - id: tc_04_zero_gain
-    description: 边界：g = 0
+    description: Boundary g = 0
     inputs:
       x: 128
       g: 0
     expected_outputs:
       y: 0
 
-  # ... 至少 10 个测试向量
+  # Add cases required by the accepted verification plan.
 
-# 随机测试（可选）
+# Optional random tests.
 random_tests:
   count: 100
   seed: 42
@@ -79,15 +79,15 @@ random_tests:
   expected_outputs:
     source: <module>_ref.compute(x, g)
 
-# 验证判据
+# Acceptance criteria.
 pass_criteria:
-  csim_diff_zero: true          # C-Sim 与 Python bit-match
+  csim_diff_zero: true          # Bit-exact C-simulation comparison against Python
   tolerance:
-    rtol: 0                     # 严格 bit-match
+    rtol: 0                     # Exact comparison
     atol: 0
-  failure_threshold: 0          # 0 个失败即 PASS
+  failure_threshold: 0          # PASS requires zero failures
 
-# 错误注入（可选，验证鲁棒性）
+# Optional fault injection for the project's robustness contract.
 fault_injection:
   - name: bit_flip
     probability: 0.01
@@ -95,7 +95,7 @@ fault_injection:
   - name: clock_glitch
     duration_ns: 5
 
-# 关联文档
+# Related project documents.
 references:
   spec: docs/spec/<module>.md
   golden_ref: reference/golden/<module>.py

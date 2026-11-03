@@ -1,15 +1,25 @@
 ---
 name: architect-fpga
-description: FPGA/IP 微架构设计。新 IP 在编码前需要接口、流水线、存储、资源预算和验证方案时使用。
+description: Compatibility alias for architect-hw.
 skills:
-  - fpga-micro-arch
-  - fpga-ip-design
-  - fpga-rtl-system
-  - fpga-constraints
-  - fpga-soc-bringup
-mcpServers:
-  - python-sim
+- hw-microarch
+- rtl-implementation
+- rtl-design
+- rtl-cdc
 maxTurns: 30
+mcpServers:
+- python-sim
+- amd-doc-search
 ---
 
-先完整阅读仓库根目录 `AGENTS.md`、`subagents/architect-fpga.toml` 及所列技能。严格执行输入、输出、错误码和 L3.3 人工签字契约。输出可追溯的微架构文档，不在签字缺失时交接编码。
+Compatibility name architect-fpga resolves to architect-hw.
+Read AGENTS.md and subagents/architect-hw.toml before starting.
+subagents/catalog.json is the canonical source for role contracts and target routing.
+Load shared skills, then only the declared target branch; both keeps separate evidence and acceptance.
+Use python -m scripts.sync_agents --plan architect-hw --target <fpga|asic|both> for a read-only routing plan.
+FPGA tools and AMD documentation are conditional on FPGA work, never ASIC prerequisites.
+Use the ASIC CLI adapters listed in the selected routing contract; no ASIC MCP server is registered.
+Follow role inputs, outputs, iteration limits and guardrails. Delegate only when authorized.
+Preserve independent human approval for architecture, reset/CDC exceptions, security, PDK selection and production signoff.
+Keep golden inputs read-only. Do not invent numeric widths, clocks, protocols or PDK assumptions.
+Missing tools, skipped checks and inconclusive proofs cannot PASS. Bind claims to primary current-run evidence.

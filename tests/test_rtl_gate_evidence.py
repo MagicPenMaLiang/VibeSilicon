@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
+import jsonschema
 from scripts.quality_gate import rtl_gate_evidence
 
 
@@ -17,7 +18,7 @@ SOURCE = "project/demo/rtl/demo.sv"
 SHA = "sha256:" + "a" * 64
 
 
-def fixture(*, warning_count=0):
+def fixture(*, warning_count=0, static_status="PASS", static_findings=None):
     manifest = {
         "target": "fpga", "top": "demo", "sources": [SOURCE], "headers": [],
     }
@@ -34,12 +35,19 @@ def fixture(*, warning_count=0):
         "evidence_id": "sha256:" + "c" * 64,
         "execution": {"compile": "PASS", "run": "PASS", "pass_token_count": 1},
     }
+    static = {
+        "status": static_status, "source_sha256": lint["source_sha256"],
+        "findings": static_findings or [],
+    }
+    static["evidence_id"] = rtl_gate_evidence._content_id(static)
+    passed = static_status == "PASS"
     return rtl_gate_evidence.build_bundle(
         manifest_path="project/demo/rtl_project_manifest.json", manifest=manifest,
         manifest_sha256=SHA, waiver_sha256="sha256:" + "d" * 64,
         waiver_result={"sources_checked": 1, "waivers_checked": 0},
-        lint_report=lint, smoke_report=smoke,
-        checks={"g0": "PASS", "g1": "PASS", "g2": "PASS"}, status="PASS",
+        lint_report=lint, static_report=static, smoke_report=smoke if passed else None,
+        checks={"g0": "PASS", "g1": static_status, "g2": "PASS" if passed else "NOT_RUN"},
+        status=static_status,
     )
 
 
@@ -54,6 +62,27 @@ class RtlGateEvidenceTests(unittest.TestCase):
         schema = json.loads((ROOT / "schemas/rtl_gate_evidence.schema.json").read_text(encoding="utf-8"))
         self.assertEqual(set(first), set(schema["required"]))
         self.assertEqual(schema["properties"]["evidence_kind"]["const"], "RTL_GATE_BUNDLE")
+        jsonschema.validate(first, schema)
+
+    def test_static_failure_cannot_be_relabelled_as_pass_with_zero_tool_returncode(self):
+        changed = fixture(static_status="FAIL")
+        self.assertEqual(changed["stages"][1]["metrics"]["returncode"], 0)
+        changed["stages"][1]["status"] = "PASS"
+        changed["stages"][1]["evidence_id"] = rtl_gate_evidence._content_id(changed["stages"][1])
+        changed["evidence_id"] = rtl_gate_evidence._content_id(changed)
+        with self.assertRaisesRegex(rtl_gate_evidence.GateEvidenceError, "required check results"):
+            rtl_gate_evidence.verify_bundle(changed, allowed_sources={SOURCE})
+
+    def test_static_blockers_are_visible_when_many_warnings_are_truncated(self):
+        finding = {
+            "level": "error", "rule_id": "RTL-R007", "message_code": "RTL_READABILITY",
+            "file": SOURCE, "line": 100, "column": 1,
+        }
+        bundle = fixture(warning_count=25, static_status="FAIL", static_findings=[finding])
+        self.assertEqual(bundle["stages"][1]["annotations"][0], finding)
+        self.assertEqual(bundle["annotations_truncated"], 6)
+        schema = json.loads((ROOT / "schemas/rtl_gate_evidence.schema.json").read_text(encoding="utf-8"))
+        jsonschema.validate(bundle, schema)
 
     def test_annotations_are_bounded_relative_and_do_not_expose_rtl(self):
         bundle = fixture(warning_count=25)

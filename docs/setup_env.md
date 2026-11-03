@@ -137,7 +137,7 @@ that needs a specific EDA tool can run depends on that tool being on `PATH`:
 * Formal verification needs `yosys` + `symbiyosys`.
 * FPGA implementation needs `vivado`.
 * HLS implementation needs `vitis_hls`.
-* ASIC synthesis / STA / physical flow needs `openroad` and `klayout`.
+* ASIC synthesis needs `yosys`; STA/physical work needs `openroad`; the fixed physical/deck flow also probes the KLayout `strmrun` executable. See `config/asic_backend_policy.json` for the exact capability contract.
 
 These are listed in the report under `eda:<name>` with a `WARN` status when
 missing. The launcher does not fail on optional tools; CI agents can opt in
@@ -170,11 +170,30 @@ license or a hardware run is available.
 
 ## Codex integration
 
+The project also registers the shared remote `amd-doc-search` documentation
+service independently of the three local EDA/simulation launchers. See
+[FPGA documentation service](fpga_documentation_service.md) for query/version
+checks and live validation. It is optional for flow startup and not required
+for ASIC work. Client reload is needed to discover newly added MCP configuration.
+
 Start Codex with the repository root as the working directory. The project
 `.codex/config.toml` uses `cwd = "."` for the three MCP launchers. Trust the
 project so its config and `.agents/skills/` are available. The native Codex
 agents in `.codex/agents/` reference the canonical contracts in `subagents/`;
-the reviewer additionally uses a read-only sandbox.
+reviewer permissions are inherited from the parent session. Shared role names are
+architect-hw, coder-rtl, reviewer-hw and orchestrator-hw; the previous names are
+compatibility aliases. Maintain `subagents/catalog.json`, then run
+`python -m scripts.sync_agents --write` and `--check` to update role adapters.
+Use `python -m scripts.sync_agents --plan orchestrator-hw --target asic` to
+inspect conditional skill/tool routing without launching EDA. See
+[project map](project_map.md) for the complete current structure.
+
+Agent-local `sandbox_mode` and `mcp_servers` settings do not override current
+Codex parent permissions or MCP access. For enforced independent review, launch
+the parent review session with a read-only sandbox and only approved read-only
+MCP tools. The generated reviewer disables supported escalation/app/plugin
+capabilities but does not claim a separate sandbox. See the
+[official custom-agent permission model](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
 For machine-specific EDA paths, create `.vibesilicon/mcp-env.json` locally:
 
@@ -192,7 +211,7 @@ process environment variables take precedence. `.vibesilicon/` is ignored by
 Git; do not copy personal tool paths into the tracked Codex configuration.
 
 After changing configuration, reload MCP or restart the Codex session.
-Check `codex doctor --json` for malformed role warnings and
+Where the Codex CLI is installed, check `codex doctor --json` for configuration diagnostics and
 `codex mcp list` for registered servers. Registration does not prove a
 successful MCP handshake or an available EDA license.
 
@@ -217,3 +236,42 @@ python -m unittest discover -s tests -p "test_*.py"
 The three wrappers wrap those four commands plus the EDA probe and produce
 a structured report plus a stable exit code, which is useful for CI and
 for repeated local verification.
+
+## OpenCode integration
+
+Start OpenCode from the repository root after preparing the Python environment.
+`opencode.json` selects `orchestrator-hw`, declares the four hardware roles and their compatibility aliases,
+and starts the three local MCP servers through `scripts/mcp_launcher.py`.
+The project enables these servers with a bounded 30-second startup timeout.
+Vendor executable paths can be supplied through the ignored
+`.vibesilicon/mcp-env.json` file using `VIVADO_BIN`, `VIVADO_SETTINGS` and
+`VITIS_RUN_BIN`; explicit environment variables take precedence.
+
+OpenCode automatically discovers `.opencode/plugins/vibesilicon-quality-gate.js`;
+the project does not need a second explicit plugin entry. The plugin checks RTL
+paths from the input of `tool.execute.after`, including patch move destinations.
+Failures are reported to the agent after the edit; the hook does not roll back
+the edit or supply engineering sign-off. Logs and JSON reports stay under the
+ignored `.vibesilicon/` directory.
+
+The gate selects `VIBESILICON_PYTHON`, then the project `.venv`, then
+`VIBESILICON_MCP_PYTHON`, then `python` from PATH. Keep interpreter overrides
+machine-local. OpenCode's project MCP settings also merge with user settings;
+inspect the resolved configuration when diagnosing inherited entries.
+
+Run these checks from the repository root:
+
+```bash
+opencode --version
+opencode debug config
+opencode debug skill
+opencode debug agent orchestrator-hw
+opencode mcp list
+python -m unittest discover -s tests -p "test_opencode_plugin.py"
+```
+
+The plugin regression tests require Node.js and exercise successful and failed
+checks, patch moves, missing tools and workspace boundaries. Configuration, MCP
+connectivity and RTL gates are separate from model-provider authentication and
+from vendor synthesis, implementation or hardware validation. Treat resolved
+configuration output as local diagnostic data; it can include user settings.

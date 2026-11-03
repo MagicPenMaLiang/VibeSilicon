@@ -22,7 +22,7 @@ Repository paths below are relative to the VibeSilicon project root. Read AGENTS
 
 4. Run check_timing, report_clocks, report_clock_interaction, report_exceptions and setup/hold summaries. Identify uncovered endpoints; positive WNS alone does not prove constraint completeness.
 
-5. Use fpga-cdc-check for crossing correctness. Architecture and CDC/reset exceptions retain independent human review. Return proposed XDC, contract traceability, selector counts, effective constraints and unresolved assumptions.
+5. Use rtl-cdc for crossing correctness. Architecture and CDC/reset exceptions retain independent human review. Return proposed XDC, contract traceability, selector counts, effective constraints and unresolved assumptions.
 
 ## Evidence and handoff
 

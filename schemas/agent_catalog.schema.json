@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VibeSilicon hardware role catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "default_agent", "aliases", "roles"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "default_agent": {"type": "string"},
+    "aliases": {"type": "object", "additionalProperties": {"type": "string"}},
+    "roles": {
+      "type": "object",
+      "minProperties": 4,
+      "maxProperties": 4,
+      "additionalProperties": {"$ref": "#/$defs/contract"}
+    }
+  },
+  "$defs": {
+    "strings": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skills", "mcp_servers"],
+      "properties": {
+        "skills": {"$ref": "#/$defs/strings"},
+        "mcp_servers": {"$ref": "#/$defs/strings"},
+        "backend_modules": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "contract": {
+      "type": "object",
+      "required": ["agent", "input", "output", "guardrails", "routing"],
+      "properties": {
+        "agent": {
+          "type": "object",
+          "required": ["name", "role", "description", "skills", "mcp_servers", "max_turns"],
+          "properties": {
+            "name": {"type": "string"},
+            "role": {"type": "string"},
+            "description": {"type": "string"},
+            "skills": {"$ref": "#/$defs/strings"},
+            "mcp_servers": {"$ref": "#/$defs/strings"},
+            "max_turns": {"type": "integer", "minimum": 1}
+          }
+        },
+        "input": {"type": "object"},
+        "output": {"type": "object"},
+        "guardrails": {"type": "object"},
+        "routing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fpga", "asic"],
+          "properties": {
+            "fpga": {"$ref": "#/$defs/route"},
+            "asic": {"$ref": "#/$defs/route"}
+          }
+        }
+      }
+    }
+  }
+}

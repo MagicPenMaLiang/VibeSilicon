@@ -113,7 +113,7 @@ def validate_waivers(
             raise WaiverRegistryError("invalid or duplicate waiver ID")
         if entry["rule_id"] not in RULES:
             raise WaiverRegistryError(f"unknown or unimplemented rule: {waiver_id}")
-        if entry["source"] not in manifest["sources"] or not SCOPE.fullmatch(entry["scope"]):
+        if entry["source"] not in manifest["sources"] + manifest["headers"] or not SCOPE.fullmatch(entry["scope"]):
             raise WaiverRegistryError(f"waiver has non-manifest source or imprecise scope: {waiver_id}")
         if not SHA256.fullmatch(entry["source_sha256"]):
             raise WaiverRegistryError(f"invalid source hash: {waiver_id}")
@@ -126,7 +126,7 @@ def validate_waivers(
         entries[waiver_id] = entry
 
     used: set[str] = set()
-    for source in manifest["sources"]:
+    for source in manifest["sources"] + manifest["headers"]:
         source_path = _bounded_path(root, source, kind="source")
         raw = source_path.read_bytes()
         digest = "sha256:" + hashlib.sha256(raw).hexdigest()
@@ -168,7 +168,7 @@ def validate_waivers(
             raise WaiverRegistryError(f"unverifiable waiver marker in {source}")
     if set(entries) != used:
         raise WaiverRegistryError(f"unused registry entries: {sorted(set(entries) - used)}")
-    return {"status": "PASS", "gate": "G0_WAIVER_REGISTRY", "sources_checked": len(manifest["sources"]), "waivers_checked": len(used)}
+    return {"status": "PASS", "gate": "G0_WAIVER_REGISTRY", "sources_checked": len(manifest["sources"] + manifest["headers"]), "waivers_checked": len(used)}
 
 
 def main(argv: list[str] | None = None) -> int:

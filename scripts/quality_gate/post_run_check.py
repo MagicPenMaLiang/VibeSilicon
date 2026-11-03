@@ -86,7 +86,7 @@ def _infer_profile(source: Path | None, project_dir: Path) -> str:
 
 
 def check_lint(source: Path) -> dict:
-    """① Lint（verilator）。仅扫描 .v/.sv。"""
+    """1. Verilator lint for .v/.sv sources."""
     if not source or not source.exists():
         return _result(SKIP, reason="no source file")
     if source.suffix not in ('.v', '.sv', '.svh'):
@@ -102,14 +102,14 @@ def check_lint(source: Path) -> dict:
         "-Wno-DECLFILENAME",
         str(source),
     ]
-    # verilator_bin.exe 在 Windows 下需要 VERILATOR_ROOT 才能定位 include
+    # verilator_bin.exe needs VERILATOR_ROOT to locate includes on Windows.
     env = verilator_environment(Path(VERILATOR))
     if VERILATOR_ROOT:
         env["VERILATOR_ROOT"] = VERILATOR_ROOT
     try:
-        # Windows 上 Verilator 可能派生辅助进程并继承管道句柄；使用 PIPE 时，
-        # 父进程结束后 communicate() 仍可能一直等待 EOF。临时文件不会有
-        # 这个问题，也避免大量 lint 输出占满管道缓冲区。
+        # Windows helper processes may inherit pipe handles. With PIPE,
+        # communicate() can wait for EOF after the parent process exits.
+        # Temporary files avoid this wait and pipe-buffer exhaustion.
         with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as output_file:
             result = subprocess.run(
                 cmd,
@@ -150,7 +150,7 @@ def check_lint(source: Path) -> dict:
 
 
 def check_async_reg(source: Path) -> dict:
-    """② ASYNC_REG 静态扫描（调用 scan_async_reg.py）。"""
+    """2. Static ASYNC_REG scan using scan_async_reg.py."""
     if not source or not source.exists():
         return _result(SKIP, reason="no source file")
     if source.suffix not in ('.v', '.sv', '.svh'):
@@ -207,9 +207,9 @@ def check_readability(source: Path) -> dict:
 
 
 def check_csynth(project_dir: Path) -> dict:
-    """③ 资源估算（HLS 路线，需先跑 csynth）。
+    """3. HLS resource estimation; C synthesis must already have run.
 
-    Vitis HLS 2024.2 csynth.rpt 格式（单列，无 available 列）：
+    Vitis HLS 2024.2 csynth.rpt layout (single column, no availability column):
     | BRAM | DSP | FF |    LUT   | URAM|
     |   -  |  -  |  -| 41 (~0%)|  - |
     """
@@ -217,20 +217,20 @@ def check_csynth(project_dir: Path) -> dict:
     if not rpt.exists():
         return _result(
             SKIP,
-            reason=f"csynth.rpt 不存在（需先通过 vitis-hls-mcp 跑 csynth）：{rpt}",
+            reason=f"csynth.rpt does not exist; run HLS csynth first: {rpt}",
         )
 
     try:
         content = rpt.read_text(encoding="utf-8", errors='ignore')
 
         def find_used(name):
-            """Vitis HLS 2024.2 csynth.rpt 表头：`| BRAM | DSP | FF | LUT | URAM|`
-            数据行：`|+ gain  | ... | ... | - | - | - | 41 (~0%)| - |`
+            """Vitis HLS 2024.2 header: `| BRAM | DSP | FF | LUT | URAM|`.
+            Data row: `|+ gain | ... | ... | - | - | - | 41 (~0%)| - |`.
 
-            策略：先定位含 `BRAM | DSP | FF | LUT | URAM` 的表头，按列索引；
-            再找下一行含 `|+ <modname>` 的数据行，按相同索引取值。
+            Locate the resource header and its column index, then find the
+            following module data row and extract the corresponding cell.
             """
-            # 1. 找表头
+            # 1. Locate the header.
             header_pat = re.compile(r'\|\s*BRAM\s*\|\s*DSP\s*\|\s*FF\s*\|\s*LUT\s*\|\s*URAM\s*\|')
             header_m = header_pat.search(content)
             if not header_m:
@@ -240,33 +240,33 @@ def check_csynth(project_dir: Path) -> dict:
                 return None, None
             col_idx = header_cols.index(name)
 
-            # 2. 找下一行（同段落内），含 `|+ <modname>` 开头的数据行
-            # 用 DOTALL 匹配整行（含换行前的所有 | ... | ... | ... |）
+            # 2. Find the next module row in the same report section.
+            # DOTALL includes all cells before the row-ending newline.
             data_pat = re.compile(r'\|\+[^\n]+', re.MULTILINE)
             data_m = data_pat.search(content, header_m.end())
             if not data_m:
                 return None, None
             data_line = data_m.group(0)
-            # 简单 split by `|` 然后用 col_idx 取列
-            # data_line 包含前缀 `+ gain`，实际资源列在更靠后的位置。
-            # 改用更可靠的方式：直接取 data_line.split('|')[col_idx+1]
+            # Split on pipes and use the resource column index.
+            # The data row has a module prefix and additional non-resource cells.
+            # Access the resource cells through the observed row offset.
             split_parts = data_line.split('|')
-            # 数据行格式：`|+ gain  | issue | slack | latency_cycles | latency_ns |
+            # Data row: module | issue | slack | latency_cycles | latency_ns |
             #                  iter_latency | interval | trip_count | pipelined |
             #                  BRAM | DSP | FF | LUT | URAM|`
-            # 前 9 个非资源列：模块名 + issue + slack + 5 个 latency 列 + pipelined
-            # split_parts[10] 起才是 BRAM/DSP/FF/LUT/URAM
-            # BRAM 在表头 col_idx=0，对应 split_parts[10]
-            # 偏移量 = 10 - 0 = 10
+            # Nine non-resource columns precede the resource columns.
+            # BRAM/DSP/FF/LUT/URAM start at split_parts[10].
+            # Header BRAM index 0 corresponds to split_parts[10].
+            # The offset is 10.
             RESOURCE_OFFSET = 10
             target_idx = col_idx + RESOURCE_OFFSET
             if target_idx >= len(split_parts):
                 return None, None
             cell = split_parts[target_idx].strip()
-            # 注意：strip() 已处理前导空格，下面的 regex 直接匹配
+            # Whitespace has already been stripped before this match.
 
-            # 3. 解析 cell：`41 (~0%)` / `12 (5%)` / `12` / `-`
-            # Vitis HLS 用 `~N%` 表示"约 N%"（如 ~0%）
+            # 3. Parse cells such as `41 (~0%)`, `12 (5%)`, `12` or `-`.
+            # The tilde in ~N% denotes an approximate percentage.
             m = re.match(r'(\d+)(?:\s*\(\s*~?([\d.]+)%\s*\))?', cell)
             if m:
                 used = int(m.group(1))
@@ -291,7 +291,7 @@ def check_csynth(project_dir: Path) -> dict:
             "ff_used": ff_used, "ff_pct": ff_pct,
         }
 
-        # BRAM 是关键风险指标（计划 §4.6）
+        # BRAM utilization is a key resource-risk metric.
         if bram_pct is not None:
             if bram_pct > THRESHOLDS["bram_pct_csyn_fail"]:
                 result["level"] = "FAIL"
@@ -303,7 +303,7 @@ def check_csynth(project_dir: Path) -> dict:
                 result["level"] = "PASS"
                 status = PASS
         else:
-            return _result(ERROR, reason="csynth.rpt 存在但无法解析 BRAM 使用率", **result)
+            return _result(ERROR, reason="csynth.rpt exists but BRAM utilization cannot be parsed", **result)
 
         return _result(status, **result)
     except Exception as e:
@@ -342,7 +342,7 @@ def _find_vivado_report(vivado_project: Path | None, names: tuple[str, ...]) -> 
 
 
 def check_timing(vivado_project: Path) -> dict:
-    """④ 时序（Vivado report_timing_summary）。"""
+    """4. Vivado report_timing_summary checks."""
     report = _find_vivado_report(
         vivado_project, ("impl_timing_summary.rpt", "timing_summary.rpt", "impl_timing.rpt")
     )
@@ -363,7 +363,7 @@ def check_timing(vivado_project: Path) -> dict:
 
 
 def check_cdc(vivado_project: Path) -> dict:
-    """⑤ CDC 拓扑（Vivado report_cdc）。"""
+    """5. CDC topology from Vivado report_cdc."""
     report = _find_vivado_report(vivado_project, ("impl_cdc.rpt", "cdc.rpt"))
     if report is None:
         return _result(ERROR, reason="Vivado CDC report not found", project=_path_text(vivado_project))
@@ -382,7 +382,7 @@ def check_cdc(vivado_project: Path) -> dict:
 
 
 def check_impl(vivado_project: Path) -> dict:
-    """⑥ 资源真实层（Vivado impl_1）。"""
+    """6. Implemented resource usage from Vivado impl_1."""
     report_names = {
         "timing": ("impl_timing_summary.rpt", "timing_summary.rpt", "impl_timing.rpt"),
         "cdc": ("impl_cdc.rpt", "cdc.rpt"),
@@ -444,7 +444,7 @@ def check_impl(vivado_project: Path) -> dict:
 
 
 def run_fast(source: Path) -> dict:
-    """L1 沙箱模式：lint + ASYNC_REG + RTL readability."""
+    """L1 sandbox: lint, ASYNC_REG and RTL readability."""
     return {
         "mode": "fast (L1 sandbox)",
         "timestamp": _now(),
@@ -463,7 +463,7 @@ def run_full(
     vivado_project: Path | None = None,
     profile: str = "auto",
 ) -> dict:
-    """L2 门禁全量：① + ② + ③ + ④ + ⑤，5-10 分钟。"""
+    """L2 checks: lint, ASYNC_REG, estimated resources, timing and CDC."""
     selected_profile = _infer_profile(source, project_dir) if profile == "auto" else profile
     if selected_profile not in {"rtl", "hls", "mixed"}:
         raise ValueError(f"unknown quality-gate profile: {selected_profile}")
@@ -487,7 +487,7 @@ def run_full(
 
 
 def run_impl(vivado_project: Path) -> dict:
-    """L2.6 资源真实层：⑥，1-3 小时。"""
+    """L2.6: implemented resource checks."""
     return {
         "mode": "impl (resource real layer)",
         "timestamp": _now(),
@@ -554,20 +554,20 @@ def write_report(result: dict, output_path: Path) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Quality Gate 6 项检查统一入口')
+    parser = argparse.ArgumentParser(description='Unified entry point for six quality checks')
     parser.add_argument(
         '--fast', action='store_true',
-        help='L1 沙箱模式（lint + ASYNC_REG + RTL readability，< 1s）',
+        help='L1 sandbox: lint, ASYNC_REG and RTL readability',
     )
-    parser.add_argument('--impl', action='store_true', help='资源真实层（仅 ⑥，1-3h）')
-    parser.add_argument('--source', '-s', help='源文件路径（单文件 .v/.sv/.cpp）')
-    parser.add_argument('--project', '-p', help='HLS 工程目录（含 solution1/）')
-    parser.add_argument('--vivado-project', help='Vivado 工程路径（.xpr）')
+    parser.add_argument('--impl', action='store_true', help='Implemented resource checks only')
+    parser.add_argument('--source', '-s', help='Source file path (.v/.sv/.cpp)')
+    parser.add_argument('--project', '-p', help='HLS project directory containing solution1/')
+    parser.add_argument('--vivado-project', help='Vivado project path (.xpr)')
     parser.add_argument(
         '--profile', choices=['auto', 'rtl', 'hls', 'mixed'], default='auto',
-        help='门禁适用 profile；auto 根据输入推断',
+        help='Applicable gate profile; auto infers it from the inputs',
     )
-    parser.add_argument('--output', '-o', help='JSON 报告输出路径（默认 reports/）')
+    parser.add_argument('--output', '-o', help='JSON report output path')
     args = parser.parse_args()
 
     source = Path(args.source).resolve() if args.source else None

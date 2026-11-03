@@ -18,6 +18,9 @@ Repository paths below are relative to the VibeSilicon project root. Read AGENTS
 
 2. First state an observable hypothesis, sampling clock and required signals. Select one named ILA core and fixed immediate capture; the initial adapter does not accept arbitrary Tcl trigger expressions.
 
+   If probes are missing or instrumentation changes timing, read
+   `references/instrumentation.md` before preparing a new reviewed image.
+
 3. Check hardware identity, programmed image provenance and probe correspondence before arming. Existing unknown device contents cannot be certified merely by loading an LTX file; program the matched bitstream in the approved capture transaction.
 
 4. Bound sample depth, timeout and exclusive board ownership. Preserve the CSV/waveform hash and device/run identity; do not modify unrelated targets or kill other sessions.

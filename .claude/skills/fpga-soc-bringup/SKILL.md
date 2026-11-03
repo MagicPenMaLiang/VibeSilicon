@@ -24,6 +24,10 @@ Repository paths below are relative to the VibeSilicon project root. Read AGENTS
 
 5. Then test peripheral addresses, interrupts, DMA/cache coherency, PL clocks and reset recovery. Report each stage separately, with BLOCKED for absent evidence. Hardware and production sign-off require independent human review.
 
+If platform/application/boot packaging is required, read
+`references/software_boot_handoff.md` before connecting software artifacts to the
+board plan. This is an optional SoC branch; the adapter remains input preflight.
+
 ## Evidence and handoff
 
 Bind conclusions to current source/configuration, tool version and artifact hashes. Return PASS, FAIL or BLOCKED for each declared check, with assumptions and the next owner. Keep golden inputs read-only and preserve independent review boundaries.

@@ -1,36 +1,18 @@
 ---
 name: fpga-cdc-check
-description: Analyze clock-domain crossings, choose safe synchronizers or asynchronous FIFOs, and review CDC evidence without accepting structural lint as functional proof.
+description: Compatibility entry for rtl-cdc; use rtl-cdc for new work.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   category: verification
   routes: [fpga, asic, both]
+  alias_of: rtl-cdc
 ---
 
-# CDC analysis
+# Compatibility entry
 
-Use this skill when a design has multiple clocks, asynchronous inputs, generated clocks, or reset-domain crossings.
-
-## Required inputs
-
-- Clock/reset inventory and relationships.
-- Source manifest and target configuration.
-- Crossing list with data width, rate, coherency, and loss/backpressure requirements.
-- Structural CDC report and applicable protocol/formal evidence.
-
-## Rules
-
-- Single-bit level: reviewed two-or-more-flop synchronizer, with the first stages placed together where supported.
-- Pulse/event: toggle, pulse-stretch, or request/acknowledge scheme with a proven minimum spacing.
-- Multi-bit data: handshake, Gray-coded pointer, or asynchronous FIFO. Never synchronize bits independently.
-- Reset: assert/deassert behavior must match the architecture; asynchronous deassertion requires reviewed synchronization.
-- Constraints: exceptions identify explicit endpoints and never replace a CDC circuit.
-
-## Output
-
-Enumerate crossings before triage, classify the transfer contract, select one reviewed repair and rerun structural plus functional evidence. Keep source/destination reset assumptions explicit. For FIFO pointers, inspect effective skew/delay constraints: asynchronous clock groups can override max-delay constraints on the same paths.
-
-For every crossing report source, destination, scheme, structural result, functional evidence, remaining assumptions, and status. Missing/inconclusive evidence is `BLOCKED`, not `PASS`.
-
-References: `references/async_reg_guide.md`, `references/cdc_levels.md`, and `references/xpm_primitives.md`.
+Read repository-root `skills/rtl-cdc/SKILL.md` and follow that skill's contract.
+Use `rtl-cdc` in new role configurations and documentation. This entry preserves
+existing invocations; it adds no capabilities or permissions. Supporting resources at historical paths are generated mirrors of the canonical
+resources, preserving existing links. Edit the canonical resource and run the
+skill synchronizer rather than maintaining separate copies.

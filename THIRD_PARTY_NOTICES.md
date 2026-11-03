@@ -13,6 +13,7 @@ Release owners must re-check the resolved dependency set before distribution.
 | PyYAML | 6.0.2 | MIT | Project/KPI configuration |
 | fxpmath | 0.4.9 | MIT | Fixed-point simulation |
 | scikit-image | 0.24.0 | BSD-3-Clause | PSNR/SSIM metrics |
+| jsonschema | 4.25.1 | MIT | Runtime JSON Schema validation |
 
 ## Development and validation dependencies
 
@@ -26,7 +27,17 @@ Transitive dependencies are installed from the Python package index and retain
 their own licenses. A release SBOM/notice must be generated from the actual
 resolved environment rather than inferred only from `requirements.lock`.
 
-## External proprietary tools
+## Referenced AMD engineering workflows
+
+FPGA workflow additions adapt practices from AMD Ross AI Assistant at
+`dce0fb90611b144dd529490359b51cea5d0d5596` and the locally supplied Vivado AI
+Assistant Examples v0.6.7 (MIT-noted documentation). Copyright (c) 2026 Advanced
+Micro Devices, Inc. The upstream MIT license is preserved in
+`third_party/amd-ross/LICENSE`; source identities, adoption decisions and limits
+are recorded in `docs/fpga_upstream_adoption.md`. VibeSilicon's new readers and
+contracts are independently authored. Proprietary MCP binaries are not included.
+
+## External proprietary tools (installation only)
 
 - AMD Vivado and Vitis HLS are user-installed proprietary tools. VibeSilicon does
   not redistribute their installers, licenses, generated IP, caches, DCPs or

@@ -1,34 +1,18 @@
 ---
 name: fpga-ppa-analysis
-description: Analyze FPGA performance, power, area/resources and ASIC PPA evidence without comparing incompatible configurations.
+description: Compatibility entry for hw-ppa-analysis; use hw-ppa-analysis for new work.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   category: analysis
   routes: [fpga, asic, both]
+  alias_of: hw-ppa-analysis
 ---
 
-# PPA analysis
+# Compatibility entry
 
-## Evidence normalization
-
-Bind every measurement to design/config hashes, tool version, target, constraints, corner, stage, and source report. FPGA resource and ASIC area are different quantities and must not be combined into one score.
-
-## FPGA
-
-Report LUT, FF, DSP, block/ultra memory, clock resources, WNS/TNS, achieved frequency, estimated/measured power, congestion, and implementation status.
-
-## ASIC
-
-Report cell area/count, macro area, WNS/TNS and violating endpoints by corner, clock assumptions, parasitic stage, power activity source, leakage/internal/switching power, utilization, DRC/LVS status, and whether the flow is sign-off capable.
-
-## Comparison rules
-
-Collect flat and hierarchical utilization, clock/exception/methodology and route evidence using the fixed `collect_reports` MCP tool. Attribute hotspots before suggesting an optimization; use the separate resource/power optimization skills for changes. Collection success and read-only analysis do not authorize implementation edits.
-
-- Compare only equivalent functionality, vectors, constraints, corners, and tool settings.
-- Show absolute metrics, deltas, guardrails, and uncertainty.
-- Do not hide failed or cancelled candidates.
-- A Pareto result is a decision aid, not production sign-off.
-
-References: `references/resource_analysis.md`, `references/timing_analysis.md`, and `references/power_analysis.md`.
+Read repository-root `skills/hw-ppa-analysis/SKILL.md` and follow that skill's contract.
+Use `hw-ppa-analysis` in new role configurations and documentation. This entry preserves
+existing invocations; it adds no capabilities or permissions. Supporting resources at historical paths are generated mirrors of the canonical
+resources, preserving existing links. Edit the canonical resource and run the
+skill synchronizer rather than maintaining separate copies.

@@ -70,6 +70,21 @@ class RtlWaiverRegistryTests(unittest.TestCase):
             "status": "PASS", "gate": "G0_WAIVER_REGISTRY", "sources_checked": 1, "waivers_checked": 1,
         })
 
+    def test_header_waivers_require_the_same_reviewed_registry(self):
+        header = self.source.with_suffix(".svh")
+        header.write_text(RTL.replace("module top;", "module helper;"), encoding="utf-8")
+        self.source.write_text("`default_nettype none\nmodule top;\nendmodule\n`default_nettype wire\n", encoding="utf-8")
+        manifest = json.loads(self.manifest.read_text(encoding="utf-8"))
+        manifest["headers"] = ["project/demo/rtl/top.svh"]
+        self.manifest.write_text(json.dumps(manifest), encoding="utf-8")
+        self.waiver.update(
+            source="project/demo/rtl/top.svh", module="helper", scope="line:4",
+            source_sha256="sha256:" + hashlib.sha256(header.read_bytes()).hexdigest(),
+        )
+        with self.assertRaisesRegex(WaiverRegistryError, "unregistered"):
+            self.check([])
+        self.assertEqual(self.check()["sources_checked"], 2)
+
     def test_project_default_registry_passes(self):
         self.check()
         self.assertEqual(

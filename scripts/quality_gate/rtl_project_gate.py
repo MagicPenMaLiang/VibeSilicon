@@ -14,8 +14,9 @@ from scripts.quality_gate.rtl_gate_evidence import (
     build_bundle, emit_github_annotations, summary as evidence_summary,
 )
 from scripts.quality_gate.rtl_manifest import ManifestError, validate_manifest
-from scripts.quality_gate.rtl_project_lint import run_lint
+from scripts.quality_gate.rtl_project_lint import _hash_sources, run_lint
 from scripts.quality_gate.rtl_project_smoke import run_project
+from scripts.quality_gate.rtl_project_static import run_static_checks
 from scripts.quality_gate.rtl_quality_config import RtlQualityConfigError
 from scripts.quality_gate.rtl_supplemental_policy import (
     maintenance_snapshot, validate_domain_evidence, validate_generated_provenance,
@@ -55,19 +56,31 @@ def run_gates(manifest_path: Path, *, repository_root: Path = ROOT) -> dict:
     }
     waiver_result = None
     lint = None
+    static = None
     smoke = None
     blocked_gate = None
     try:
+        source_hashes = _hash_sources(root, manifest)
         maintenance = maintenance_snapshot(manifest_path, repository_root=root)
         result["supplemental"]["maintenance_evidence_id"] = maintenance["evidence_id"]
         generated = validate_generated_provenance(manifest_path, repository_root=root)
         result["supplemental"]["generated_provenance"] = generated["status"]
+        waiver_raw = (root / waiver_path).read_bytes()
         waiver_result = validate_waivers(manifest_path, repository_root=root)
+        if _hash_sources(root, manifest) != source_hashes or (root / waiver_path).read_bytes() != waiver_raw:
+            raise WaiverRegistryError("source or waiver registry changed during G0")
         result["checks"]["g0"] = "PASS"
-        result["waiver_sha256"] = _sha((root / waiver_path).read_bytes())
+        result["waiver_sha256"] = _sha(waiver_raw)
         lint = run_lint(manifest_path, repository_root=root, include_warning_headers=True)
-        result["checks"]["g1"] = lint["status"]
-        if lint["status"] != "PASS":
+        if lint["source_sha256"] != source_hashes:
+            raise ManifestError("G0 and Verilator checked different source bytes")
+        static = run_static_checks(manifest, repository_root=root, source_hashes=source_hashes)
+        if (_sha(manifest_file.read_bytes()) != manifest_sha256
+                or (root / waiver_path).read_bytes() != waiver_raw):
+            raise ManifestError("manifest or waiver registry changed before G1 completed")
+        result["g1_static_evidence"] = static
+        result["checks"]["g1"] = "PASS" if lint["status"] == static["status"] == "PASS" else "FAIL"
+        if result["checks"]["g1"] != "PASS":
             result["status"] = "FAIL"
         else:
             domains = validate_domain_evidence(manifest_path, repository_root=root)
@@ -85,7 +98,7 @@ def run_gates(manifest_path: Path, *, repository_root: Path = ROOT) -> dict:
     bundle = build_bundle(
         manifest_path=manifest_relative, manifest=manifest, manifest_sha256=manifest_sha256,
         waiver_sha256=result["waiver_sha256"], waiver_result=waiver_result,
-        lint_report=lint, smoke_report=smoke, checks=result["checks"],
+        lint_report=lint, static_report=static, smoke_report=smoke, checks=result["checks"],
         status=result["status"], blocked_gate=blocked_gate,
     )
     result["unified_evidence_id"] = bundle["evidence_id"]

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FPGA planning estimates, not implementation acceptance",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "target_flow", "implementation", "device_part", "bindings", "workload", "resources", "memories", "external_memory"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "target_flow": {"const": "fpga"},
+    "implementation": {"enum": ["rtl", "hls"]},
+    "device_part": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.+-]+$"},
+    "bindings": {"type": "array", "minItems": 3, "maxItems": 3, "items": {
+      "type": "object", "additionalProperties": false, "required": ["role", "path", "sha256"],
+      "properties": {
+        "role": {"enum": ["numeric_contract", "golden_model", "test_vectors"]},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    }},
+    "workload": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_unit", "clock_hz", "required_items_per_second", "items_per_initiation", "initiation_interval_cycles", "sustained_fraction", "latency_cycles", "max_latency_seconds"],
+      "properties": {
+        "item_unit": {"type": "string", "minLength": 1},
+        "clock_hz": {"$ref": "#/$defs/positive"},
+        "required_items_per_second": {"$ref": "#/$defs/positive"},
+        "items_per_initiation": {"$ref": "#/$defs/positiveInteger"},
+        "initiation_interval_cycles": {"$ref": "#/$defs/positiveInteger"},
+        "sustained_fraction": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "latency_cycles": {"$ref": "#/$defs/nonnegativeInteger"},
+        "max_latency_seconds": {"$ref": "#/$defs/positive"}
+      }
+    },
+    "resources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/budget"}},
+    "memories": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false, "required": ["name", "width_bits", "depth", "copies", "budget_bits"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "width_bits": {"$ref": "#/$defs/positiveInteger"},
+        "depth": {"$ref": "#/$defs/positiveInteger"},
+        "copies": {"$ref": "#/$defs/positiveInteger"},
+        "budget_bits": {"$ref": "#/$defs/nonnegativeInteger"}
+      }
+    }},
+    "external_memory": {
+      "type": "object", "additionalProperties": false, "required": ["bytes_per_item", "available_bytes_per_second"],
+      "properties": {
+        "bytes_per_item": {"$ref": "#/$defs/nonnegative"},
+        "available_bytes_per_second": {"$ref": "#/$defs/nonnegative"}
+      }
+    }
+  },
+  "$defs": {
+    "positive": {"type": "number", "exclusiveMinimum": 0, "maximum": 1e15},
+    "nonnegative": {"type": "number", "minimum": 0, "maximum": 1e15},
+    "positiveInteger": {"type": "integer", "minimum": 1, "maximum": 1000000000000000},
+    "nonnegativeInteger": {"type": "integer", "minimum": 0, "maximum": 1000000000000000},
+    "budget": {
+      "type": "object", "additionalProperties": false, "required": ["name", "estimated", "budget"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "estimated": {"$ref": "#/$defs/nonnegative"},
+        "budget": {"$ref": "#/$defs/nonnegative"}
+      }
+    }
+  }
+}

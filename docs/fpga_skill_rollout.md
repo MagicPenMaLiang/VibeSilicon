@@ -7,7 +7,9 @@ test does not qualify a board or approve production use.
 
 ## Stage 1: engineering decisions and discoverable resources
 
-Canonical skills now cover 19 focused tasks. The additions are constraints,
+The original FPGA rollout covered 22 focused tasks; the current shared/FPGA/ASIC
+catalog and compatibility mapping are documented in [project map](project_map.md).
+The original rollout additions are constraints,
 simulation bring-up, lint triage, line coverage, resource optimization, power
 optimization, flow orchestration, ILA debug, programming and SoC bring-up.
 Existing CDC, timing and PPA instructions retain their evidence and approval

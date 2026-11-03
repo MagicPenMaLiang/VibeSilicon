@@ -1,25 +1,25 @@
-# KPI 目标值模板（per IP / per Phase）
+# KPI target template (per IP / per phase). Values below are illustrative, not project acceptance criteria.
 #
-# 用法：cp docs/templates/kpi_target.yaml.template docs/kpi_target.yaml
-# 由 Orchestrator + Quality Gate 监控对照
-# 阈值参考计划 §6.5.1 + §8
+# Usage: copy templates/kpi_target.yaml.template into the private project documentation.
+# Reviewed targets are consumed by the orchestrator and applicable quality gates.
+# Replace sample targets before use; preserve the approved numeric and interface contract.
 
 metadata:
   phase: <Phase X>
-  module: <module_name | all>      # all 表示 phase 级 KPI
+  module: <module_name | all>      # all denotes phase-level KPIs
   version: v1.0
   date: <ISO8601>
   owner: <human_name>
 
-# 资源 KPI（计划 §8.2，软上限 + 硬上限）
+# Resource KPIs: reviewed warning and blocking limits.
 resources:
   bram_pct:
-    soft_limit: 60                # 预警
-    warn_limit: 80                # 报警（csynth）
-    hard_limit: 95                # 阻塞（impl_1）
-    fail_action: "URAM 迁移 + 分块 PARTITION（计划 §4.6 8 项）"
+    soft_limit: 60                # Early warning
+    warn_limit: 80                # Synthesis warning
+    hard_limit: 95                # Implementation blocking limit
+    fail_action: "Evaluate reviewed URAM migration and partitioning against the memory and throughput contract"
   uram_pct:
-    soft_limit: 90                # URAM 越多越好
+    soft_limit: 90                # Illustrative utilization target; more usage is not inherently better.
   dsp_pct:
     soft_limit: 70
     hard_limit: 90
@@ -30,10 +30,10 @@ resources:
     soft_limit: 70
     hard_limit: 90
 
-# 时序 KPI
+# Timing KPIs. These sample thresholds do not establish timing closure.
 timing:
   wns_ns:
-    warn: 0.5                     # WNS < 0.5 预警
+    warn: 0.5                     # Warn when WNS < 0.5
     fail: 0.0                     # WNS < 0 FAIL
   tns_ns:
     warn: -1.0
@@ -42,65 +42,65 @@ timing:
     warn: 0.0
     fail: -0.5
   fmax_mhz:
-    target: 100                   # KV260 典型 100 MHz
+    target: 100                   # Illustrative frequency, not a default target
 
-# 质量 KPI（按 IP 类型）
+# Quality KPIs by IP type; bit-exact contracts require zero mismatches.
 quality:
   psnr_db:
-    target: 45.0                  # 图像类 IP
+    target: 45.0                  # Image-processing IP only
     hard_min: 40.0
   ssim:
     target: 0.99
     hard_min: 0.95
-  csim_diff_rate:                 # C-Sim 与 Python bit-match 比例
+  csim_diff_rate:                 # Fraction of C-simulation results matching the Python golden reference
     target: 1.0
     hard_min: 0.99
   cdc_critical_violations:
     target: 0
-    hard_max: 0                   # critical 任何都阻塞
+    hard_max: 0                   # Any critical violation blocks acceptance
 
-# 效率 KPI（计划 §8.1，对比 baseline 节省率）
+# Efficiency KPIs: comparisons require attributable, compatible baseline measurements.
 efficiency:
   spec_to_rtl_hours:
-    baseline_human: 40            # 1 周 = 40h 资深工程师
-    target_ai: 4                  # AI 半自动
-    saving_rate_target: 0.90      # 节省 90%
+    baseline_human: 40            # Illustrative 40-hour engineering week
+    target_ai: 4                  # Illustrative assisted-workflow target
+    saving_rate_target: 0.90      # Illustrative 90% reduction
   rtl_to_board_days:
-    baseline_human: 21            # 3 周 = 21d
-    target_ai: 7                  # 1 周
+    baseline_human: 21            # Illustrative 21-day baseline
+    target_ai: 7                  # Illustrative one-week target
     saving_rate_target: 0.67
   review_hours_per_module:
-    baseline_human: 8             # 1 天
+    baseline_human: 8             # Illustrative one-day baseline
     target_ai: 1
     saving_rate_target: 0.875
   coder_iterations:
-    baseline_human: null         # 人工无上限
-    target_ai_max: 3              # ≤ 3 次（计划 §6.3.1）
+    baseline_human: null         # No declared human iteration limit
+    target_ai_max: 3              # At most three iterations before escalation
     hard_max: 5
 
-# 安全 KPI（计划 §8.3）
+# Safety KPIs.
 safety:
-  l1_l2_l3_l4_log_complete: true  # 4 层防御日志齐全
-  l33_signoff_rate: 1.0          # 100% 人工签字
+  l1_l2_l3_l4_log_complete: true  # Complete applicable workflow logs
+  l33_signoff_rate: 1.0          # All applicable human sign-off items approved
   quality_gate_pass_rate:
     target: 0.90                 # ≥ 90% PASS
-    warn: 0.80                   # < 80% 报警
-  private_data_leak_count: 0     # 私有 spec 0 外泄
-  license_file_in_repo: false    # 不含 License 文件
+    warn: 0.80                   # Warn below 80%; a required failed gate still blocks acceptance.
+  private_data_leak_count: 0     # No unauthorized disclosure of private specifications
+  license_file_in_repo: false    # No proprietary EDA license files; the open-source LICENSE is required.
 
-# 学习 KPI（计划 §8.4）
+# Learning KPIs.
 learning:
   lessons_per_month: 3
   skill_refresh_per_phase: 1
   training_per_month: 1
 
-# Baseline 类型（计划 §3.5 + §8.5）
+# Baseline selection; see templates/baseline_report.md.template.
 baseline:
   type: <manual | official_ip | ai_first | cross_ai | theoretical | none>
-  rationale: <选择此 baseline 类型的原因>
-  saving_rate_adjustment: <按 §8.5 表调整后的实际节省率>
+  rationale: <reason_for_baseline_selection>
+  saving_rate_adjustment: <reviewed_comparison_method_and_result>
 
-# 监控频率（计划 §8）
+# Monitoring cadence.
 monitoring:
   daily_standup_min: 5
   weekly_review_min: 30

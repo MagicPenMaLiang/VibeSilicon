@@ -1,13 +1,17 @@
-# DCP 诊断判据
+# DCP diagnostic criteria
 
-诊断必须区分“观测”和“推断”。WNS/TNS/WHS、起终点、path group、logic levels、cell/net delay 是观测；根因类别是推断，必须列出支持和反证。
+Distinguish observations from inferences. WNS/TNS/WHS, endpoints, path groups,
+logic levels and cell/net delays are observations. Root-cause categories are
+inferences and require supporting and contradictory evidence.
 
-| 类别 | 最少证据 | 不足时处理 |
+| Category | Minimum evidence | Action when insufficient |
 |---|---|---|
-| LOGIC_DEPTH | 关键路径逻辑级数 + cell delay 占比 | 标记 UNKNOWN |
-| ROUTE_DOMINATED | net/route delay 占比 + 物理/扇出信息 | 不建议盲目加流水 |
-| HIGH_FANOUT | fanout 数值 + 多条受影响路径 | 不建议复制寄存器 |
-| CLOCK_OR_CONSTRAINT_SUSPECT | clock interaction/exception/未约束路径证据 | 转人工约束评审 |
-| HOLD | WHS/THS/hold endpoints + min-delay 路径 | 不用 setup 优化代替 |
+| LOGIC_DEPTH | Critical-path logic levels and cell-delay fraction | Mark UNKNOWN |
+| ROUTE_DOMINATED | Net/route-delay fraction, physical and fanout information | Do not suggest blind pipelining |
+| HIGH_FANOUT | Fanout values and multiple affected paths | Do not recommend replication without evidence |
+| CLOCK_OR_CONSTRAINT_SUSPECT | Clock interaction, exceptions and unconstrained paths | Request human constraint review |
+| HOLD | WHS/THS, failing endpoints and minimum-delay paths | Do not substitute a setup optimization |
 
-输出至少包含：checkpoint hash、timing evidence ID、Vivado/design state、setup/hold 指标、前三条关键路径、类别、confidence、支持证据、反证、下一步建议。不得只保存 LLM 摘要而丢弃原始 `.rpt`。
+Include the checkpoint hash, timing evidence ID, Vivado version/design state,
+setup/hold metrics, three critical paths, category, confidence, supporting and
+contradictory evidence, and next action. Preserve raw `.rpt` files alongside any summary.

@@ -6,4 +6,4 @@ A level synchronizer transfers a persistent one-bit state with variable latency.
 
 Do not independently synchronize bits of a coherent bus. Do not feed combinational glitches into a level synchronizer or fan out its first stage. Avoid fabric clock gating; use enables or reviewed clock-control wrappers.
 
-See the repository fpga-cdc-check skill for structural and functional evidence requirements. Simulate asynchronous ratios, phase shifts, reset sequencing and backpressure; use applicable formal properties. Keep FPGA and ASIC physical constraints separate.
+See the repository rtl-cdc skill for structural and functional evidence requirements. Simulate asynchronous ratios, phase shifts, reset sequencing and backpressure; use applicable formal properties. Keep FPGA and ASIC physical constraints separate.
