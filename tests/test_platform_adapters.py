@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from tests.support import ROOT, load_module
+from scripts.sync_agents import load_catalog
 
 
 hook = load_module("vibesilicon_post_edit_hook", "scripts/quality_gate/post_edit_hook.py")
@@ -50,11 +51,13 @@ class PlatformAdapterTests(unittest.TestCase):
         mcp = json.loads((ROOT / ".mcp.json").read_text(encoding="utf-8"))
         codex_hooks = json.loads((ROOT / ".codex/hooks.json").read_text(encoding="utf-8"))
         self.assertIn("PostToolUse", claude["hooks"])
-        self.assertEqual(set(mcp["mcpServers"]), set(launcher.SERVER_PATHS))
+        local = {name for name, server in mcp["mcpServers"].items() if server.get("type", "stdio") == "stdio"}
+        self.assertEqual(local, set(launcher.SERVER_PATHS))
         self.assertIn("PostToolUse", codex_hooks["hooks"])
 
     def test_both_platforms_expose_all_agents_and_skills(self):
-        expected_agents = {"architect-fpga", "coder-fpga", "reviewer-fpga", "orchestrator-fpga"}
+        catalog = load_catalog(ROOT)
+        expected_agents = set(catalog["roles"]) | set(catalog["aliases"])
         expected_skills = set(launcher_path.parent.name for launcher_path in (ROOT / "skills").glob("*/SKILL.md"))
         self.assertEqual({path.stem for path in (ROOT / ".claude/agents").glob("*.md")}, expected_agents)
         self.assertEqual({path.stem for path in (ROOT / ".codex/agents").glob("*.toml")}, expected_agents)
@@ -77,6 +80,8 @@ class PlatformAdapterTests(unittest.TestCase):
     def test_codex_mcp_configured_working_directory_can_find_launcher(self):
         config = (ROOT / ".codex/config.toml").read_text(encoding="utf-8")
         for section in config.split("[mcp_servers.")[1:]:
+            if re.search(r'^url = ', section, re.MULTILINE):
+                continue  # Remote HTTP services are not local launcher processes.
             name = section.split("]", 1)[0]
             cwd = re.search(r'^cwd = "([^"]+)"$', section, re.MULTILINE).group(1)
             completed = subprocess.run(
@@ -97,6 +102,8 @@ class PlatformAdapterTests(unittest.TestCase):
         # without its own .venv (for example CI or an isolated worktree).
         environment["VIBESILICON_MCP_PYTHON"] = sys.executable
         for name, server in config["mcpServers"].items():
+            if server.get("type", "stdio") != "stdio":
+                continue
             # Claude expands the default when its own environment has no
             # CLAUDE_PROJECT_DIR; it injects that variable only in the child.
             args = [arg.replace("${CLAUDE_PROJECT_DIR:-.}", ".") for arg in server["args"]]
@@ -174,9 +181,9 @@ class PlatformAdapterTests(unittest.TestCase):
     def test_codex_mcp_allowlists_match_server_contracts(self):
         config = (ROOT / ".codex/config.toml").read_text(encoding="utf-8")
         self.assertIn('["fxp_sim", "numpy_diff", "load_vectors", "psnr_ssim"]', config)
-        self.assertIn('["csim", "csynth", "co_sim", "export"]', config)
+        self.assertIn('["csim", "csynth", "co_sim", "export", "analyze_csynth"]', config)
         self.assertIn(
-            '["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream"]',
+            '["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream", "collect_reports", "analyze_opt_log"]',
             config,
         )
         self.assertNotIn('"run_script"', config)
@@ -208,6 +215,63 @@ class PlatformAdapterTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         self.assertIn("does not exist", completed.stderr)
 
+
+
+    def _run_hook(self, payload: bytes):
+        return subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts/quality_gate/post_edit_hook.py"),
+                "--platform",
+                "claude",
+            ],
+            cwd=ROOT,
+            input=payload,
+            capture_output=True,
+            timeout=10,
+        )
+
+    def test_hook_runs_the_gate_when_the_payload_carries_raw_newlines(self):
+        """A host that delivers unescaped newlines must not skip the gate."""
+        cwd = str(ROOT).replace("\\", "\\\\")
+        payload = (
+            '{"cwd": "' + cwd + '", "tool_name": "Write", "tool_input": '
+            '{"file_path": "rtl/definitely_missing.sv", "content": "module x;\nendmodule\n"}}'
+        ).encode()
+        completed = self._run_hook(payload)
+        stderr = completed.stderr.decode()
+        self.assertNotIn("invalid JSON", stderr)
+        # The gate ran: the missing edited RTL is reported by the gate itself.
+        self.assertIn("does not exist", stderr)
+        self.assertEqual(completed.returncode, 2)
+
+    def test_hook_accepts_a_non_rtl_edit_with_raw_newlines(self):
+        cwd = str(ROOT).replace("\\", "\\\\")
+        payload = (
+            '{"cwd": "' + cwd + '", "tool_name": "Write", "tool_input": '
+            '{"file_path": "docs/example.md", "content": "first\nsecond\n"}}'
+        ).encode()
+        completed = self._run_hook(payload)
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+
+    def test_hook_reports_an_unreadable_payload_instead_of_skipping_the_gate(self):
+        completed = self._run_hook(b"this payload is not json at all")
+        stderr = completed.stderr.decode()
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn("did NOT run", stderr)
+
+    def test_hook_still_rejects_a_strict_payload_it_can_read(self):
+        payload = json.dumps(
+            {
+                "cwd": str(ROOT),
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "rtl/definitely_missing.sv"},
+            }
+        ).encode()
+        completed = self._run_hook(payload)
+        stderr = completed.stderr.decode()
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn("does not exist", stderr)
 
 if __name__ == "__main__":
     unittest.main()

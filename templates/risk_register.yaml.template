@@ -27,14 +27,14 @@ risks:
       - Declare logical widths, signedness and Q_FRAC in spec.md.
       - Compare the implementation plan with the frozen golden reference.
       - Include zero and maximum-value boundary vectors.
-    owner: coder-fpga
+    owner: coder-rtl
     status: monitoring
 
   - id: R002
     category: cdc
     severity: critical
     description: "Unsafe clock-domain crossings can cause metastability or incoherent transfers"
-    source: "skills/fpga-cdc-check/SKILL.md"
+    source: "skills/rtl-cdc/SKILL.md"
     likelihood: high
     impact: critical
     detection: "Quality Gate ⑤ Vivado report_cdc"
@@ -42,7 +42,7 @@ risks:
       - Use a reviewed synchronizer with ASYNC_REG where applicable.
       - Use a reviewed coherent handshake or asynchronous FIFO for multi-bit data.
       - Obtain required human approval for CDC, reset and PHY assumptions.
-    owner: coder-fpga + reviewer-fpga
+    owner: coder-rtl + reviewer-hw
     status: monitoring
 
   - id: R003
@@ -62,7 +62,7 @@ risks:
       6. Review supported memory-port optimization for the selected tool version.
       7. Use reviewed XPM crossing macros only for applicable CDC requirements.
       8. Track routing congestion and timing non-regression.
-    owner: coder-fpga
+    owner: coder-rtl
     status: monitored
 
   - id: R004
@@ -78,7 +78,7 @@ risks:
       - Evaluate splitting a diagnosed combinational path.
       - Review create_clock against the accepted frequency requirement.
       - Compare implementation strategies in a controlled experiment.
-    owner: coder-fpga
+    owner: coder-rtl
     status: monitoring
 
   - id: R005
@@ -93,7 +93,7 @@ risks:
       - Escalate to the project owner and independent reviewer.
       - Check the completeness of spec.md.
       - Review the immutable Python golden-reference contract.
-    owner: orchestrator-fpga
+    owner: orchestrator-hw
     status: monitored
 
   - id: R006
@@ -138,7 +138,7 @@ risks:
       - Check the selected settings64.bat and installed tool version.
       - Keep personal installation paths in ignored local environment settings.
       - Use the supported MCP launcher and its tool-selection environment.
-    owner: coder-fpga + orchestrator-fpga
+    owner: coder-rtl + orchestrator-hw
     status: monitored
 
   - id: R009

@@ -21,3 +21,11 @@ This is a read-only diagnostic skill. It may open an existing checkpoint and gen
 5. Hand any proposed RTL/XDC/strategy change to `fpga-timing-closure`.
 
 Do not claim an exception is valid from timing reports alone. See `references/classification.md`.
+
+For methodology/TIMING findings, read `references/methodology.md` to localize
+effective constraints, order dependent diagnoses and hand off release-specific
+remedies without changing the checkpoint.
+
+When optimization appears blocked or resource inference changes unexpectedly,
+read `references/opt_design.md` for stage-scoped log attribution before proposing
+protection/constraint changes. The analyze_opt_log tool reads existing logs only.

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "backend": "verilator",
+  "metric": "line",
+  "scope": ["examples/rtl/counter/rtl/counter.sv"],
+  "minimum_percent": 100,
+  "simulation_contract": "examples/rtl/counter/rtl_simulation_contract.json"
+}

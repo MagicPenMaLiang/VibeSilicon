@@ -47,6 +47,6 @@ Do not derive a bus choice or clock target from a Python function signature alon
 
 Produce the reviewed dataflow, numeric table, memory plan, target budgets and
 verification matrix in `templates/micro_arch_template.md`. For HLS, consult the
-shared [scheduling reference](../../fpga-ip-design/references/pragma_cheatsheet.md).
+shared [scheduling reference](../../rtl-implementation/references/pragma_cheatsheet.md).
 Every proposed transformation must preserve the frozen golden boundary or have
 an explicitly reviewed contract change before implementation.

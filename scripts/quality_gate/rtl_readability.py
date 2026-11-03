@@ -221,6 +221,18 @@ def _without_for_control(line: str) -> str:
     return line
 
 
+def _without_declaration_ranges(line: str) -> str:
+    """Range bounds are elaboration constants; retain arithmetic initializers."""
+    declaration = DECLARATION_RE.search(line)
+    if not declaration:
+        return line
+    assignment = ASSIGNMENT_RE.search(line, declaration.end())
+    end = assignment.start() if assignment else len(line)
+    prefix = line[:declaration.end()]
+    ranges = re.sub(r"\[[^\]]*\]", "", line[declaration.end():end])
+    return prefix + ranges + line[end:]
+
+
 def analyze(source_path: Path, *, root: Path | None = None) -> dict[str, Any]:
     path = source_path.resolve(strict=True)
     if path.suffix.lower() not in RTL_SUFFIXES:
@@ -272,7 +284,7 @@ def analyze(source_path: Path, *, root: Path | None = None) -> dict[str, Any]:
         rf"(?:\+|-|\*|/|%|<<|>>)\s*{unsized}|{unsized}\s*(?:\+|-|\*|/|%|<<|>>)"
     )
     for number, line in enumerate(code, 1):
-        if arithmetic.search(_without_for_control(line)):
+        if arithmetic.search(_without_declaration_ranges(_without_for_control(line))):
             violations.append(_violation(raw_lines, "RTL-R002", source, number, raw_lines[number - 1]))
 
     # RTL-R003: expressions that visibly mix declared signed and unsigned operands.

@@ -39,10 +39,9 @@ without checking the target memory contract and synthesis result.
 ## Reusable example and validation
 
 The neutral example is
-`skills/fpga-rtl-system/references/verilog_templates/csr_template.v`.
-It is an unfinished interface scaffold: register state, read data and interrupts
-are not implemented. It does not implement AXI4-Lite. Define and verify the
-register contract and bus shell before using it in a design.
+`skills/rtl-design/references/verilog_templates/csr_template.v`.
+Read its stated widths, access timing and interrupt behavior before adapting it.
+It does not implement AXI4-Lite; a shell requires separate protocol verification.
 
 Verify permissions, all supported byte masks, reset, illegal addresses, collision
 precedence, interrupt races and configuration atomicity. Preserve source-bound

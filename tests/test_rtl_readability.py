@@ -99,6 +99,14 @@ class RtlReadabilityTests(unittest.TestCase):
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["summary"], {"violations": 0, "blocking": 0, "warnings": 0, "waived": 0})
 
+    def test_parameterized_ranges_are_not_datapath_arithmetic(self):
+        rtl = CLEAN_RTL.replace("[7:0]", "[WIDTH-1:0]")
+        self.assertNotIn("RTL-R002", {item["rule_id"] for item in self.analyze_text(rtl)["violations"]})
+
+    def test_declaration_range_exemption_does_not_hide_unsized_initializer(self):
+        rtl = CLEAN_RTL.replace("logic [7:0] count_d;", "logic [WIDTH-1:0] count_d = count_q + 1;")
+        self.assertIn("RTL-R002", {item["rule_id"] for item in self.analyze_text(rtl)["violations"]})
+
     def test_fault_fixture_exercises_all_ten_rules(self):
         report = self.analyze_text(BROKEN_RTL)
         rule_ids = {item["rule_id"] for item in report["violations"]}

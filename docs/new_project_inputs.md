@@ -2,6 +2,10 @@
 
 VibeSilicon distinguishes FPGA and ASIC targets at project intake. Use separate target manifests even when both targets share one RTL source set.
 
+Start with `hw-flow`. Use architect-hw, coder-rtl, reviewer-hw and orchestrator-hw
+for both targets, loading only the selected branch from `subagents/catalog.json`.
+See [project map](project_map.md) for the full skill/tool map and legacy aliases.
+
 ## Common inputs
 
 - Project ID and version with no customer-identifying information in the public repository.
@@ -15,13 +19,28 @@ VibeSilicon distinguishes FPGA and ASIC targets at project intake. Use separate 
 
 ## FPGA target
 
+The default implementation path is algorithm to handwritten RTL. Select HLS or
+an HLS sub-block explicitly when needed; it is not required for direct RTL work.
+Use fpga-algorithm-to-rtl for operation/stage/storage mapping and
+`templates/fpga_feasibility.json.tpl` for the bounded planning assessment. A
+CANDIDATE estimate does not approve architecture or replace implementation checks.
+
 - Device/part, board only if hardware replay is required, and tool version range.
 - Clock definitions, generated clocks, I/O constraints, and explicitly justified exceptions.
 - Memory implementation policy and allowed vendor primitives.
 - Synthesis/implementation strategy and required reports.
 - Hardware test plan, safe programming procedure, and human approval boundary.
 
+For the bounded adapters, declare report/coverage acceptance separately from
+hardware validation. Use `schemas/rtl_coverage_contract.schema.json` for supported
+line coverage, `templates/fpga_board_request.json.tpl` for exact-target operations,
+and `templates/fpga_soc_plan.json.tpl` for PS7/MPSoC input preflight. See
+`docs/fpga_skill_rollout.md` for artifact binding and operation-specific approvals.
+
 ## ASIC target
+
+Use `asic-flow` and `asic-pdk-intake` before invoking the existing ASIC CLI
+adapters. No ASIC MCP server is registered; FPGA services are not prerequisites.
 
 - External PDK root and an allowlisted manifest of liberty, LEF, RC, SDC, GDS, and rule-deck views.
 - Process corner, voltage, temperature, RC corner, derates, clock uncertainty, and load assumptions.

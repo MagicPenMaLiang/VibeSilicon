@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vibesilicon.local/schemas/rtl_gate_evidence.schema.json",
-  "title": "Unified RTL G0/G1/G2 evidence bundle v1",
+  "title": "Unified RTL G0/G1/G2 evidence bundle v2",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "evidence_kind", "status", "evidence_id", "project", "stages", "annotation_count", "annotations_truncated", "limitations"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "evidence_kind": {"const": "RTL_GATE_BUNDLE"},
     "status": {"enum": ["PASS", "FAIL", "BLOCKED"]},
     "evidence_id": {"$ref": "#/$defs/sha256"},
@@ -44,9 +44,9 @@
       "additionalProperties": false,
       "required": ["level", "rule_id", "message_code", "file", "line", "column"],
       "properties": {
-        "level": {"const": "warning"},
-        "rule_id": {"type": "string", "pattern": "^VERILATOR-[A-Z][A-Z0-9_-]{2,53}$"},
-        "message_code": {"const": "VERILATOR_WARNING"},
+        "level": {"enum": ["warning", "error"]},
+        "rule_id": {"type": "string", "pattern": "^(?:VERILATOR-[A-Z][A-Z0-9_-]{2,53}|RTL-R00[1-9]|RTL-R010|ASYNC-REG)$"},
+        "message_code": {"enum": ["VERILATOR_WARNING", "RTL_READABILITY", "ASYNC_REG_MISSING"]},
         "file": {"$ref": "#/$defs/path"},
         "line": {"type": "integer", "minimum": 1},
         "column": {"type": "integer", "minimum": 1}
@@ -77,11 +77,13 @@
     },
     "g1_metrics": {
       "type": "object", "additionalProperties": false,
-      "required": ["source_set_sha256", "tool", "returncode"],
+      "required": ["source_set_sha256", "tool", "returncode", "static_status", "static_evidence_id"],
       "properties": {
         "source_set_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
         "tool": {"oneOf": [{"$ref": "#/$defs/tool"}, {"type": "null"}]},
-        "returncode": {"oneOf": [{"type": "integer"}, {"type": "null"}]}
+        "returncode": {"oneOf": [{"type": "integer"}, {"type": "null"}]},
+        "static_status": {"enum": ["PASS", "FAIL", null]},
+        "static_evidence_id": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
       }
     },
     "g2_metrics": {

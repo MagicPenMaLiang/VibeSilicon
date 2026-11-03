@@ -10,7 +10,7 @@ diagnosis and design changes belong to the focused skills below.
 | WHS/THS | Negative values or nonzero failing hold endpoints mean FAIL |
 | Unconstrained paths | Nonzero paths prevent timing sign-off as PASS |
 
-1. Resource, power and summary timing trends: use `fpga-ppa-analysis`.
+1. Resource, power and summary timing trends: use `hw-ppa-analysis`.
 2. Existing `.dcp` with critical-path, clock-interaction or root-cause questions:
    use read-only `fpga-dcp-analysis` (R0).
 3. RTL, XDC or implementation changes: complete DCP diagnosis first, then use

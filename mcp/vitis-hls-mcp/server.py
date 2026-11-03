@@ -2,7 +2,7 @@
 """
 vitis-hls-mcp: Bounded Vitis HLS integration MCP server.
 
-Exposes four tools:
+Exposes bounded build tools and optional read-only report analysis:
 - csim: C simulation against a project-supplied self-checking testbench.
 - csynth: C synthesis producing RTL and resource reports.
 - co_sim: RTL co-simulation
@@ -17,18 +17,22 @@ Tool selection comes from the launcher environment or PATH:
 """
 
 import asyncio
+import json
 import math
 import os
 import re
 import shutil
 import subprocess
 import tempfile
-from pathlib import Path
+import xml.etree.ElementTree as ET
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
+
+from scripts.hls_reports import analyze_csynth
 
 
 VITIS_RUN_BIN = (
@@ -50,6 +54,15 @@ app = Server("vitis-hls")
 @app.list_tools()
 async def list_tools() -> list[Tool]:
     return [
+        Tool(
+            name="analyze_csynth",
+            description="Read existing HLS synthesis XML and optional log; estimates only, no build or freshness certification",
+            inputSchema={
+                "type": "object",
+                "properties": {"report_path": {"type": "string"}, "log_path": {"type": "string"}},
+                "required": ["report_path"], "additionalProperties": False,
+            },
+        ),
         Tool(
             name="csim",
             description="Run HLS C simulation; correctness requires independent checks against the frozen golden reference",
@@ -197,8 +210,36 @@ def _part(value: Any) -> str:
     return value
 
 
+def _testbench_path(project_dir: Path, value: Any) -> Path:
+    """Accept only an existing project-local C++ file, never Tcl text."""
+    if not isinstance(value, str) or not value or any(c in value for c in "\x00\r\n{};$[]"):
+        raise ValueError("testbench must be a relative C++ path without Tcl control characters")
+    relative = Path(value.replace("\\", "/"))
+    if relative.is_absolute() or PureWindowsPath(value).drive or ".." in relative.parts:
+        raise ValueError("testbench must be relative to project_dir without traversal")
+    path = (project_dir / relative).resolve(strict=True)
+    if not path.is_relative_to(project_dir) or not path.is_file() or path.suffix.lower() != ".cpp":
+        raise ValueError("testbench must be an existing .cpp file within project_dir")
+    return path
+
+
+def _tcl_path(path: Path) -> str:
+    value = path.as_posix()
+    if any(c in value for c in "\x00\r\n{}"):
+        raise ValueError("path cannot be represented safely in Tcl")
+    return "{" + value + "}"
+
+
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    if name == "analyze_csynth":
+        try:
+            if not {"report_path"} <= set(arguments) or set(arguments) - {"report_path", "log_path"}:
+                raise ValueError("analyze_csynth accepts report_path and optional log_path only")
+            result = analyze_csynth(PROJECT_ROOT, arguments["report_path"], arguments.get("log_path"))
+        except (OSError, ValueError, ET.ParseError) as exc:
+            result = {"status": "BLOCKED", "error": str(exc)}
+        return [TextContent(type="text", text=json.dumps(result, allow_nan=False))]
     project_dir = _resolve_project_dir(arguments["project_dir"])
     top = _identifier(arguments["top_function"], "top_function")
 
@@ -211,11 +252,11 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         ]
 
     if name == "csim":
-        testbench = arguments.get("testbench", "testbench.cpp")
+        testbench = _testbench_path(project_dir, arguments.get("testbench", "testbench.cpp"))
         tcl = (
             f"open_project {project_dir.name}\n"
             f"set_top {top}\n"
-            f"add_files {testbench}\n"
+            f"add_files -tb {_tcl_path(testbench)}\n"
             f'open_solution "solution1"\n'
             f"csim_design\n"
             f"exit\n"

@@ -1,52 +1,489 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project": "VibeSilicon",
-  "skill_count": 9,
+  "skill_count": 41,
+  "canonical_skill_count": 31,
+  "compatibility_alias_count": 10,
   "skills": [
     {
-      "name": "fpga-dcp-analysis",
-      "dir": "fpga-dcp-analysis",
-      "path": "skills/fpga-dcp-analysis/SKILL.md"
+      "name": "asic-drc-lvs",
+      "dir": "asic-drc-lvs",
+      "path": "skills/asic-drc-lvs/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-flow",
+      "dir": "asic-flow",
+      "path": "skills/asic-flow/SKILL.md",
+      "category": "orchestration",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-pdk-intake",
+      "dir": "asic-pdk-intake",
+      "path": "skills/asic-pdk-intake/SKILL.md",
+      "category": "intake",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-physical-design",
+      "dir": "asic-physical-design",
+      "path": "skills/asic-physical-design/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-ppa",
+      "dir": "asic-ppa",
+      "path": "skills/asic-ppa/SKILL.md",
+      "category": "analysis",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-signoff-handoff",
+      "dir": "asic-signoff-handoff",
+      "path": "skills/asic-signoff-handoff/SKILL.md",
+      "category": "review",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-sta",
+      "dir": "asic-sta",
+      "path": "skills/asic-sta/SKILL.md",
+      "category": "analysis",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "asic-synthesis",
+      "dir": "asic-synthesis",
+      "path": "skills/asic-synthesis/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "fpga-algorithm-to-rtl",
+      "dir": "fpga-algorithm-to-rtl",
+      "path": "skills/fpga-algorithm-to-rtl/SKILL.md",
+      "category": "architecture",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-cdc-check",
       "dir": "fpga-cdc-check",
-      "path": "skills/fpga-cdc-check/SKILL.md"
+      "path": "skills/fpga-cdc-check/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-cdc",
+      "resources_source": "rtl-cdc"
+    },
+    {
+      "name": "fpga-constraints",
+      "dir": "fpga-constraints",
+      "path": "skills/fpga-constraints/SKILL.md",
+      "category": "constraints",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "fpga-coverage",
+      "dir": "fpga-coverage",
+      "path": "skills/fpga-coverage/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-coverage",
+      "resources_source": "rtl-coverage"
+    },
+    {
+      "name": "fpga-dcp-analysis",
+      "dir": "fpga-dcp-analysis",
+      "path": "skills/fpga-dcp-analysis/SKILL.md",
+      "category": "analysis",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-design-reviewer",
       "dir": "fpga-design-reviewer",
-      "path": "skills/fpga-design-reviewer/SKILL.md"
+      "path": "skills/fpga-design-reviewer/SKILL.md",
+      "category": "review",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "hw-design-review",
+      "resources_source": "hw-design-review"
+    },
+    {
+      "name": "fpga-doc-search",
+      "dir": "fpga-doc-search",
+      "path": "skills/fpga-doc-search/SKILL.md",
+      "category": "documentation",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "fpga-flow",
+      "dir": "fpga-flow",
+      "path": "skills/fpga-flow/SKILL.md",
+      "category": "orchestration",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-formal-verification",
       "dir": "fpga-formal-verification",
-      "path": "skills/fpga-formal-verification/SKILL.md"
+      "path": "skills/fpga-formal-verification/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-formal",
+      "resources_source": "rtl-formal"
+    },
+    {
+      "name": "fpga-ila-debug",
+      "dir": "fpga-ila-debug",
+      "path": "skills/fpga-ila-debug/SKILL.md",
+      "category": "hardware",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-ip-design",
       "dir": "fpga-ip-design",
-      "path": "skills/fpga-ip-design/SKILL.md"
+      "path": "skills/fpga-ip-design/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-implementation",
+      "resources_source": "rtl-implementation"
+    },
+    {
+      "name": "fpga-lint-triage",
+      "dir": "fpga-lint-triage",
+      "path": "skills/fpga-lint-triage/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-lint",
+      "resources_source": "rtl-lint"
     },
     {
       "name": "fpga-micro-arch",
       "dir": "fpga-micro-arch",
-      "path": "skills/fpga-micro-arch/SKILL.md"
+      "path": "skills/fpga-micro-arch/SKILL.md",
+      "category": "architecture",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "hw-microarch",
+      "resources_source": "hw-microarch"
+    },
+    {
+      "name": "fpga-power-optimization",
+      "dir": "fpga-power-optimization",
+      "path": "skills/fpga-power-optimization/SKILL.md",
+      "category": "optimization",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-ppa-analysis",
       "dir": "fpga-ppa-analysis",
-      "path": "skills/fpga-ppa-analysis/SKILL.md"
+      "path": "skills/fpga-ppa-analysis/SKILL.md",
+      "category": "analysis",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "hw-ppa-analysis",
+      "resources_source": "hw-ppa-analysis"
+    },
+    {
+      "name": "fpga-programming",
+      "dir": "fpga-programming",
+      "path": "skills/fpga-programming/SKILL.md",
+      "category": "hardware",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "fpga-realtime-video-debug",
+      "dir": "fpga-realtime-video-debug",
+      "path": "skills/fpga-realtime-video-debug/SKILL.md",
+      "category": "hardware",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "fpga-resource-optimization",
+      "dir": "fpga-resource-optimization",
+      "path": "skills/fpga-resource-optimization/SKILL.md",
+      "category": "optimization",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-rtl-system",
       "dir": "fpga-rtl-system",
-      "path": "skills/fpga-rtl-system/SKILL.md"
+      "path": "skills/fpga-rtl-system/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-design",
+      "resources_source": "rtl-design"
+    },
+    {
+      "name": "fpga-simulation",
+      "dir": "fpga-simulation",
+      "path": "skills/fpga-simulation/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "compatibility",
+      "alias_of": "rtl-simulation",
+      "resources_source": "rtl-simulation"
+    },
+    {
+      "name": "fpga-soc-bringup",
+      "dir": "fpga-soc-bringup",
+      "path": "skills/fpga-soc-bringup/SKILL.md",
+      "category": "hardware",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
     },
     {
       "name": "fpga-timing-closure",
       "dir": "fpga-timing-closure",
-      "path": "skills/fpga-timing-closure/SKILL.md"
+      "path": "skills/fpga-timing-closure/SKILL.md",
+      "category": "optimization",
+      "routes": [
+        "fpga"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "hw-design-review",
+      "dir": "hw-design-review",
+      "path": "skills/hw-design-review/SKILL.md",
+      "category": "review",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "hw-flow",
+      "dir": "hw-flow",
+      "path": "skills/hw-flow/SKILL.md",
+      "category": "orchestration",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "hw-microarch",
+      "dir": "hw-microarch",
+      "path": "skills/hw-microarch/SKILL.md",
+      "category": "architecture",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "hw-ppa-analysis",
+      "dir": "hw-ppa-analysis",
+      "path": "skills/hw-ppa-analysis/SKILL.md",
+      "category": "analysis",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-cdc",
+      "dir": "rtl-cdc",
+      "path": "skills/rtl-cdc/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-coverage",
+      "dir": "rtl-coverage",
+      "path": "skills/rtl-coverage/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-design",
+      "dir": "rtl-design",
+      "path": "skills/rtl-design/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-formal",
+      "dir": "rtl-formal",
+      "path": "skills/rtl-formal/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-implementation",
+      "dir": "rtl-implementation",
+      "path": "skills/rtl-implementation/SKILL.md",
+      "category": "implementation",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-lint",
+      "dir": "rtl-lint",
+      "path": "skills/rtl-lint/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
+    },
+    {
+      "name": "rtl-simulation",
+      "dir": "rtl-simulation",
+      "path": "skills/rtl-simulation/SKILL.md",
+      "category": "verification",
+      "routes": [
+        "fpga",
+        "asic",
+        "both"
+      ],
+      "kind": "canonical"
     }
   ]
 }

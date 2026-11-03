@@ -66,6 +66,20 @@ def _lint_annotations(lint: dict | None, allowed_sources: set[str]) -> tuple[lis
     return items[:MAX_ANNOTATIONS], max(0, len(items) - MAX_ANNOTATIONS)
 
 
+def _annotation_kind(annotation: dict) -> bool:
+    rule = annotation["rule_id"]
+    return (
+        isinstance(rule, str) and bool(RULE_ID.fullmatch(rule)) and (
+            rule.startswith("VERILATOR-") and annotation["message_code"] == "VERILATOR_WARNING"
+            and annotation["level"] == "warning"
+            or rule in {f"RTL-R{number:03d}" for number in range(1, 11)}
+            and annotation["message_code"] == "RTL_READABILITY" and annotation["level"] in {"warning", "error"}
+            or rule == "ASYNC-REG" and annotation["message_code"] == "ASYNC_REG_MISSING"
+            and annotation["level"] == "error"
+        )
+    )
+
+
 def _verify_metrics(stage: dict) -> None:
     metrics = stage["metrics"]
     if stage["gate"] == "G0":
@@ -85,7 +99,7 @@ def _verify_metrics(stage: dict) -> None:
         )):
             raise GateEvidenceError("PASS G0 metrics are incomplete")
     elif stage["gate"] == "G1":
-        if set(metrics) != {"source_set_sha256", "tool", "returncode"}:
+        if set(metrics) != {"source_set_sha256", "tool", "returncode", "static_status", "static_evidence_id"}:
             raise GateEvidenceError("invalid G1 metrics shape")
         populated = metrics["source_set_sha256"] is not None
         if populated:
@@ -95,10 +109,19 @@ def _verify_metrics(stage: dict) -> None:
                     or tool["name"] != "verilator" or not isinstance(tool["version"], str) or not tool["version"]
                     or type(metrics["returncode"]) is not int):
                 raise GateEvidenceError("invalid populated G1 metrics")
-            if (stage["status"] == "PASS") != (metrics["returncode"] == 0):
-                raise GateEvidenceError("G1 status and return code differ")
+            if stage["status"] in {"PASS", "FAIL"}:
+                expected = "PASS" if metrics["returncode"] == 0 and metrics["static_status"] == "PASS" else "FAIL"
+                if metrics["static_status"] is None or stage["status"] != expected:
+                    raise GateEvidenceError("G1 status and required check results differ")
         elif metrics["tool"] is not None or metrics["returncode"] is not None or stage["status"] in {"PASS", "FAIL"}:
             raise GateEvidenceError("G1 metrics are incomplete")
+        if metrics["static_status"] is None:
+            if metrics["static_evidence_id"] is not None:
+                raise GateEvidenceError("G1 static metrics are incomplete")
+        elif (metrics["static_status"] not in {"PASS", "FAIL"}
+              or not isinstance(metrics["static_evidence_id"], str)
+              or not SHA256.fullmatch(metrics["static_evidence_id"])):
+            raise GateEvidenceError("invalid G1 static metrics")
     else:
         if set(metrics) != {"smoke_evidence_id", "compile", "run", "pass_token_count"}:
             raise GateEvidenceError("invalid G2 metrics shape")
@@ -125,12 +148,22 @@ def _verify_metrics(stage: dict) -> None:
 def build_bundle(
     *, manifest_path: str, manifest: dict, manifest_sha256: str,
     waiver_sha256: str | None, waiver_result: dict | None,
-    lint_report: dict | None, smoke_report: dict | None,
+    lint_report: dict | None, smoke_report: dict | None, static_report: dict | None = None,
     checks: dict, status: str, blocked_gate: str | None = None,
 ) -> dict:
-    """Normalize existing gate results without changing their threshold semantics."""
+    """Bind G1 to Verilator and its required source-bound static checks."""
     allowed_sources = set(manifest["sources"] + manifest["headers"])
     annotations, truncated = _lint_annotations(lint_report, allowed_sources)
+    if static_report is not None:
+        if lint_report is None or static_report["source_sha256"] != lint_report["source_sha256"]:
+            raise GateEvidenceError("G1 lint and static source hashes differ")
+        if static_report["evidence_id"] != _content_id(static_report):
+            raise GateEvidenceError("G1 static content ID mismatch")
+        annotations.extend(static_report["findings"])
+        # Blocking errors must remain visible when annotations are truncated.
+        annotations.sort(key=lambda item: (item["level"] != "error", item["file"], item["line"], item["column"], item["rule_id"]))
+        truncated += max(0, len(annotations) - MAX_ANNOTATIONS)
+        annotations = annotations[:MAX_ANNOTATIONS]
     g0_status = "BLOCKED" if blocked_gate == "g0" else checks["g0"]
     g1_status = "BLOCKED" if blocked_gate == "g1" else checks["g1"]
     g2_status = "BLOCKED" if blocked_gate == "g2" else checks["g2"]
@@ -148,6 +181,10 @@ def build_bundle(
             "source_set_sha256": _sha(json.dumps(source_hashes, sort_keys=True, separators=(",", ":")).encode("utf-8")),
             "tool": lint_report["tool"], "returncode": lint_report["returncode"],
         }
+    g1_metrics.update(
+        static_status=static_report["status"] if static_report else None,
+        static_evidence_id=static_report["evidence_id"] if static_report else None,
+    )
     if smoke_report is None:
         g2_metrics = {"smoke_evidence_id": None, "compile": None, "run": None, "pass_token_count": None}
     else:
@@ -164,7 +201,7 @@ def build_bundle(
         _stage("G2", g2_status, metrics=g2_metrics, annotations=[]),
     ]
     bundle = {
-        "schema_version": 1, "evidence_kind": "RTL_GATE_BUNDLE",
+        "schema_version": 2, "evidence_kind": "RTL_GATE_BUNDLE",
         "status": status, "evidence_id": "",
         "project": {
             "manifest": manifest_path, "manifest_sha256": manifest_sha256,
@@ -188,7 +225,7 @@ def verify_bundle(bundle: dict, *, allowed_sources: set[str] | None = None) -> d
     }
     if not isinstance(bundle, dict) or set(bundle) != required:
         raise GateEvidenceError("invalid RTL gate evidence shape")
-    if (type(bundle["schema_version"]) is not int or bundle["schema_version"] != 1
+    if (type(bundle["schema_version"]) is not int or bundle["schema_version"] != 2
             or bundle["evidence_kind"] != "RTL_GATE_BUNDLE" or bundle["status"] not in STATUSES - {"NOT_RUN"}):
         raise GateEvidenceError("unsupported RTL gate evidence")
     if not isinstance(bundle["evidence_id"], str) or not SHA256.fullmatch(bundle["evidence_id"]):
@@ -225,11 +262,7 @@ def verify_bundle(bundle: dict, *, allowed_sources: set[str] | None = None) -> d
         for annotation in stage["annotations"]:
             if set(annotation) != {"level", "rule_id", "message_code", "file", "line", "column"}:
                 raise GateEvidenceError("invalid RTL gate annotation shape")
-            if (annotation["level"] != "warning"
-                    or not isinstance(annotation["rule_id"], str)
-                    or not annotation["rule_id"].startswith("VERILATOR-")
-                    or not RULE_ID.fullmatch(annotation["rule_id"])
-                    or annotation["message_code"] != "VERILATOR_WARNING"
+            if (not _annotation_kind(annotation)
                     or not isinstance(annotation["file"], str) or Path(annotation["file"]).is_absolute()
                     or "\\" in annotation["file"] or ".." in annotation["file"].split("/")
                     or type(annotation["line"]) is not int or annotation["line"] < 1

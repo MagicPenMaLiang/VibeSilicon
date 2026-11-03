@@ -14,7 +14,9 @@ Usage (registered in opencode.json):
 
 import asyncio
 import json
+import math
 import os
+from fractions import Fraction
 from pathlib import Path
 
 import numpy as np
@@ -80,14 +82,14 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="numpy_diff",
-            description="Compare NumPy arrays using the declared relative and absolute tolerances",
+            description="Compare numeric arrays; zero tolerances preserve exact integer values and nonzero tolerances are explicit",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "array_a": {"type": "string", "description": "Array A: root-confined .npy path or inline JSON array"},
                     "array_b": {"type": "string", "description": "Array B: root-confined .npy path or inline JSON array"},
-                    "rtol": {"type": "number", "default": 0, "description": "Relative tolerance"},
-                    "atol": {"type": "number", "default": 0, "description": "Absolute tolerance"},
+                    "rtol": {"type": "number", "minimum": 0, "default": 0, "description": "Finite nonnegative relative tolerance"},
+                    "atol": {"type": "number", "minimum": 0, "default": 0, "description": "Finite nonnegative absolute tolerance"},
                 },
                 "required": ["array_a", "array_b"],
             },
@@ -183,6 +185,61 @@ def _load_array(arg: str) -> np.ndarray:
     return _validate_array(np.load(path, allow_pickle=False))
 
 
+def _tolerance(value, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite nonnegative number")
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"{name} must be a finite nonnegative number")
+    return float(value)
+
+
+def _compare_arrays(a: np.ndarray, b: np.ndarray, rtol: float, atol: float) -> dict:
+    """Keep integer comparisons and differences out of floating-point arithmetic."""
+    integers = a.dtype.kind in "biu" and b.dtype.kind in "biu"
+    if integers:
+        left, right = a.astype(object), b.astype(object)
+        diff = np.abs(left - right)
+        relative, absolute = Fraction(rtol), Fraction(atol)
+        denominator = relative.denominator * absolute.denominator
+        limit = absolute.numerator * relative.denominator
+        factor = relative.numerator * absolute.denominator
+        close = diff * denominator <= limit + np.abs(right) * factor
+    elif rtol == atol == 0:
+        # Python scalar equality avoids lossy promotion of int64/uint64 to float.
+        close = a.astype(object) == b.astype(object)
+        dtype = np.result_type(a.dtype, b.dtype, np.float64)
+        diff = np.abs(a.astype(dtype) - b.astype(dtype))
+        if a.dtype.kind in "biu" or b.dtype.kind in "biu":
+            # Compute mixed-type diagnostics without rounding the integer operand.
+            def distance(x, y):
+                if not np.isfinite(x) or not np.isfinite(y):
+                    return abs(x - y)
+                real = Fraction(x.real) - Fraction(y.real)
+                imag = Fraction(x.imag) - Fraction(y.imag)
+                return math.hypot(float(real), float(imag))
+
+            diff = np.fromiter(
+                (distance(x, y) for x, y in zip(a.astype(object).flat, b.astype(object).flat)),
+                dtype=np.float64, count=a.size,
+            ).reshape(a.shape)
+    else:
+        for array in (a, b):
+            if array.dtype.kind in "iu" and any(abs(int(x)) > 2**53 for x in array.flat):
+                raise ValueError("mixed integer/floating comparison above 2**53 requires zero tolerances")
+        close = np.isclose(a, b, rtol=rtol, atol=atol)
+        dtype = np.result_type(a.dtype, b.dtype, np.float64)
+        diff = np.abs(a.astype(dtype) - b.astype(dtype))
+    result = {"pass": bool(np.all(close)), "shape": a.shape, "rtol": rtol, "atol": atol}
+    if not result["pass"]:
+        result.update(
+            max_abs_diff=int(diff.max()) if integers else float(diff.max()),
+            mean_abs_diff=float(sum(diff.flat) / diff.size) if integers else float(diff.mean()),
+            mismatch_count=int(np.count_nonzero(~close)),
+            total_elements=int(a.size),
+        )
+    return result
+
+
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if name == "fxp_sim":
@@ -205,25 +262,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         try:
             a = _load_array(arguments["array_a"])
             b = _load_array(arguments["array_b"])
-            rtol = arguments.get("rtol", 0)
-            atol = arguments.get("atol", 0)
+            rtol = _tolerance(arguments.get("rtol", 0), "rtol")
+            atol = _tolerance(arguments.get("atol", 0), "atol")
             if a.shape != b.shape:
                 return [TextContent(type="text", text=(
                     f"FAIL: shape mismatch {a.shape} vs {b.shape}"
                 ))]
-            if np.allclose(a, b, rtol=rtol, atol=atol):
-                return [TextContent(type="text", text=str({
-                    "pass": True, "shape": a.shape, "rtol": rtol, "atol": atol,
-                }))]
-            diff = np.abs(a.astype(int) - b.astype(int))
-            return [TextContent(type="text", text=str({
-                "pass": False,
-                "shape": a.shape,
-                "max_abs_diff": int(diff.max()),
-                "mean_abs_diff": float(diff.mean()),
-                "mismatch_count": int((diff > 0).sum()),
-                "total_elements": int(a.size),
-            }))]
+            return [TextContent(type="text", text=str(_compare_arrays(a, b, rtol, atol)))]
         except Exception as e:
             return [TextContent(type="text", text=f"ERROR: {e}")]
 

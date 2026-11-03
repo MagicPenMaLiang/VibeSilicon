@@ -12,7 +12,7 @@ functional and numeric contract, interfaces, clocks, resets, throughput, latency
 backpressure, target device or external PDK views, PPA budgets and approval scope.
 Freeze the golden model and accepted vectors before implementation.
 
-Use `skills/fpga-micro-arch/templates/micro_arch_template.md` for the reviewed
+Use `skills/hw-microarch/templates/micro_arch_template.md` for the reviewed
 architecture. Keep behavioral contracts shared for a dual-target design, while
 maintaining separate manifests, constraints, memory wrappers and target evidence.
 

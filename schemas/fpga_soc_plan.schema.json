@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SoC input preflight plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "family",
+    "part",
+    "preset",
+    "initialization",
+    "interface_contract",
+    "board_tests"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "family": {
+      "enum": [
+        "ps7",
+        "mpsoc"
+      ]
+    },
+    "part": {
+      "type": "string",
+      "pattern": "^xc[a-z0-9-]+$"
+    },
+    "preset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "initialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "interface_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "board_tests": {
+      "const": [
+        "identity",
+        "boot_log",
+        "ddr_memory",
+        "peripheral",
+        "clock_reset"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "family": {
+            "const": "ps7"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "part": {
+            "pattern": "^xc7z"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "family": {
+            "const": "mpsoc"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "part": {
+            "pattern": "^xczu"
+          }
+        }
+      }
+    }
+  ]
+}

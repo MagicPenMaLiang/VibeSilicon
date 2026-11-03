@@ -46,5 +46,5 @@ under justified assumptions. Functional state/transition coverage and formal
 cover traces complement simulation; code coverage alone does not prove correctness.
 
 After restructuring state or pipeline registers, choose the proof mode in
-`skills/fpga-formal-verification/references/proof_modes.md`, run the applicable
+`skills/rtl-formal/references/proof_modes.md`, run the applicable
 gates and compare timing/resources under matching configurations.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Real-time FPGA video debug"
+  short_description: "Trace video, image IP, DMA/DDR and display failures"
+  default_prompt: "Use $fpga-realtime-video-debug to analyze the current board failure, reconstruct the evidence timeline and choose the smallest discriminating experiment."

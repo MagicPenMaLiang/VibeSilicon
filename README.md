@@ -20,9 +20,9 @@ exit code table.
 
 ## What is included
 
-- Agent roles for architecture, implementation, review, and workflow orchestration.
-- Skills for RTL/HLS design, CDC, formal verification, timing closure, and PPA analysis.
-- MCP servers for Python simulation, Vitis HLS, and Vivado.
+- Four shared hardware roles: architect-hw, coder-rtl, reviewer-hw and orchestrator-hw, with previous role names retained as compatibility aliases.
+- 31 canonical skills: 11 shared hardware/RTL skills, 12 FPGA-specific skills and 8 ASIC-specific skills. Ten previous skill names remain compatibility entries, for 41 discoverable entries in total.
+- Local MCP servers for Python simulation, Vitis HLS, and Vivado, plus the separate hosted AMD documentation search service.
 - Deterministic RTL manifest, lint, readability, waiver, protocol, and smoke-test gates.
 - ASIC synthesis, STA, physical-flow evidence, and PPA report contracts.
 - Templates and schemas for starting a new FPGA or ASIC project.
@@ -63,6 +63,24 @@ Create a project outside this repository or copy the neutral templates into a ne
 
 ## Core workflows
 
+Start with `hw-flow` and select `fpga`, `asic`, or `both`. Shared architecture,
+RTL and verification use `hw-*` and `rtl-*`; implementation stages use
+`fpga-flow` or `asic-flow`. See [project map](docs/project_map.md) for roles,
+the complete skill classification, tools, evidence limits and migration mapping.
+
+The default FPGA path is algorithm -> reviewed microarchitecture -> handwritten
+RTL -> simulation/verification -> synthesis/implementation -> hardware validation.
+HLS is an explicitly selected alternative or sub-block. Start with
+`fpga-algorithm-to-rtl` and the cheap `python -m scripts.fpga_feasibility` planning
+check before an expensive FPGA build. ASIC and dual-target flows retain their
+separate contracts. See [FPGA upstream adoption](docs/fpga_upstream_adoption.md)
+for what was added, what remains a playbook, and what is outside the current scope.
+
+The native Vivado backend remains the execution default. It covers selected
+tasks, not the full official Ross MCP interface; see
+[backend coverage and selection](docs/ross_backend_coverage.md). Useful Ross FPGA
+practices are adapted into existing skills without requiring its execution server.
+
 ### RTL project gate
 
 ```bash
@@ -75,9 +93,43 @@ The gate validates the selected source manifest, performs configured lint/readab
 
 The ASIC adapters consume a reviewed manifest and external PDK views. They emit content-addressed synthesis, STA, physical-flow, and PPA evidence. PDK and design assets remain outside the repository. See [docs/asic_ppa.md](docs/asic_ppa.md).
 
+Start with `asic-flow`; focused skills cover PDK intake, synthesis, STA,
+physical design, DRC/LVS, PPA and signoff handoff. These skills route existing
+CLI adapters; no ASIC MCP server or foundry-qualified signoff flow is implied.
+
+### FPGA report, coverage and board adapters
+
+Use the fixed `collect_reports` Vivado MCP tool for a source-bound DCP report
+bundle and `python -m scripts.quality_gate.rtl_coverage` for declared Verilator
+line coverage with preserved logs. Board requests default to preview and require
+exact device/artifact binding plus external operation-specific approval for
+execution. PS7/MPSoC support currently validates bring-up inputs; board checks
+remain explicit. See [docs/fpga_skill_rollout.md](docs/fpga_skill_rollout.md).
+
 ### Agent integrations
 
-Canonical instructions live in `AGENTS.md`, `skills/`, and `subagents/`. Thin adapters are provided for Claude Code, Codex, and OpenCode. MCP configuration uses environment variables or commands available on `PATH`; no machine-specific path is committed.
+The FPGA roles share `fpga-doc-search` through the remote `amd-doc-search`
+service. It searches release-specific documentation without starting EDA; results
+still require relevance and edition checks. Reload the client's MCP configuration
+after adding it. See [FPGA documentation service](docs/fpga_documentation_service.md)
+for client setup, live validation and limitations. ASIC work does not require it.
+
+Canonical instructions live in `AGENTS.md`, `skills/`, and `subagents/catalog.json`.
+The catalog generates readable role contracts and Claude Code, Codex and OpenCode
+role adapters. Target-specific skills are loaded after intake; ASIC routing has
+no Vivado, Vitis or AMD documentation dependency. MCP configuration uses environment
+variables or commands available on `PATH`; no machine-specific path is committed.
+
+Native Codex/Claude skill copies include the complete supporting resources.
+Run `python scripts/sync_skills.py --write` after canonical edits, followed by
+`--check`; CI rejects missing or divergent resources.
+After role-catalog edits, run `python -m scripts.sync_agents --write`, followed
+by `--check`. Preview any role/target without executing EDA:
+
+```bash
+python -m scripts.sync_agents --plan orchestrator-hw --target asic
+python -m scripts.sync_agents --plan coder-fpga --target both
+```
 
 ## Security model
 
@@ -89,6 +141,10 @@ Canonical instructions live in `AGENTS.md`, `skills/`, and `subagents/`. Thin ad
 Read [SECURITY.md](SECURITY.md) before attaching a licensed EDA installation or a self-hosted runner.
 
 ## Status
+
+Before updating GitHub, follow [release preparation](docs/release_preparation.md)
+to audit publishable source and prepare a hash-bound snapshot without copying local
+designs or changing the Git index.
 
 This public repository is an alpha distribution. Open-source CI validates portable contracts and pure-Python behavior; it does not constitute FPGA hardware validation or ASIC sign-off.
 

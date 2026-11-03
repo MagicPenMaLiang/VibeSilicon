@@ -1,0 +1,41 @@
+---
+name: rtl-cdc
+description: Analyze clock-domain crossings, choose safe synchronizers or asynchronous FIFOs, and review CDC evidence without accepting structural lint as functional proof.
+license: Apache-2.0
+metadata:
+  version: "1.0.0"
+  category: verification
+  routes: [fpga, asic, both]
+---
+
+# CDC analysis
+
+Use this skill when a design has multiple clocks, asynchronous inputs, generated clocks, or reset-domain crossings.
+
+## Required inputs
+
+- Clock/reset inventory and relationships.
+- Source manifest and target configuration.
+- Crossing list with data width, rate, coherency, and loss/backpressure requirements.
+- Structural CDC report and applicable protocol/formal evidence.
+
+## Rules
+
+- Single-bit level: reviewed two-or-more-flop synchronizer, with the first stages placed together where supported.
+- Pulse/event: toggle, pulse-stretch, or request/acknowledge scheme with a proven minimum spacing.
+- Multi-bit data: handshake, Gray-coded pointer, or asynchronous FIFO. Never synchronize bits independently.
+- Reset: assert/deassert behavior must match the architecture; asynchronous deassertion requires reviewed synchronization.
+- Constraints: exceptions identify explicit endpoints and never replace a CDC circuit.
+
+## Output
+
+Enumerate crossings before triage, classify the transfer contract, select one reviewed repair and rerun structural plus functional evidence. Keep source/destination reset assumptions explicit. For FIFO pointers, inspect effective skew/delay constraints: asynchronous clock groups can override max-delay constraints on the same paths.
+
+For every crossing report source, destination, scheme, structural result, functional evidence, remaining assumptions, and status. Missing/inconclusive evidence is `BLOCKED`, not `PASS`.
+
+For ASIC, require the reviewed library synchronizer cells, reset topology and
+placement/MTBF assumptions; an FPGA ASYNC_REG attribute or XPM instance is not
+an ASIC implementation. Treat the ASYNC_REG and XPM references as FPGA-only.
+Shared transfer/proof classification lives in `references/cdc_levels.md`.
+
+FPGA references: `references/async_reg_guide.md` and `references/xpm_primitives.md`.

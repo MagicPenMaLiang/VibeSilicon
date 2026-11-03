@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "default_agent": "orchestrator-hw",
+  "aliases": {
+    "architect-fpga": "architect-hw",
+    "coder-fpga": "coder-rtl",
+    "reviewer-fpga": "reviewer-hw",
+    "orchestrator-fpga": "orchestrator-hw"
+  },
+  "roles": {
+    "architect-hw": {
+      "agent": {
+        "name": "architect-hw",
+        "role": "FPGA/ASIC Microarchitecture Designer",
+        "description": "Turn reviewed requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric behavior, budgets, and a verification plan before coding.",
+        "skills": [
+          "hw-microarch",
+          "rtl-implementation",
+          "rtl-design",
+          "rtl-cdc"
+        ],
+        "mcp_servers": [
+          "python-sim"
+        ],
+        "max_iterations": 2,
+        "max_turns": 30
+      },
+      "input": {
+        "spec_required": true,
+        "numeric_contract_required": true,
+        "interface_contract_required": true,
+        "kpi_budget_required": true,
+        "target_flow_required": true
+      },
+      "output": {
+        "architecture_pattern": "design/<module>/architecture.md",
+        "signoff_pattern": "design/<module>/architecture.review.json",
+        "signoff_required": true
+      },
+      "required_sections": {
+        "interfaces": "ports, protocols, clocks, resets, CDC boundaries",
+        "dataflow": "pipeline stages, latency, throughput, backpressure",
+        "numeric": "widths, signedness, scaling, rounding, saturation, overflow",
+        "memory": "behavior, latency, collision policy, FPGA/ASIC wrapper boundary",
+        "implementation": "RTL/HLS split, parameterization, target-specific boundaries",
+        "budget": "area/resources, frequency, power, and non-regression limits",
+        "verification": "golden comparison, assertions, simulation, formal and target evidence"
+      },
+      "guardrails": {
+        "no_silent_numeric_change": true,
+        "no_unreviewed_clock_exception": true,
+        "no_pdk_or_license_copy": true,
+        "human_review_required": [
+          "architecture",
+          "clock_reset",
+          "memory_macro",
+          "security"
+        ]
+      },
+      "handoff": {
+        "next_agent": "coder-rtl",
+        "requires_signed_architecture": true
+      },
+      "routing": {
+        "fpga": {
+          "skills": [
+            "fpga-algorithm-to-rtl",
+            "fpga-doc-search",
+            "fpga-constraints",
+            "fpga-soc-bringup"
+          ],
+          "mcp_servers": [
+            "amd-doc-search"
+          ]
+        },
+        "asic": {
+          "skills": [
+            "asic-pdk-intake",
+            "asic-sta",
+            "asic-physical-design"
+          ],
+          "mcp_servers": [],
+          "backend_modules": [
+            "scripts.asic_backend_contract",
+            "scripts.asic_input_evidence",
+            "scripts.asic_synth_sta_adapter",
+            "scripts.asic_physical_artifact",
+            "scripts.asic_ppa_report"
+          ]
+        }
+      }
+    },
+    "coder-rtl": {
+      "agent": {
+        "name": "coder-rtl",
+        "role": "RTL and selected HLS Implementer",
+        "description": "Implement the smallest reviewed change, preserve behavioral contracts, and produce reproducible verification evidence.",
+        "skills": [
+          "rtl-implementation",
+          "rtl-design",
+          "rtl-simulation",
+          "rtl-lint",
+          "rtl-coverage",
+          "rtl-formal"
+        ],
+        "mcp_servers": [
+          "python-sim"
+        ],
+        "max_iterations": 3,
+        "max_turns": 50
+      },
+      "input": {
+        "spec_required": true,
+        "signed_architecture_required": true,
+        "source_manifest_required": true,
+        "golden_reference_required_when_applicable": true,
+        "test_vectors_required": true,
+        "kpi_budget_required": true
+      },
+      "output": {
+        "source_pattern": "design/<module>/src/**/*",
+        "evidence_pattern": "design/<module>/evidence/**/*.json"
+      },
+      "workflow": {
+        "steps": [
+          "Read the signed architecture and enumerate invariants",
+          "Implement one bounded change",
+          "Run G0 manifest and provenance checks",
+          "Run G1 lint, readability, CDC-shape, and waiver checks",
+          "Run applicable G2 simulation, protocol assertions, and formal checks",
+          "Compare target metrics with the reviewed budget",
+          "Return code, evidence IDs, limitations, and unresolved risks"
+        ]
+      },
+      "guardrails": {
+        "golden_read_only": true,
+        "no_unreviewed_numeric_change": true,
+        "no_unreviewed_constraint_change": true,
+        "logic_memory_separation_required": true,
+        "stop_after_failed_iterations": 3
+      },
+      "routing": {
+        "fpga": {
+          "skills": [
+            "fpga-algorithm-to-rtl",
+            "fpga-doc-search",
+            "fpga-resource-optimization",
+            "fpga-power-optimization"
+          ],
+          "mcp_servers": [
+            "amd-doc-search",
+            "vitis-hls",
+            "vivado"
+          ]
+        },
+        "asic": {
+          "skills": [
+            "asic-pdk-intake",
+            "asic-synthesis",
+            "asic-sta",
+            "asic-physical-design",
+            "asic-drc-lvs",
+            "asic-ppa"
+          ],
+          "mcp_servers": [],
+          "backend_modules": [
+            "scripts.asic_backend_contract",
+            "scripts.asic_input_evidence",
+            "scripts.asic_synth_sta_adapter",
+            "scripts.asic_physical_artifact",
+            "scripts.asic_ppa_report"
+          ]
+        }
+      }
+    },
+    "reviewer-hw": {
+      "agent": {
+        "name": "reviewer-hw",
+        "role": "Independent FPGA/ASIC Design Reviewer",
+        "description": "Review architecture, RTL, CDC, formal, timing, PPA, and source evidence without modifying the design.",
+        "skills": [
+          "hw-design-review",
+          "rtl-cdc",
+          "rtl-formal",
+          "hw-ppa-analysis",
+          "rtl-coverage"
+        ],
+        "mcp_servers": [],
+        "max_iterations": 1,
+        "max_turns": 25
+      },
+      "input": {
+        "signed_architecture_required": true,
+        "source_manifest_required": true,
+        "quality_gate_evidence_required": true,
+        "target_evidence_required_when_claimed": true
+      },
+      "output": {
+        "review_pattern": "design/<module>/review.json",
+        "status_values": [
+          "PASS",
+          "FAIL",
+          "BLOCKED",
+          "NOT_APPLICABLE"
+        ]
+      },
+      "review": {
+        "required_dimensions": [
+          "requirements_traceability",
+          "numeric_correctness",
+          "clock_reset_cdc",
+          "protocol_behavior",
+          "memory_boundary",
+          "verification_adequacy",
+          "ppa_and_constraint_integrity",
+          "evidence_freshness",
+          "license_and_provenance"
+        ]
+      },
+      "guardrails": {
+        "read_only": true,
+        "verify_primary_evidence": true,
+        "skip_is_not_pass": true,
+        "independent_human_required": [
+          "architecture",
+          "reset_cdc_exception",
+          "security",
+          "production_signoff"
+        ]
+      },
+      "routing": {
+        "fpga": {
+          "skills": [
+            "fpga-doc-search",
+            "fpga-dcp-analysis",
+            "fpga-constraints"
+          ],
+          "mcp_servers": [
+            "amd-doc-search"
+          ]
+        },
+        "asic": {
+          "skills": [
+            "asic-pdk-intake",
+            "asic-sta",
+            "asic-drc-lvs",
+            "asic-ppa",
+            "asic-signoff-handoff"
+          ],
+          "mcp_servers": [],
+          "backend_modules": [
+            "scripts.asic_backend_contract",
+            "scripts.asic_input_evidence",
+            "scripts.asic_synth_sta_adapter",
+            "scripts.asic_physical_artifact",
+            "scripts.asic_ppa_report"
+          ]
+        }
+      }
+    },
+    "orchestrator-hw": {
+      "agent": {
+        "name": "orchestrator-hw",
+        "role": "FPGA/ASIC Engineering Workflow Orchestrator",
+        "description": "Select the target flow, enforce dependencies and gates, and coordinate architect, coder, and reviewer handoffs.",
+        "skills": [
+          "hw-flow",
+          "hw-microarch",
+          "hw-design-review",
+          "hw-ppa-analysis"
+        ],
+        "mcp_servers": [
+          "python-sim"
+        ],
+        "max_turns": 60
+      },
+      "output": {
+        "summary_pattern": "design/<module>/acceptance.md",
+        "evidence_required": true
+      },
+      "input": {
+        "target_flow_required": true,
+        "standard_task_contract_required": true,
+        "spec_required": true,
+        "source_manifest_required": true
+      },
+      "workflow": {
+        "sequence": [
+          "Classify target as FPGA, ASIC, or both",
+          "Validate project inputs and third-party boundaries",
+          "Dispatch architect and wait for independent architecture approval",
+          "Dispatch coder for a bounded implementation",
+          "Enforce G0, G1, and applicable G2 gates",
+          "Run target-specific synthesis or physical stages only when authorized",
+          "Dispatch independent reviewer",
+          "Return accepted evidence, limitations, and unresolved risks"
+        ]
+      },
+      "target_gates": {
+        "fpga": [
+          "rtl",
+          "simulation",
+          "cdc",
+          "formal_if_applicable",
+          "synthesis",
+          "implementation",
+          "hardware_if_required"
+        ],
+        "asic": [
+          "rtl",
+          "simulation",
+          "cdc",
+          "formal_if_applicable",
+          "pdk_input",
+          "synthesis_sta",
+          "physical",
+          "drc_lvs",
+          "ppa"
+        ]
+      },
+      "guardrails": {
+        "fail_closed": true,
+        "skip_is_not_pass": true,
+        "no_automatic_signoff": true,
+        "no_untrusted_self_hosted_pull_request_execution": true
+      },
+      "routing": {
+        "fpga": {
+          "skills": [
+            "fpga-flow",
+            "fpga-doc-search",
+            "fpga-programming",
+            "fpga-ila-debug",
+            "fpga-soc-bringup",
+            "fpga-realtime-video-debug"
+          ],
+          "mcp_servers": [
+            "amd-doc-search",
+            "vitis-hls",
+            "vivado"
+          ]
+        },
+        "asic": {
+          "skills": [
+            "asic-flow",
+            "asic-pdk-intake",
+            "asic-signoff-handoff"
+          ],
+          "mcp_servers": [],
+          "backend_modules": [
+            "scripts.asic_backend_contract",
+            "scripts.asic_input_evidence",
+            "scripts.asic_synth_sta_adapter",
+            "scripts.asic_physical_artifact",
+            "scripts.asic_ppa_report"
+          ]
+        }
+      }
+    }
+  }
+}

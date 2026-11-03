@@ -90,10 +90,7 @@ def find_cross_domain_regs(clk_to_regs: dict[str, set[str]]) -> set[str]:
 
 
 def scan_file(filepath: Path) -> list[dict]:
-    try:
-        content = filepath.read_text(encoding='utf-8', errors='ignore')
-    except Exception:
-        return []
+    content = filepath.read_text(encoding='utf-8', errors='strict')
 
     async_marked = extract_async_marked_regs(content)
     clk_to_regs = extract_clk_to_regs(content)

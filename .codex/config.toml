@@ -18,7 +18,7 @@ command = "python"
 args = ["scripts/mcp_launcher.py", "vitis-hls"]
 cwd = "."
 env_vars = ["VITIS_RUN_BIN", "VITIS_HLS_PATH", "VITIS_UNIFIED_PATH"]
-enabled_tools = ["csim", "csynth", "co_sim", "export"]
+enabled_tools = ["csim", "csynth", "co_sim", "export", "analyze_csynth"]
 default_tools_approval_mode = "writes"
 
 [mcp_servers.vivado]
@@ -26,5 +26,13 @@ command = "python"
 args = ["scripts/mcp_launcher.py", "vivado"]
 cwd = "."
 env_vars = ["VIVADO_BIN", "VIVADO_SETTINGS", "VIBESILICON_ALLOW_RUN_SCRIPT", "VIBESILICON_TCL_ALLOWLIST"]
-enabled_tools = ["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream"]
+enabled_tools = ["synth_design", "place_route", "report_timing", "analyze_checkpoint", "report_cdc", "write_bitstream", "collect_reports", "analyze_opt_log"]
 default_tools_approval_mode = "writes"
+
+[mcp_servers.amd-doc-search]
+url = "https://ross.amd.com/mcp/doc-search"
+enabled_tools = ["vivado_doc_search"]
+enabled = true
+required = false
+startup_timeout_sec = 20
+tool_timeout_sec = 60

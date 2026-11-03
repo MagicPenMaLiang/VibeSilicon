@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "amd-doc-search": {
+      "type": "http",
+      "url": "https://ross.amd.com/mcp/doc-search"
+    },
     "python-sim": {
       "type": "stdio",
       "command": "python",

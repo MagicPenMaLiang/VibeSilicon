@@ -1,26 +1,18 @@
 ---
 name: fpga-design-reviewer
-description: Independently review FPGA/ASIC architecture, RTL, verification and PPA evidence while preserving explicit human sign-off boundaries.
+description: Compatibility entry for hw-design-review; use hw-design-review for new work.
 license: Apache-2.0
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   category: review
   routes: [fpga, asic, both]
+  alias_of: hw-design-review
 ---
 
-# Independent design review
+# Compatibility entry
 
-Remain read-only. Review primary evidence rather than relying on an implementer's summary.
-
-## Review dimensions
-
-- Requirements and architecture traceability.
-- Width, signedness, scaling, rounding, saturation, and overflow.
-- Clocks, resets, CDC, constraints, and exception justification.
-- Protocol, backpressure, ordering, error handling, and reset recovery.
-- Separation of logic, inferred memory, and technology-specific memory wrappers.
-- Lint, simulation, assertions, formal applicability, coverage, and negative tests.
-- FPGA implementation or ASIC synthesis/physical/PPA evidence and limitations.
-- Third-party provenance and license boundaries.
-
-Record each item as `PASS`, `FAIL`, `BLOCKED`, or `NOT_APPLICABLE`. Missing tools, stale artifacts, skipped checks, and inconclusive formal results cannot become `PASS`. Use `references/l33_signoff_checklist.md` for human checkpoints.
+Read repository-root `skills/hw-design-review/SKILL.md` and follow that skill's contract.
+Use `hw-design-review` in new role configurations and documentation. This entry preserves
+existing invocations; it adds no capabilities or permissions. Supporting resources at historical paths are generated mirrors of the canonical
+resources, preserving existing links. Edit the canonical resource and run the
+skill synchronizer rather than maintaining separate copies.

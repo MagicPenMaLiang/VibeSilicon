@@ -4,10 +4,15 @@ VibeSilicon supports FPGA and ASIC work through four roles and evidence-based ga
 
 ## Roles
 
-- `architect-fpga`: turns requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric contracts, budgets, and verification plans.
-- `coder-fpga`: implements the smallest reviewed RTL or HLS change and runs the required local gates.
-- `reviewer-fpga`: independently checks architecture, RTL, CDC, formal, timing, PPA, and evidence. It does not modify the design under review.
-- `orchestrator-fpga`: selects the target flow, enforces dependencies, and stops on missing evidence or approval.
+- `architect-hw`: turns requirements into interfaces, clock/reset domains, data flow, memory architecture, numeric contracts, budgets, and verification plans.
+- `coder-rtl`: implements the smallest reviewed RTL change or explicitly selected HLS component and runs the required local gates.
+- `reviewer-hw`: independently checks architecture, RTL, CDC, formal, timing, PPA, and evidence. It does not modify the design under review.
+- `orchestrator-hw`: selects the target flow, enforces dependencies, and stops on missing evidence or approval.
+
+`subagents/catalog.json` is the source of truth for all four role contracts and
+their target-specific skill/tool routing. The old `*-fpga` role names remain
+compatibility aliases for these same responsibilities. They do not define a
+second team. Delegate only when the task and environment authorize it.
 
 ## Required project inputs
 
@@ -36,17 +41,35 @@ Use `docs/new_project_inputs.md` and the files under `templates/`.
 
 ## Flow selection
 
+Start with `hw-flow`. Shared design/verification uses `hw-microarch`,
+`rtl-implementation`, `rtl-design`, `rtl-lint`, `rtl-simulation`, `rtl-coverage`,
+`rtl-cdc`, `rtl-formal`, `hw-design-review` and `hw-ppa-analysis` as applicable.
+Use `fpga-flow` for FPGA stages and `asic-flow` for ASIC stages. Load only the
+selected target branch. See `docs/project_map.md` for capabilities and gaps.
+
 - FPGA: architecture → RTL/HLS → G0 manifest → G1 static/readability → G2 simulation/protocol/formal as applicable → synthesis/implementation → hardware validation.
 - ASIC: architecture → RTL → G0/G1/G2 → reviewed PDK input evidence → synthesis/STA → physical flow → DRC/LVS evidence → PPA report → sign-off handoff.
 - Both: maintain one behavioral/numeric contract, but use separate target manifests, constraints, memory wrappers, evidence, and acceptance decisions.
 
 ## Canonical assets
 
+For AMD FPGA documentation, the four roles share the `fpga-doc-search` skill
+and the separate `amd-doc-search` MCP service (`vivado_doc_search`). Use it for
+release-sensitive Vivado development/debug decisions and optional Vitis/HLS/SoC
+questions; verify source relevance and edition. The native Vivado backend remains
+an EDA execution adapter. Documentation lookup is not an ASIC prerequisite or a
+replacement for current-run evidence, architecture review or hardware approval.
+
 - Skills: `skills/`
-- Agent contracts: `subagents/`
+- Agent contracts: `subagents/catalog.json`; generated readable TOML views in `subagents/`
 - MCP servers: `mcp/`
 - Quality gates and adapters: `scripts/`
 - Schemas and policies: `schemas/`, `config/`
 - Project templates: `templates/`
 
 Only claim results supported by the current run's content-addressed evidence.
+
+After skill edits run `python scripts/sync_skills.py --write` and `--check`.
+After role edits run `python -m scripts.sync_agents --write` and `--check`.
+Native skill copies and client role adapters are generated; edit their canonical
+sources first. Alias entries preserve previous names and do not add permissions.

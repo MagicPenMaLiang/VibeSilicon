@@ -1,18 +1,15 @@
-// TODO: unfinished scaffold; review and verify before use.
-//
-// Compute pipeline template
-// Scope: illustrative multiply-add scaffold; numeric widths are not validated.
-// Reference: references/hls_templates/compute_pipeline.cpp
-
+// Full-precision signed multiply-add example: a*b + c, with no quantization.
+// Reviewed product width is 2*W; one additional bit covers signed addition.
+// Narrowing, rounding or saturation belongs to a separately reviewed contract.
 #pragma once
-#include "hls_stream.h"
 #include "ap_int.h"
 
 template<int W>
-ap_int<W+4> compute_pipeline(ap_int<W> a, ap_int<W> b, ap_int<4> c) {
+ap_int<2*W+1> compute_pipeline(ap_int<W> a, ap_int<W> b, ap_int<4> c) {
+    static_assert(W >= 2, "product must cover the four-bit addend");
 #pragma HLS PIPELINE II=1
-    // TODO: multiply-add / accumulation / reviewed overflow policy
-    ap_int<W+1> mul = a * b;
-    ap_int<W+4> acc = mul + c;
-    return acc;
+    ap_int<2*W> product = a * b;
+    ap_int<2*W+1> extended_product = product;
+    ap_int<2*W+1> extended_addend = c;
+    return extended_product + extended_addend;
 }

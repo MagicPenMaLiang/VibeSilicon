@@ -1,9 +1,9 @@
-# ASYNC_REG reference scaffold
+# Synchronizer implementation evidence
 
-This reference is unfinished. The existing `scripts/quality_gate/scan_async_reg.py`
-is a structural annotation check, not a proof that clock-domain crossings are safe.
-Use the canonical CDC skill to select and review the crossing topology.
+Use ASYNC_REG only on reviewed synchronizer stages; the attribute does not establish event delivery or data coherence. Keep combinational logic out of the metastability-catching path. Avoid fanout from the first stage and keep destination stages physically close where the target supports it.
 
-TODO: document supported annotation syntax, scan inputs and output fields,
-reset assumptions, synchronizer placement and limitations. Bind conclusions
-to the actual tool result rather than an illustrative JSON response.
+Document destination frequency, data transition rate, chosen stage count, target MTBF and technology assumptions. Two stages are a common structure, not a universal reliability guarantee. For ASIC, use the reviewed library cells and placement/sign-off flow rather than FPGA properties.
+
+Reset assertion/deassertion is a separate crossing contract. Prove destination reset release and startup behavior; do not assume a resettable synchronizer is valid for every target.
+
+Check synthesized cells, retained attributes and placement alongside report_cdc. Use simulation/assertions for minimum event spacing and handshake behavior. Structural recognition alone is insufficient. Bind results to source/checkpoint hashes and tool version.

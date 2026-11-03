@@ -74,7 +74,7 @@ the neutral core configuration interface.
 ## 5. Implementation choice and budgets
 
 Explain the RTL/HLS partition and why it meets the target contract. For HLS,
-read `skills/fpga-ip-design/references/pragma_cheatsheet.md`; record directive
+read `skills/rtl-implementation/references/pragma_cheatsheet.md`; record directive
 intent, target loop/function, recurrence and memory-port limits. Requested II,
 latency and resource counts are estimates until bound to measured reports.
 

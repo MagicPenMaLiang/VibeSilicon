@@ -1,9 +1,9 @@
-# Power analysis reference scaffold
+# Power evidence quality
 
-This reference is unfinished. Use the canonical PPA skill and record whether
-power evidence is estimated or measured, with activity and operating conditions.
+Identify measured board power, routed activity-based tool estimates, or vectorless estimates explicitly. Record target, source/configuration hashes, voltage, temperature, operating mode, tool version, stage, static/dynamic breakdown and activity-file hash/annotation coverage.
 
-TODO: document supported report commands, dynamic and static power fields,
-activity sources, confidence levels and comparable experiment conditions.
-An assumed toggle rate is not measured activity. Changes to clocks, numeric
-behavior or throughput require the project's contract and review process.
+Check that activity represents reset, idle, active throughput and realistic backpressure. Preserve the measured interval and clock assumptions. Unannotated nets or default toggle rates introduce uncertainty; do not infer precision from decimal formatting.
+
+Compare candidates under the same corner, activity, design contract and tool settings. Board rail totals can include PS, DRAM and peripherals; do not equate them to isolated PL power. ASIC leakage/internal/switching reports belong to separate corners and library views.
+
+Optimization needs a hypothesis and functional/timing/resource guardrails. Clock-enable or operand-isolation changes require startup and wakeup tests. Never add fabric combinational clock gates, silently alter throughput, or treat an estimate as board validation.

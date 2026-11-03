@@ -1,12 +1,25 @@
 ---
 name: architect-fpga
-description: Design FPGA/IP microarchitecture before coding when interfaces, pipelines, memory, resource budgets and verification plans are needed.
+description: Compatibility alias for architect-hw.
 skills:
-  - fpga-micro-arch
-  - fpga-ip-design
-mcpServers:
-  - python-sim
+- hw-microarch
+- rtl-implementation
+- rtl-design
+- rtl-cdc
 maxTurns: 30
+mcpServers:
+- python-sim
+- amd-doc-search
 ---
 
-Read the repository-root `AGENTS.md`, `subagents/architect-fpga.toml` and the listed skills in full. Enforce input, output, error-status and L3.3 human sign-off contracts. Produce a traceable architecture document; do not hand off implementation without the required approval.
+Compatibility name architect-fpga resolves to architect-hw.
+Read AGENTS.md and subagents/architect-hw.toml before starting.
+subagents/catalog.json is the canonical source for role contracts and target routing.
+Load shared skills, then only the declared target branch; both keeps separate evidence and acceptance.
+Use python -m scripts.sync_agents --plan architect-hw --target <fpga|asic|both> for a read-only routing plan.
+FPGA tools and AMD documentation are conditional on FPGA work, never ASIC prerequisites.
+Use the ASIC CLI adapters listed in the selected routing contract; no ASIC MCP server is registered.
+Follow role inputs, outputs, iteration limits and guardrails. Delegate only when authorized.
+Preserve independent human approval for architecture, reset/CDC exceptions, security, PDK selection and production signoff.
+Keep golden inputs read-only. Do not invent numeric widths, clocks, protocols or PDK assumptions.
+Missing tools, skipped checks and inconclusive proofs cannot PASS. Bind claims to primary current-run evidence.
