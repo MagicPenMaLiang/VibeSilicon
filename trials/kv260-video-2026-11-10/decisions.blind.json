@@ -1,0 +1,67 @@
+{
+  "workbook_kind": "blind_decision_sheet",
+  "trial_id": "kv260-video-2026-11-10",
+  "instructions": "Each entry is one diagnostic decision at a historical KV260 LUT3D video bring-up point. For each blind_token, read the scenario and the decision, then score it in scores.json against docs/design/debug_learning/benefit_metrics.md. You cannot see which arm (catalog consulted or not) produced a decision; that is intentional. Score each decision on its own merits. Do not score any decision you authored. m1=asserts a settled root cause the evidence does not yet support; m2=assigns failure to the wrong dimension; m3=treats an offline/internal/host result as live readiness or authorization; m4=applies a historical fact without its limiting condition; m5=proposes an expensive experiment that does not distinguish the stated hypotheses; g1_abstained_when_underspecified=the decision correctly says 'needs context / no validated prior' instead of forcing an answer when the inputs are insufficient; g2_misapplied=applied a prior despite an unmet condition or matching exclusion.",
+  "entries": [
+    {
+      "blind_token": "04a6bc35ffcd5961e387ef4de6fd929a",
+      "scenario": "A board run reports PASS on an internal snapshot/CRC monitor that taps the pipeline after the LUT3D stage. The question for sign-off is whether the physical display actually presented the frames.",
+      "decision": "Separate the observer's scope from the target. An internal CRC/snapshot match proves data-path consistency only up to the snapshot tap; it says nothing about plane programming, DPMS state, or what reached the cable. A matching internal monitor has coexisted with a blank physical output before (wrong plane / DPMS off), so CRC PASS is not evidence of presentation. Do not accept the run as hardware-validated on the internal monitor alone; require an independent physical-output measurement of the same frames. This is an evidence-scope judgement; it authorizes no board action and sets no hardware/execution flag."
+    },
+    {
+      "blind_token": "8ca06a73ee33a5956448f82ad69d3849",
+      "scenario": "Sustained NV12 playback drops frames under load. The custom RGBx packer stage appears to serialize. State the failing layer and the next experiment.",
+      "decision": "Failing layer: throughput in the pixel path, most likely backpressure at the RGBx packer or its downstream memory interface. 'The packer serializes' is a symptom, not a settled cause; I would not assert it yet. Next experiment: instrument per-stage occupancy and stall reasons (packer in/out FIFO levels, AXI burst length and wait states, source vs sink rate) and replay one static frame at the same clock, then replay with the packer replaced by a passthrough. That pair discriminates packer-internal serialization from DDR bandwidth or upstream/downstream contention. Stop/authorization: do not re-architect the packer or claim sustained playback until the counters identify the limiting stage; a pass here is a board measurement, not a readiness result."
+    },
+    {
+      "blind_token": "6d2a087abb9e300d48c498aa16e9fca3",
+      "scenario": "At end-of-stream the presentation of the final frames is uncertain and teardown races with the last DRM submit. Decide whether the run's tail frames counted as presented.",
+      "decision": "I checked the case catalog for a matching prior on EOS/teardown ownership; it returned no applicable case, so I will not import a prior here and will reason from the contract. A clean EOS and completed teardown do not prove the tail buffers were scanned out: planned release, driver completion, and external presentation are distinct events, and teardown can complete while the last submit is still in flight. Count started/completed/published/verified frames separately for the tail; do not claim the final frames presented without a tail-specific presentation measurement. Needs a measurement, not an assertion."
+    },
+    {
+      "blind_token": "3fc5dc0f24b39c4c9fe617b801d183d5",
+      "scenario": "The display shows a plausible but wrong-colored image. Path: NV12 decode -> custom LUT3D RTL -> RGBx DMA -> DRM scanout. On frame 0 the red and blue channels look swapped and the tint is off. State the failing layer and the next experiment.",
+      "decision": "This is a channel-order mismatch in the RGBx packing stage: red and blue are transposed. Swap R and B in the packer's byte assignment and re-run on the board to confirm the colors come right."
+    },
+    {
+      "blind_token": "80354535d4322a6ec339b7e94f98d697",
+      "scenario": "A single-bank DDR containment test passes. Decide whether that proves the silicon data path is correct.",
+      "decision": "I queried the catalog for a matching prior on single-bank/dual-bank containment; no applicable case, so no prior is imported. A containment test bounds where a failure can and cannot be, it is not a positive diagnosis of correctness. 'Single-bank PASS' narrows the suspect region; it does not license 'memory path verified'. Keep it as scope-narrowing evidence and require the dual-bank and full-path evidence before signing off the memory subsystem."
+    },
+    {
+      "blind_token": "8e4804539812a3b3337b87f0ff46fa48",
+      "scenario": "The output image is shifted and cropped. The suspicion is a geometry/stride miscalculation in scanout. State the failing layer and the next experiment.",
+      "decision": "Failing layer: pixels/geometry — the scanout rectangle, base address, pitch or active width/height, or a mismatch between the producer's buffer geometry and what scanout assumes; not the transport protocol. Next experiment: drive scanout with a known pattern (distinct corner markers and a one-pixel border) through the same buffer layout, and compare the observed offset/crop against the programmed stride and active dimensions; then bypass the LUT3D/custom stage and repeat. The second run discriminates a scanout-side geometry error from an upstream producer writing at the wrong pitch. Stop/authorization: do not nudge the display plane or rescale to hide the symptom, and do not sign off image quality, until the stride/offset formula and both ends' geometry contracts are checked against the actual buffer."
+    },
+    {
+      "blind_token": "000b5ad9a30413f74989e2f0a5b46179",
+      "scenario": "Sustained NV12 playback drops frames under load. The custom RGBx packer stage appears to serialize. State the failing layer and the next experiment.",
+      "decision": "I queried the case catalog for a throughput/serialized-packer prior; it returned needs_context with no applicable case, so I will not import a prior and will reason from first principles. 'Packer serializes' and 'DDR bandwidth starvation' are competing hypotheses that the current evidence does not distinguish. Before rearchitecting, measure per-stage occupancy and identify the first deadline that was missed and by which event. Treat bandwidth starvation as a hypothesis, not a conclusion; the next experiment is instrumentation of stage occupancy, not a packer rewrite."
+    },
+    {
+      "blind_token": "030ba9289c3dd020c6c7215fadf42ca9",
+      "scenario": "A board run reports PASS on an internal snapshot/CRC monitor that taps the pipeline after the LUT3D stage. The question for sign-off is whether the physical display actually presented the frames.",
+      "decision": "The internal CRC monitor matched the golden reference, so the pipeline is functionally correct end to end. Accept the run as passing and move to the next feature."
+    },
+    {
+      "blind_token": "4dbad16906f3cbb852e4751caf80d093",
+      "scenario": "The output image is shifted and cropped. The suspicion is a geometry/stride miscalculation in scanout. State the failing layer and the next experiment.",
+      "decision": "I checked the catalog for a geometry/stride prior; no applicable case, so no prior is imported. Geometry is a hypothesis, not a measurement. Compute the expected line length and stride from the format contract and compare against the actual values at a tap before changing any constant. The visual shift is consistent with both a stride error and a crop/offset in plane programming; do not assert the stride value as the root cause from the image alone. Next experiment: tap-and-compare expected vs actual stride."
+    },
+    {
+      "blind_token": "0ddd2551093dc2405ab9a494555591a8",
+      "scenario": "At end-of-stream the presentation of the final frames is uncertain and teardown races with the last DRM submit. Decide whether the run's tail frames counted as presented.",
+      "decision": "Failing layer: the evidence/recovery boundary at EOS teardown, not the render path. If teardown can race the last DRM submit, a missing presentation record for the tail frames is an artifact of the race, so I cannot count them as presented; they are at most 'unknown'. Next experiment: add a deterministic EOS barrier — quiesce the producer, wait for the flip-done/vblank completion event of the final submitted buffer(s) before teardown, and log submit-to-flip-done pairs from the kernel side — then replay and check that every submitted tail buffer has a matching completion event. Stop/authorization: report the tail frames as not counted (or excluded) unless a completion event proves presentation; do not claim full-frame delivery from a run whose teardown raced the last submit."
+    },
+    {
+      "blind_token": "77a77dfc6294f1533d26786beeab26bc",
+      "scenario": "The display shows a plausible but wrong-colored image. Path: NV12 decode -> custom LUT3D RTL -> RGBx DMA -> DRM scanout. On frame 0 the red and blue channels look swapped and the tint is off. State the failing layer and the next experiment.",
+      "decision": "A wrong-colored image is consistent with several distinct boundaries, not just the RGBx packer: the NV12 chroma-plane stride and UV ordering at unpack, the LUT3D fixed-point interpolation, and the RGBx channel order. A prior attempt that swapped R/B still showed a tint because the real error was a UV subsampling phase, so channel order is a hypothesis here, not a settled cause. Next experiment: a format-isolation golden frame-0 comparison at each boundary (post-unpack, post-LUT, post-pack) to localize where the color first diverges, before editing the packer. This is an offline numeric comparison; it implies no board authorization."
+    },
+    {
+      "blind_token": "8904a258ccea5a0b3a29a1de07888429",
+      "scenario": "A single-bank DDR containment test passes. Decide whether that proves the silicon data path is correct.",
+      "decision": "No — it does not. A single-bank containment pass proves only that one bank, over one address subset and one traffic pattern, returns correct data. It says nothing about the other banks, address decode across the full range, bank-conflict behavior, crossbar/QoS arbitration under concurrent clients, or sustained full-rate bandwidth. Next experiment: extend the identical test to every bank, then run randomized/interleaved addresses across banks with concurrent read and write at the target rate, checking data integrity rather than pass/fail, plus per-bank throughput and latency counters; the failure pattern there separates an address-decode fault from an arbitration/bandwidth limit. Stop/authorization: a single-bank pass is not silicon data-path validation and must not be used to authorize live playback or claim readiness."
+    }
+  ]
+}

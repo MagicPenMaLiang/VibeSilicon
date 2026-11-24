@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import re
@@ -17,6 +18,7 @@ from scripts.quality_gate.rtl_readability import _always_blocks, _strip_comments
 
 ROOT = Path(__file__).resolve().parents[2]
 HASH = re.compile(r"sha256:[0-9a-f]{64}\Z")
+UTC_TIMESTAMP = re.compile(r"(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})Z\Z")
 TODO = re.compile(r"\b(TODO|FIXME|XXX)(?:\(([A-Za-z][A-Za-z0-9_.-]{1,31})\))?\s*:", re.IGNORECASE)
 
 
@@ -28,12 +30,30 @@ def _sha(raw: bytes) -> str:
     return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
-def _content_id(value: dict) -> str:
+def _content_id(value: dict, *, excluded: str = "evidence_id") -> str:
     payload = json.dumps(
-        {key: item for key, item in value.items() if key != "evidence_id"},
+        {key: item for key, item in value.items() if key != excluded},
         sort_keys=True, separators=(",", ":"),
     ).encode("utf-8")
     return _sha(payload)
+
+
+def _utc_timestamp(value: object, field: str) -> datetime.datetime:
+    """Parse a strict RFC3339 UTC stamp. Local offsets are rejected on purpose:
+    an approval has to name one unambiguous instant."""
+    if not isinstance(value, str) or not UTC_TIMESTAMP.fullmatch(value):
+        raise SupplementalPolicyError(f"{field} is not an RFC3339 UTC timestamp")
+    try:
+        return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as exc:
+        raise SupplementalPolicyError(f"{field} is not a valid calendar time") from exc
+
+
+def _string_list(value: object, field: str) -> None:
+    if (not isinstance(value, list) or not value
+            or any(not isinstance(item, str) or not item.strip() for item in value)
+            or len(value) != len(set(value))):
+        raise SupplementalPolicyError(f"{field} must be a non-empty list of unique statements")
 
 
 def _manifest_file(root: Path, manifest_path: Path) -> Path:
@@ -145,11 +165,55 @@ def validate_generated_provenance(manifest_path: Path, *, repository_root: Path 
     return {"status": "PASS", "contract": value["evidence_id"]}
 
 
+def _domain_approval(project_root: str, top: str, evidence_id: str,
+                     root: Path, *, required: bool) -> str | None:
+    """A tool PASS is not an engineering decision. AGENTS.md already reserves
+    reset/CDC exceptions to independent human review; this is the executor for
+    that rule. The record exists only if it is bound to the evidence it
+    approves -- regenerating the evidence invalidates it by construction."""
+    path = root / project_root / "rtl_domain_approval.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        if not required:
+            return None
+        raise SupplementalPolicyError(
+            "multi-domain project requires rtl_domain_approval.json") from exc
+    required_fields = {
+        "schema_version", "top", "evidence_id", "approved_by", "approved_at_utc",
+        "generated_by", "generated_at_utc", "approved_scope", "excluded_scope",
+        "basis", "record_id",
+    }
+    if not isinstance(value, dict) or set(value) != required_fields or value["schema_version"] != 1:
+        raise SupplementalPolicyError("invalid domain approval shape")
+    if value["top"] != top:
+        raise SupplementalPolicyError("domain approval names a different top module")
+    if not isinstance(value["evidence_id"], str) or value["evidence_id"] != evidence_id:
+        raise SupplementalPolicyError("domain approval does not bind the current CDC/RDC evidence")
+    approver, generator = value["approved_by"], value["generated_by"]
+    if (not isinstance(approver, str) or not approver.strip()
+            or not isinstance(generator, str) or not generator.strip()):
+        raise SupplementalPolicyError("domain approval lacks an approver or a generator")
+    if approver.strip().casefold() == generator.strip().casefold():
+        raise SupplementalPolicyError("domain approval is not independent of its generator")
+    generated_at = _utc_timestamp(value["generated_at_utc"], "generated_at_utc")
+    approved_at = _utc_timestamp(value["approved_at_utc"], "approved_at_utc")
+    if approved_at < generated_at:
+        raise SupplementalPolicyError("domain approval predates the record it approves")
+    _string_list(value["approved_scope"], "approved_scope")
+    _string_list(value["excluded_scope"], "excluded_scope")
+    if not isinstance(value["basis"], str) or not value["basis"].strip():
+        raise SupplementalPolicyError("domain approval states no basis")
+    if not isinstance(value["record_id"], str) or value["record_id"] != _content_id(value, excluded="record_id"):
+        raise SupplementalPolicyError("domain approval content ID mismatch")
+    return value["record_id"]
+
+
 def validate_domain_evidence(manifest_path: Path, *, repository_root: Path = ROOT) -> dict:
     root = repository_root.resolve(strict=True)
     manifest = validate_manifest(manifest_path, repository_root=repository_root)
     if len(manifest["clocks"]) <= 1 and len(manifest["resets"]) <= 1:
-        return {"status": "NOT_APPLICABLE", "evidence_id": None}
+        return {"status": "NOT_APPLICABLE", "evidence_id": None, "approval_id": None}
     contract_path = root / manifest["project_root"] / "rtl_domain_evidence.json"
     try:
         value = json.loads(contract_path.read_text(encoding="utf-8"))
@@ -168,7 +232,10 @@ def validate_domain_evidence(manifest_path: Path, *, repository_root: Path = ROO
         raise SupplementalPolicyError("CDC/RDC evidence does not match the project")
     if not isinstance(value["evidence_id"], str) or value["evidence_id"] != _content_id(value):
         raise SupplementalPolicyError("CDC/RDC evidence content ID mismatch")
-    return {"status": "PASS", "evidence_id": value["evidence_id"]}
+    required = "domain_approval" in load_policy()["gate_requirements"]["g2"]
+    approval_id = _domain_approval(manifest["project_root"], manifest["top"],
+                                   value["evidence_id"], root, required=required)
+    return {"status": "PASS", "evidence_id": value["evidence_id"], "approval_id": approval_id}
 
 
 def main(argv: list[str] | None = None) -> int:

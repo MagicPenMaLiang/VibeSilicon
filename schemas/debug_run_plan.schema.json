@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "attempt", "date", "package_path", "evidence_path", "bound_boot", "artifacts", "bindings", "capture_path", "capture_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "attempt": {"$ref": "#/$defs/token"},
+    "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "package_path": {"$ref": "#/$defs/path"},
+    "evidence_path": {"$ref": "#/$defs/path"},
+    "bound_boot": {"$ref": "#/$defs/token"},
+    "capture_path": {"$ref": "#/$defs/path"},
+    "capture_sha256": {"$ref": "#/$defs/hash"},
+    "artifacts": {"type": "array", "minItems": 5, "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"$ref": "#/$defs/path"}, "sha256": {"$ref": "#/$defs/hash"}}}},
+    "bindings": {"type": "object", "additionalProperties": false, "required": ["player", "image", "device_tree", "golden", "host_validator"], "properties": {"player": {"$ref": "#/$defs/path"}, "image": {"$ref": "#/$defs/path"}, "device_tree": {"$ref": "#/$defs/path"}, "golden": {"$ref": "#/$defs/path"}, "host_validator": {"$ref": "#/$defs/path"}}}
+  },
+  "$defs": {
+    "token": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"},
+    "path": {"type": "string", "minLength": 1, "maxLength": 1024},
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

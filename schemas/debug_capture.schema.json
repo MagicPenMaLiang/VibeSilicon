@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "boot_id", "collector_id", "sequence_start", "sequence_end", "checks"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "boot_id": {"$ref": "#/$defs/token"}, "collector_id": {"$ref": "#/$defs/token"},
+    "sequence_start": {"type": "integer", "minimum": 0}, "sequence_end": {"type": "integer", "minimum": 0},
+    "checks": {
+      "type": "object", "additionalProperties": false,
+      "required": ["persistent_marker", "finalizer", "staging", "transport", "trace", "services", "image"],
+      "properties": {
+        "persistent_marker": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["consumed"], "properties": {"consumed": {"type": "boolean"}}}]},
+        "finalizer": {"$ref": "#/$defs/entries"}, "staging": {"$ref": "#/$defs/entries"}, "transport": {"$ref": "#/$defs/entries"},
+        "trace": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["baseline_matches"], "properties": {"baseline_matches": {"type": "boolean"}}}]},
+        "services": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["restored"], "properties": {"restored": {"type": "boolean"}}}]},
+        "image": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["sha256"], "properties": {"sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}}]}
+      }
+    }
+  },
+  "$defs": {
+    "token": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"},
+    "entries": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["entries"], "properties": {"entries": {"type": "integer", "minimum": 0}}}]}
+  }
+}

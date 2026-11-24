@@ -1,6 +1,7 @@
 """Release selection, fail-closed inspection and reproducible export checks."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -19,7 +20,11 @@ class PublicReleaseAuditTests(unittest.TestCase):
         (self.root / "README.md").write_text("# Neutral source\n", encoding="utf-8")
 
     def git(self, *args):
-        return subprocess.run(["git", "-C", str(self.root), *args], capture_output=True, check=True)
+        try:
+            return subprocess.run(["git", "-C", str(self.root), *args], capture_output=True,
+                                  check=True, env=os.environ.copy())
+        except subprocess.CalledProcessError as error:
+            raise RuntimeError(error.stderr.decode("utf-8", errors="replace")) from error
 
     def init_git(self):
         if not shutil.which("git"):
@@ -27,12 +32,50 @@ class PublicReleaseAuditTests(unittest.TestCase):
         self.git("init")
         (self.root / ".gitignore").write_text(".vibesilicon/\nprojects/\n*.log\n", encoding="utf-8")
 
+    def test_neutral_knowledge_is_public_source_without_asset_exemptions(self):
+        path = self.root / "knowledge/fpga-video/cases/example.json"
+        path.parent.mkdir(parents=True)
+        path.write_text('{"observation": "synthetic example"}\n', encoding="utf-8")
+        self.assertEqual(release.audit(self.root), [])
+        binary = path.with_suffix(".bit")
+        binary.write_bytes(b"not a source artifact")
+        self.assertTrue(any("generated/binary artifact" in item for item in release.audit(self.root)))
+        binary.unlink()
+        path.write_text("local = " + "D:" + "/private-user/asset\n", encoding="utf-8")
+        self.assertTrue(any("local path" in item for item in release.audit(self.root)))
+
     def test_source_export_passes_and_unknown_content_is_blocked(self):
         self.assertEqual(release.audit(self.root), [])
         path = self.root / "private/design.sv"
         path.parent.mkdir()
         path.write_text("module design; endmodule\n")
         self.assertTrue(any("outside public source profile" in issue for issue in release.audit(self.root)))
+
+    def test_zcode_and_trial_profiles_keep_private_and_generated_content_blocked(self):
+        for name in (".zcode/config.json", ".zcode/agents/reviewer-hw.md", "trials/example/scores.json"):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}\n", encoding="utf-8")
+        self.assertEqual(release.audit(self.root), [])
+        for name in (".zcode/config.local.json", ".zcode/secrets/token.json", "trials/example/run.bit"):
+            with self.subTest(name=name):
+                path = self.root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("{}\n", encoding="utf-8")
+                self.assertTrue(any("outside public source profile" in item for item in release.audit(self.root)))
+                path.unlink()
+
+    def test_ignored_builds_are_excluded_but_forced_builds_still_fail(self):
+        self.init_git()
+        with (self.root / ".gitignore").open("a", encoding="utf-8") as stream:
+            stream.write("/obj_*/\n/gate_*.json\n")
+        path = self.root / "obj_example/generated.cpp"
+        path.parent.mkdir()
+        path.write_text("generated\n", encoding="utf-8")
+        (self.root / "gate_example.json").write_text("{}\n", encoding="utf-8")
+        self.assertEqual(release.audit(self.root), [])
+        self.git("add", "-f", "obj_example/generated.cpp")
+        self.assertTrue(any("outside public source profile" in item for item in release.audit(self.root)))
 
     def test_ignored_local_tree_is_not_traversed_but_tracked_ignored_files_are_checked(self):
         self.init_git()
@@ -80,6 +123,14 @@ class PublicReleaseAuditTests(unittest.TestCase):
         self.init_git()
         with patch.object(release.subprocess, "run", return_value=subprocess.CompletedProcess([], 1)):
             self.assertTrue(any("cannot enumerate" in issue for issue in release.audit(self.root)))
+
+    def test_git_lookup_preserves_empty_config_values_after_environment_restore(self):
+        with patch.dict(os.environ, {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "core.pager",
+                                     "GIT_CONFIG_VALUE_0": ""}):
+            with patch.dict(os.environ, {"VIBESILICON_ENV_TEST": "1"}):
+                pass
+            self.init_git()
+            self.assertEqual(release.audit(self.root), [])
 
     def test_export_does_not_use_parent_git_checkout(self):
         self.init_git()

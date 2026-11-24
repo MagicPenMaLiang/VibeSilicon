@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "trial_id": "example-trial",
+  "registered_date": "2026-11-10",
+  "rubric": "docs/design/debug_learning/benefit_metrics.md",
+  "success_condition": {
+    "improved_metrics": [
+      "m1"
+    ],
+    "max_overreach": 0,
+    "min_pairs": 2,
+    "require_g1_non_regression": true
+  },
+  "decisions": [
+    {
+      "pair_id": "pair0",
+      "arm": "control",
+      "held_out": true,
+      "blind_token": "713bcc6f7ebf7fa955d0b2800457f862"
+    },
+    {
+      "pair_id": "pair0",
+      "arm": "treatment",
+      "held_out": true,
+      "blind_token": "ab6ab6417e625b901b9675e8e14442d6"
+    },
+    {
+      "pair_id": "pair1",
+      "arm": "control",
+      "held_out": true,
+      "blind_token": "913dce4c9da7028b34f96607d4d4f0c4"
+    },
+    {
+      "pair_id": "pair1",
+      "arm": "treatment",
+      "held_out": true,
+      "blind_token": "c580e23d597e89053ca3b35cc2c1f016"
+    },
+    {
+      "pair_id": "pair2",
+      "arm": "control",
+      "held_out": true,
+      "blind_token": "907b71d85ab7b28637e55819fa41904a"
+    },
+    {
+      "pair_id": "pair2",
+      "arm": "treatment",
+      "held_out": true,
+      "blind_token": "a5cfa2d590ae63851950bd4947f075f1"
+    }
+  ]
+}

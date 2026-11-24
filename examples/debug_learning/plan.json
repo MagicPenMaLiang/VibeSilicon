@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0", "attempt": "synthetic", "date": "2026-11-10",
+  "package_path": "packages/synthetic-2026-11-10", "evidence_path": "evidence/synthetic-2026-11-10",
+  "bound_boot": "synthetic-boot",
+  "capture_path": "evidence/synthetic-2026-11-10/capture.json", "capture_sha256": "sha256:0eabdb8ec1aeba2a7bcf2242e28eae1db18a929402222f6c506c50ea0a07bbac",
+  "artifacts": [
+    {"path": "packages/synthetic-2026-11-10/player.txt", "sha256": "sha256:5273733bd6eeba942c22522e94ef2ade6935346913d17f6ea311c1001bd2b452"},
+    {"path": "packages/synthetic-2026-11-10/image.txt", "sha256": "sha256:3e02ca070ffd2e5567c980370af40bec22408d2aa1b23c0079de799a0e330a62"},
+    {"path": "packages/synthetic-2026-11-10/device_tree.txt", "sha256": "sha256:34b79f1863d9ab2c8f400c3cc5977268ab7b795bcdd5124506466c1a71954573"},
+    {"path": "packages/synthetic-2026-11-10/golden.txt", "sha256": "sha256:94c407c223bcad6eed187884013a5b26dd7789517c6a50162e9d7a168a176675"},
+    {"path": "packages/synthetic-2026-11-10/host_validator.txt", "sha256": "sha256:8866b83ff11f73f4b09c07ce9f6b6cd5f908e935d2574129ac82a4316adbe7fa"}
+  ],
+  "bindings": {"player": "packages/synthetic-2026-11-10/player.txt", "image": "packages/synthetic-2026-11-10/image.txt", "device_tree": "packages/synthetic-2026-11-10/device_tree.txt", "golden": "packages/synthetic-2026-11-10/golden.txt", "host_validator": "packages/synthetic-2026-11-10/host_validator.txt"}
+}

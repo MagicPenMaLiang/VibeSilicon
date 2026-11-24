@@ -13,7 +13,12 @@ from typing import Any, Iterable
 
 
 SCHEMA_VERSION = 1
-RULESET_VERSION = 1
+# Bumped to 2 when RTL-R009 gained the "held data + synchronized enable"
+# pattern. The report shape did not change, so SCHEMA_VERSION stays 1, but the
+# meaning of a PASS did: version 1 never approved that pattern, version 2 can.
+# Evidence carrying version 1 must not be read as if version 2 rules produced
+# it, and the reverse. Bump this again whenever a rule's acceptance changes.
+RULESET_VERSION = 2
 RTL_SUFFIXES = {".v", ".sv", ".svh"}
 RULES = {
     "RTL-R001": ("ERROR", "Declare every net and enable `default_nettype none`."),
@@ -24,7 +29,12 @@ RULES = {
     "RTL-R006": ("ERROR", "Drive a register or net from exactly one process."),
     "RTL-R007": ("ERROR", "Add the VibeSilicon Module Contract v1 header."),
     "RTL-R008": ("WARNING", "Move payload, valid, ready and sideband as one stage."),
-    "RTL-R009": ("ERROR", "Use an approved synchronizer, handshake or async FIFO."),
+    "RTL-R009": (
+        "ERROR",
+        "Use an approved synchronizer, handshake, async FIFO, or gate the write "
+        "with an approved synchronizer's enable so the held data is static when "
+        "it is sampled.",
+    ),
     "RTL-R010": ("ERROR", "Remove the attribute or reference an approved waiver."),
 }
 CONTRACT_FIELDS = (
@@ -43,6 +53,24 @@ WAIVER_RE = re.compile(
     r"vibesilicon-waive\s+(RTL-R\d{3})\s+id=([A-Z][A-Z0-9-]{2,63})(?:\s+reason=\S.*)?",
 )
 IDENTIFIER_RE = re.compile(r"\b[A-Za-z_][A-Za-z0-9_$]*\b")
+# RTL-R009 recognizes three approved crossings: a destination register carrying
+# ASYNC_REG, a bit that has been through an approved synchronizer cell, and the
+# "held data + synchronized enable" pattern. The last one is the multi-bit form
+# that Vivado itself classifies as an enable-controlled CDC structure rather
+# than an unknown one, and it is the only multi-bit pattern that costs no
+# per-bit handshake. It is recognized only when the write sits inside a
+# conditional whose test is an output of an approved synchronizer cell: the tool
+# can prove the ENABLE is synchronized, and the source must be static while that
+# enable is asserted. The static-source half is a review obligation, not
+# something this analysis can establish.
+SYNCHRONIZER_MODULES = frozenset({"cdc_sync"})
+SYNCHRONIZER_ENABLE_PORTS = frozenset({"q_sync", "rise_pulse"})
+SYNCHRONIZER_INSTANCE_RE = re.compile(
+    r"\b(" + "|".join(sorted(SYNCHRONIZER_MODULES)) + r")\b\s+"
+    r"(?:#\s*\([^;]*?\)\s*)?[A-Za-z_][A-Za-z0-9_$]*\s*\("
+)
+PORT_BINDING_RE = re.compile(r"\.([A-Za-z_][A-Za-z0-9_$]*)\s*\(\s*([A-Za-z_][A-Za-z0-9_$]*)\s*\)")
+SCOPE_TOKEN_RE = re.compile(r"\b(begin|end|if)\b")
 ASSIGNMENT_RE = re.compile(
     r"\b([A-Za-z_][A-Za-z0-9_$]*)\s*(?:\[[^\]]+\]\s*)?(<=|(?<![<>=!])=(?!=))"
 )
@@ -190,6 +218,143 @@ def _block_read_sites(
             rhs = statement[match.end():]
             sites.append((match.group(1), set(IDENTIFIER_RE.findall(rhs)), line_number))
     return sites
+
+
+def _synchronized_enables(code: list[str]) -> set[str]:
+    """Signals produced by an approved synchronizer cell in this file.
+
+    Only the module's own enable outputs count. Reading a synchronizer's data
+    output would still be a multi-bit crossing, and `d_async` is an input to the
+    cell, not a synchronized value.
+    """
+    enables: set[str] = set()
+    index = 0
+    while index < len(code):
+        match = SYNCHRONIZER_INSTANCE_RE.search(code[index])
+        if not match:
+            index += 1
+            continue
+        text = code[index][match.end() - 1:]
+        balance = text.count("(") - text.count(")")
+        index += 1
+        while balance > 0 and index < len(code):
+            text += "\n" + code[index]
+            balance += code[index].count("(") - code[index].count(")")
+            index += 1
+        for port, signal in PORT_BINDING_RE.findall(text):
+            if port in SYNCHRONIZER_ENABLE_PORTS:
+                enables.add(signal)
+    return enables
+
+
+def _split_top_level(expression: str, operator: str) -> list[str]:
+    """Split on `operator` where it sits at parenthesis depth zero."""
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    index = 0
+    while index < len(expression):
+        char = expression[index]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+        elif depth == 0 and expression.startswith(operator, index):
+            parts.append(expression[start:index])
+            index += len(operator)
+            start = index
+            continue
+        index += 1
+    parts.append(expression[start:])
+    return parts
+
+
+def _strip_outer_parens(expression: str) -> str:
+    text = expression.strip()
+    while text.startswith("(") and text.endswith(")"):
+        depth = 0
+        balanced = True
+        for index, char in enumerate(text):
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0 and index != len(text) - 1:
+                    balanced = False
+                    break
+        if not balanced or depth != 0:
+            break
+        text = text[1:-1].strip()
+    return text
+
+
+def _condition_implies_enable(expression: str, enables: set[str]) -> bool:
+    """True only when the condition cannot be satisfied with every enable low.
+
+    Negation disqualifies a name, so `if (!enable)` never gates a write. Every
+    top-level `||` operand must qualify on its own, so `enable || other` is
+    rejected: a disjunct that does not mention the enable can be true while the
+    enable is low. A single qualifying `&&` operand is enough, so
+    `(a || b) && enable` is still accepted. The analysis is deliberately
+    conservative -- an unrecognised shape is treated as not gating.
+    """
+    text = _strip_outer_parens(expression)
+    if not text:
+        return False
+    disjuncts = _split_top_level(text, "||")
+    if len(disjuncts) > 1:
+        return all(_condition_implies_enable(part, enables) for part in disjuncts if part.strip())
+    conjuncts = _split_top_level(text, "&&")
+    if len(conjuncts) > 1:
+        return any(_condition_implies_enable(part, enables) for part in conjuncts)
+    atom = _strip_outer_parens(text)
+    matches = list(IDENTIFIER_RE.finditer(atom))
+    if len(matches) != 1 or matches[0].group(0) not in enables:
+        return False
+    return not atom.lstrip().startswith(("!", "~"))
+
+
+def _condition_after(line: str, start: int) -> str:
+    open_index = line.find("(", start)
+    if open_index < 0:
+        return ""
+    depth = 0
+    for index in range(open_index, len(line)):
+        if line[index] == "(":
+            depth += 1
+        elif line[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return line[open_index + 1: index]
+    return ""
+
+
+def _gated_by_synchronizer(
+    code: list[str], block: dict[str, Any], line_number: int, enables: set[str]
+) -> bool:
+    """True when the write on `line_number` sits inside a scope opened by one
+    of `enables`. Any enclosing condition qualifying is enough: a write inside
+    it happens only while that enable is asserted. A bare `else` branch opens a
+    scope that is NOT gated -- it is the "enable low" side -- so it inherits
+    nothing.
+    """
+    if not enables:
+        return False
+    stack: list[bool] = []
+    pending = False
+    for number in range(block["start"], line_number):
+        line = code[number - 1]
+        for token in SCOPE_TOKEN_RE.finditer(line):
+            word = token.group(1)
+            if word == "if":
+                condition = _condition_after(line, token.end())
+                pending = _condition_implies_enable(condition, enables)
+            elif word == "begin":
+                stack.append(pending)
+                pending = False
+            elif stack:
+                stack.pop()
+    return any(stack)
 
 
 def _has_contract(
@@ -397,6 +562,7 @@ def analyze(source_path: Path, *, root: Path | None = None) -> dict[str, Any]:
     for line in code:
         if "ASYNC_REG" in line:
             async_reg_names.update(IDENTIFIER_RE.findall(line))
+    synchronized_enables = _synchronized_enables(code)
     reported_cdc: set[tuple[str, str]] = set()
     for block in blocks:
         destination_clock = block.get("clock")
@@ -404,6 +570,8 @@ def analyze(source_path: Path, *, root: Path | None = None) -> dict[str, Any]:
             continue
         for destination, reads, line_number in _block_read_sites(code, block):
             if destination in async_reg_names:
+                continue
+            if _gated_by_synchronizer(code, block, line_number, synchronized_enables):
                 continue
             for name in reads:
                 source_clocks = signal_clocks.get(name, set())

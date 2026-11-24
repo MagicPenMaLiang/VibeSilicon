@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Blind score sheet keyed only by opaque token; carries no arm or benefit claim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "trial_id", "scorer_id", "scores"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "trial_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,79}$"},
+    "scorer_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"},
+    "scores": {
+      "type": "array", "minItems": 2, "maxItems": 1024,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["blind_token", "m1", "m2", "m3", "m4", "m5", "g1_abstained_when_underspecified", "g2_misapplied"],
+        "properties": {
+          "blind_token": {"type": "string", "pattern": "^[a-f0-9]{16,64}$"},
+          "m1": {"type": "boolean"},
+          "m2": {"type": "boolean"},
+          "m3": {"type": "boolean"},
+          "m4": {"type": "boolean"},
+          "m5": {"type": "boolean"},
+          "g1_abstained_when_underspecified": {"type": "boolean"},
+          "g2_misapplied": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

@@ -52,6 +52,7 @@ def run_gates(manifest_path: Path, *, repository_root: Path = ROOT) -> dict:
             "maintenance_evidence_id": None,
             "generated_provenance": "NOT_RUN",
             "domain_evidence": "NOT_RUN",
+            "domain_approval_id": None,
         },
     }
     waiver_result = None
@@ -85,6 +86,7 @@ def run_gates(manifest_path: Path, *, repository_root: Path = ROOT) -> dict:
         else:
             domains = validate_domain_evidence(manifest_path, repository_root=root)
             result["supplemental"]["domain_evidence"] = domains["status"]
+            result["supplemental"]["domain_approval_id"] = domains["approval_id"]
             smoke = run_project(manifest_path, contract_path, repository_root=root)
             result["checks"]["g2"] = smoke["status"]
             result["g2_evidence_id"] = smoke["evidence_id"]

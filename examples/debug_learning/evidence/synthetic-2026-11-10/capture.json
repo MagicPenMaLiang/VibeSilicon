@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "boot_id": "synthetic-boot",
+  "collector_id": "synthetic-collector",
+  "sequence_start": 1,
+  "sequence_end": 2,
+  "checks": {
+    "persistent_marker": {"consumed": false},
+    "finalizer": {"entries": 0},
+    "staging": {"entries": 0},
+    "transport": {"entries": 0},
+    "trace": {"baseline_matches": true},
+    "services": {"restored": true},
+    "image": {"sha256": "sha256:3e02ca070ffd2e5567c980370af40bec22408d2aa1b23c0079de799a0e330a62"}
+  }
+}

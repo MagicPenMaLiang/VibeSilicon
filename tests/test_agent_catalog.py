@@ -101,6 +101,12 @@ class AgentCatalogTests(unittest.TestCase):
     def test_role_adapters_match_the_canonical_catalog(self):
         self.assertEqual(synchronize(ROOT), [])
 
+    def test_zcode_shares_generated_role_contracts_with_claude(self):
+        generated = generated_files(ROOT, self.catalog)
+        for name in set(self.catalog["roles"]) | set(self.catalog["aliases"]):
+            self.assertEqual(generated[f".zcode/agents/{name}.md"],
+                             generated[f".claude/agents/{name}.md"])
+
     def test_generation_preserves_unmanaged_opencode_configuration(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

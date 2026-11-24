@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scripts.quality_gate.rtl_include_closure import include_closure
 from scripts.quality_gate.rtl_manifest import ManifestError, validate_manifest
 from scripts.quality_gate.rtl_quality_config import RtlQualityConfigError, load_policy
 
@@ -42,10 +43,21 @@ def _environment(binary: Path) -> dict[str, str]:
 
 
 def _hash_sources(root: Path, data: dict) -> dict[str, str]:
-    return {
+    hashed = {
         source: hashlib.sha256((root / source).read_bytes()).hexdigest()
         for source in data["sources"] + data["headers"] + list(data.get("excluded_sources", {}))
     }
+    # `include is read by the linter but is not named in the manifest, so bind
+    # it too. Otherwise a defect can be introduced in a header and the lint
+    # evidence ID stays the same.
+    for path, source_file in include_closure(
+        root=root,
+        entries=[root / source for source in data["sources"]],
+        include_dirs=[root / directory for directory in data.get("include_dirs", [])],
+        defines=data.get("defines", {}),
+    ).items():
+        hashed.setdefault(path, hashlib.sha256(source_file.read_bytes()).hexdigest())
+    return hashed
 
 
 def _warning_headers(stderr: str, allowed_sources: set[str]) -> list[dict]:

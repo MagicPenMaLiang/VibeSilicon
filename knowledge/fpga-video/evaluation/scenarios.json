@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "physical-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "physical-output"},
+      "expected": {"matched": ["physical-vs-internal"], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "physical-wrong-target",
+      "context": {"target": "asic", "pipeline": "video", "boundary": "physical-output"},
+      "expected": {"matched": [], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "observer-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "observation"},
+      "expected": {"matched": ["observer-scope"], "needs_context": [], "excluded": ["nv12-rgbx", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "observer-missing-pipeline",
+      "context": {"target": "fpga", "boundary": "observation"},
+      "expected": {"matched": [], "needs_context": ["observer-scope"], "excluded": ["nv12-rgbx", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "transfer-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "transfer"},
+      "expected": {"matched": ["r59-attribution"], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "shared-golden-error"]}
+    },
+    {
+      "id": "transfer-wrong-pipeline",
+      "context": {"target": "fpga", "pipeline": "storage", "boundary": "transfer"},
+      "expected": {"matched": [], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "format-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "format"},
+      "expected": {"matched": ["nv12-rgbx"], "needs_context": [], "excluded": ["observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "format-missing-target",
+      "context": {"pipeline": "video", "boundary": "format"},
+      "expected": {"matched": [], "needs_context": ["nv12-rgbx"], "excluded": ["observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "golden-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "golden"},
+      "expected": {"matched": ["shared-golden-error"], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution"]}
+    },
+    {
+      "id": "golden-wrong-target",
+      "context": {"target": "asic", "pipeline": "video", "boundary": "golden"},
+      "expected": {"matched": [], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "prehardware-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "prehardware"},
+      "expected": {"matched": ["prehardware-side-effects"], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "prehardware-missing-pipeline",
+      "context": {"target": "fpga", "boundary": "prehardware"},
+      "expected": {"matched": [], "needs_context": ["prehardware-side-effects"], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "package-matches",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "package"},
+      "expected": {"matched": ["package-binding"], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "package-wrong-pipeline",
+      "context": {"target": "fpga", "pipeline": "network", "boundary": "package"},
+      "expected": {"matched": [], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "unknown-boundary-abstains",
+      "context": {"target": "fpga", "pipeline": "video", "boundary": "unseen"},
+      "expected": {"matched": [], "needs_context": [], "excluded": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"]}
+    },
+    {
+      "id": "no-context-never-matches",
+      "context": {},
+      "expected": {"matched": [], "needs_context": ["nv12-rgbx", "observer-scope", "package-binding", "physical-vs-internal", "prehardware-side-effects", "r59-attribution", "shared-golden-error"], "excluded": []}
+    }
+  ]
+}

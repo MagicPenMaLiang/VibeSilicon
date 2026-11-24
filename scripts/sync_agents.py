@@ -143,9 +143,13 @@ def generated_files(root: Path, catalog: dict) -> dict[str, bytes]:
             claude["mcpServers"] = servers
         if canonical == "reviewer-hw":
             claude["tools"] = ["Read", "Grep", "Glob", "mcp__amd-doc-search__vivado_doc_search"]
-        outputs[f".claude/agents/{name}.md"] = (
+        # ZCode accepts the same strict frontmatter key set (name, description,
+        # skills, maxTurns, mcpServers, tools), so one adapter file serves both clients.
+        agent_md = (
             "---\n" + yaml.safe_dump(claude, sort_keys=False, allow_unicode=True) + "---\n\n" + instructions
         ).encode()
+        outputs[f".claude/agents/{name}.md"] = agent_md
+        outputs[f".zcode/agents/{name}.md"] = agent_md
         agents[name] = {
             "description": description,
             "mode": "primary" if canonical == "orchestrator-hw" else "subagent",
