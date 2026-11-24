@@ -61,3 +61,5 @@ reports/private/
 /rtl_readability.json
 /runhls.tcl
 /random
+/obj_*/
+/gate_*.json

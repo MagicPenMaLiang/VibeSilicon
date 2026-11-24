@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "trial_id": "example-trial",
+  "scorer_id": "blind-reviewer-A",
+  "scores": [
+    {
+      "blind_token": "713bcc6f7ebf7fa955d0b2800457f862",
+      "m1": true,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "ab6ab6417e625b901b9675e8e14442d6",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "913dce4c9da7028b34f96607d4d4f0c4",
+      "m1": true,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "c580e23d597e89053ca3b35cc2c1f016",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "907b71d85ab7b28637e55819fa41904a",
+      "m1": true,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "a5cfa2d590ae63851950bd4947f075f1",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    }
+  ]
+}

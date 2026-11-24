@@ -14,6 +14,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from scripts.quality_gate.rtl_include_closure import include_closure
 from scripts.quality_gate.rtl_manifest import IDENTIFIER, ManifestError, _bounded_path, validate_manifest
 from scripts.quality_gate.rtl_quality_config import load_policy
 from scripts.quality_gate.rtl_xpr_shadow import _mask_non_code
@@ -247,6 +248,18 @@ def run_project(manifest_path: Path, contract_path: Path, *, repository_root: Pa
     inputs.update({path: _sha(_bounded_path(root, path, kind="source").read_bytes())
                    for path in manifest["sources"] + manifest["headers"]})
     inputs[contract["testbench"]] = _sha(testbench.read_bytes())
+    # The manifest names the design and the testbench, but the compiler also
+    # reads every reachable `include. Those bytes decide the simulation result,
+    # so they belong in the input set; otherwise editing a testbench model
+    # leaves the evidence ID unchanged and the gate vouches for a run it did
+    # not bind.
+    for path, source_file in include_closure(
+        root=root,
+        entries=[root / path for path in manifest["sources"]] + [testbench],
+        include_dirs=[root / path for path in manifest.get("include_dirs", [])],
+        defines=manifest.get("defines", {}),
+    ).items():
+        inputs.setdefault(path, _sha(source_file.read_bytes()))
     tool = _tool()
     if tool["status"] != "AVAILABLE":
         execution = {"compile": "NOT_RUN", "run": "NOT_RUN", "pass_token_count": 0}

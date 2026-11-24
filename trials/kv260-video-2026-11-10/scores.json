@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0",
+  "trial_id": "kv260-video-2026-11-10",
+  "scorer_id": "isolated-scorer-2026-11-11",
+  "scores": [
+    {
+      "blind_token": "04a6bc35ffcd5961e387ef4de6fd929a",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "8ca06a73ee33a5956448f82ad69d3849",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "6d2a087abb9e300d48c498aa16e9fca3",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "3fc5dc0f24b39c4c9fe617b801d183d5",
+      "m1": true,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "80354535d4322a6ec339b7e94f98d697",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "8e4804539812a3b3337b87f0ff46fa48",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "000b5ad9a30413f74989e2f0a5b46179",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "030ba9289c3dd020c6c7215fadf42ca9",
+      "m1": false,
+      "m2": false,
+      "m3": true,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "4dbad16906f3cbb852e4751caf80d093",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": true,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "0ddd2551093dc2405ab9a494555591a8",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "77a77dfc6294f1533d26786beeab26bc",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    },
+    {
+      "blind_token": "8904a258ccea5a0b3a29a1de07888429",
+      "m1": false,
+      "m2": false,
+      "m3": false,
+      "m4": false,
+      "m5": false,
+      "g1_abstained_when_underspecified": false,
+      "g2_misapplied": false
+    }
+  ]
+}

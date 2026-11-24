@@ -1,0 +1,5 @@
+{
+  "target": "fpga",
+  "pipeline": "video",
+  "boundary": "format"
+}

@@ -237,6 +237,16 @@ The three wrappers wrap those four commands plus the EDA probe and produce
 a structured report plus a stable exit code, which is useful for CI and
 for repeated local verification.
 
+## ZCode configuration
+
+`.zcode/config.json` provides project-relative MCP launchers and the existing
+post-edit quality hook. Role files in `.zcode/agents/` are generated from
+`subagents/catalog.json` and share their bytes with the Claude adapters.
+Run `python -m scripts.sync_agents --check` to verify those role files.
+This checks configuration parity only; live ZCode discovery, hook execution and
+permission enforcement still require verification in the installed client.
+Keep machine-specific overrides and credentials out of the shared configuration.
+
 ## OpenCode integration
 
 Start OpenCode from the repository root after preparing the Python environment.

@@ -26,9 +26,43 @@ LEGACY_THRESHOLDS = {
     "wns_ns_fail": 0.0,
     "cdc_critical": 0,
 }
-REVIEWED_CATALOG_SHA256 = "67f807f88588ebb2e8c729f4ce6b2fe61fc774d5ea70039cf8b275cb27fde6cb"
-REVIEWED_POLICY_SHA256 = "69d97436fe15239f1a3c07da2a4fcf3f759c6693d5cb7044aba49380a4eff8a6"
+# Standard 1.1 (2026-11-14) added the G2 domain-approval requirement; both
+# reviewed files were re-hashed because the version they declare moved with it.
+# Revision record: docs/rtl_quality_revision_log.md
+# Reviewed tool acceptance. The byte pin alone would still let a policy edit
+# through after a hash update; these are the values the reviewer actually
+# accepted, so they are stated in code as well. Same pattern as LEGACY_THRESHOLDS.
+TOOL_VERSIONS = {
+    "python": {"accepted_major": [3], "minimum_minor": 10},
+    "verilator": {"accepted_major": [5]},
+    "iverilog": {"accepted_major": [11, 12]},
+}
+REVIEWED_CATALOG_SHA256 = "9c7213df21a30f3485df82251f1f60e88cae1e67c7d4b973c2a39d183cfc90b1"
+REVIEWED_POLICY_SHA256 = "301646222aa945d6e33a50aa874798a662ddb505c01d674fd666daa59f7abffc"
+# The catalog says which rules exist; READABILITY decides what they accept.
+# Pinning only the catalog would let the checker's semantics drift while every
+# reviewed file stayed byte-identical -- a rule could be widened, or tightened,
+# with every existing guard still green. This hash makes any edit to the
+# checker, a comment included, require a reviewed update. Set it only from a
+# tree whose change has been independently reviewed.
+READABILITY = Path(__file__).with_name("rtl_readability.py")
+REVIEWED_READABILITY_SHA256 = "e4825f9a73e1a6732bcd2d34b9813fd5ac0b95a1802a7958b7eea99cee9fc5ba"
 SUPPLEMENTAL_AUTOMATED_RULES = {"RTL-GEN-001", "RTL-XPR-001", "RTL-MNT-001"}
+# The accepted standard version. 1.1 adds the G2 domain-approval requirement;
+# evidence produced under 1.0 cannot be read as evidence produced under 1.1.
+STANDARD_VERSION = "1.1"
+# Every check name a gate may require. A closed vocabulary is what makes
+# gate_requirements load-bearing: a misspelt optional-looking string would
+# otherwise silently switch a required human artifact off.
+GATE_CHECKS = {
+    "g0": {"catalog", "policy", "module_contract", "waiver_review"},
+    "g1": {"rtl_readability", "verilator_lint", "async_reg"},
+    "g2": {"project_elaboration", "protocol_regression", "cdc_review", "domain_approval"},
+}
+# Checks standard 1.1 cannot be met without. Dropping one of these is not a
+# policy setting; it is a downgrade, and it has to change the constant above --
+# a code edit -- rather than one line of a JSON file.
+REQUIRED_GATE_CHECKS = {"g2": {"domain_approval"}}
 
 
 class RtlQualityConfigError(ValueError):
@@ -56,10 +90,11 @@ def _require_reviewed_bytes(path: Path, expected_sha256: str) -> None:
 
 def load_catalog(path: Path = CATALOG) -> dict:
     _require_reviewed_bytes(path, REVIEWED_CATALOG_SHA256)
+    _require_reviewed_bytes(READABILITY, REVIEWED_READABILITY_SHA256)
     data = _read(path)
     if set(data) != {"schema_version", "standard_version", "catalog_id", "profiles", "rules"}:
         raise RtlQualityConfigError("unexpected RTL catalog fields")
-    if data["schema_version"] != 1 or data["standard_version"] != "1.0":
+    if data["schema_version"] != 1 or data["standard_version"] != STANDARD_VERSION:
         raise RtlQualityConfigError("unsupported RTL catalog version")
     if data["catalog_id"] != "vibesilicon-rtl-coding-standard-v1":
         raise RtlQualityConfigError("unreviewed RTL catalog ID")
@@ -112,7 +147,7 @@ def load_policy(path: Path = POLICY, *, catalog: dict | None = None) -> dict:
     required = {"schema_version", "policy_id", "standard_version", "activation", "legacy_gate_thresholds", "readability_thresholds", "profile_rules", "tool_versions", "gate_requirements"}
     if set(data) != required:
         raise RtlQualityConfigError("unexpected RTL policy fields")
-    if (data["schema_version"], data["policy_id"], data["standard_version"]) != (1, "vibesilicon-rtl-quality-v1", "1.0"):
+    if (data["schema_version"], data["policy_id"], data["standard_version"]) != (1, "vibesilicon-rtl-quality-v1", STANDARD_VERSION):
         raise RtlQualityConfigError("unsupported or unreviewed RTL quality policy")
     if data["activation"] != "round1_legacy_gate_only":
         raise RtlQualityConfigError("RTL project gate activation requires a reviewed policy revision")
@@ -149,10 +184,16 @@ def load_policy(path: Path = POLICY, *, catalog: dict | None = None) -> dict:
             raise RtlQualityConfigError(f"invalid tool major versions: {name}")
         if "minimum_minor" in version and (type(version["minimum_minor"]) is not int or version["minimum_minor"] < 0):
             raise RtlQualityConfigError(f"invalid tool minor version: {name}")
+    if data["tool_versions"] != TOOL_VERSIONS:
+        raise RtlQualityConfigError("tool version policy changed without policy version review")
     gates = data["gate_requirements"]
     if not isinstance(gates, dict) or set(gates) != {"g0", "g1", "g2"}:
         raise RtlQualityConfigError("incomplete gate policy")
     for name, checks in gates.items():
         if not isinstance(checks, list) or not checks or any(not isinstance(check, str) or not check for check in checks) or len(checks) != len(set(checks)):
             raise RtlQualityConfigError(f"invalid required checks: {name}")
+        if not set(checks) <= GATE_CHECKS[name]:
+            raise RtlQualityConfigError(f"unknown required check: {name}")
+        if not REQUIRED_GATE_CHECKS.get(name, set()) <= set(checks):
+            raise RtlQualityConfigError(f"required check missing: {name}")
     return data

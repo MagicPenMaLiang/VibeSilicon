@@ -16,8 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", "__pycache__", ".pytest_cache", ".ruff_cache"}
 SOURCE_DIRS = {
-    ".agents", ".claude", ".codex", ".github", ".opencode", "config", "docs", "examples",
-    "mcp", "schemas", "scripts", "skills", "subagents", "templates", "tests", "third_party",
+    ".agents", ".claude", ".codex", ".github", ".opencode", ".zcode", "config", "docs", "examples",
+    "knowledge", "mcp", "schemas", "scripts", "skills", "subagents", "templates", "tests", "third_party", "trials",
 }
 SOURCE_FILES = {
     ".gitattributes", ".gitignore", ".mcp.json", "AGENTS.md", "CODE_OF_CONDUCT.md",
@@ -45,9 +45,11 @@ def source_files(root: Path = ROOT) -> list[Path]:
     """Use Git's publish candidates without traversing ignored local design trees."""
     root = root.resolve(strict=True)
     if (root / ".git").exists():
+        # Preserve empty GIT_CONFIG_VALUE entries after Windows environment
+        # restoration; implicit OS inheritance can lose those empty values.
         result = subprocess.run(
             ["git", "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-            capture_output=True, check=False, timeout=30,
+            capture_output=True, check=False, timeout=30, env=os.environ.copy(),
         )
         if result.returncode:
             raise ValueError("cannot enumerate Git release candidates")
@@ -86,10 +88,13 @@ def _public_path(relative: Path) -> bool:
         return relative.name in SOURCE_FILES
     if relative.parts[0] not in SOURCE_DIRS or any(part in SKIP_DIRS for part in relative.parts):
         return False
-    if relative.parts[0] in {".agents", ".claude", ".codex", ".opencode"}:
+    if relative.parts[0] == "trials":
+        return relative.suffix in {".md", ".json"}
+    if relative.parts[0] in {".agents", ".claude", ".codex", ".opencode", ".zcode"}:
         allowed = {
             ".agents": {"skills"}, ".claude": {"skills", "agents", "settings.json"},
             ".codex": {"agents", "config.toml", "hooks.json"}, ".opencode": {"plugins"},
+            ".zcode": {"agents", "config.json"},
         }[relative.parts[0]]
         return relative.parts[1] in allowed and not relative.name.endswith(".local.json")
     return True

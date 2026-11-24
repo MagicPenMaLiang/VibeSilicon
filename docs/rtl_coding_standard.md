@@ -48,6 +48,11 @@
   Declaration range arithmetic is an elaboration expression; unsized datapath
   arithmetic and arithmetic initializers still require explicit sizing.
 - G2: elaboration, self-checking simulation, protocol assertions, mutation/fault checks, and formal verification as applicable.
+  A project with more than one clock or reset additionally requires
+  `rtl_domain_approval.json`: an independent human acceptance of the CDC/RDC
+  evidence, bound by content ID to the exact evidence it approves, stating what
+  it covers and what it does not. A green `report_cdc` is evidence, not a
+  decision. See `docs/rtl_quality_revision_log.md` (standard 1.1).
 - G3/G4: target synthesis, implementation or physical design, PPA evidence, and independent sign-off.
 
 No required skipped, unavailable, inconclusive, or stale check is a PASS.

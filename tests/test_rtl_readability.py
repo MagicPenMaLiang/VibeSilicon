@@ -212,6 +212,193 @@ endmodule
         report = self.analyze_text(rtl)
         self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
 
+    HELD_DATA_PRELUDE = """
+`default_nettype none
+module held_data_cdc (
+    input  logic       clk_a,
+    input  logic       clk_b,
+    input  logic       aresetn_dst,
+    input  logic       data_i,
+    input  logic       stats_valid,
+    output logic [7:0] dst_o
+);
+    logic [7:0] src_q;
+    logic       stats_valid_sync;
+    logic       stats_valid_rise;
+    logic [7:0] dst_q;
+    logic [7:0] other_q;
+
+    always_ff @(posedge clk_a) src_q <= {7'd0, data_i};
+
+    cdc_sync u_sval (
+        .clk_dst    (clk_b),
+        .aresetn_dst(aresetn_dst),
+        .d_async    (stats_valid),
+        .q_sync     (stats_valid_sync),
+        .rise_pulse (stats_valid_rise)
+    );
+"""
+
+    def analyze_held_data(self, body):
+        rtl = self.HELD_DATA_PRELUDE + body + """
+    assign dst_o = dst_q;
+endmodule
+`default_nettype wire
+"""
+        return self.analyze_text(rtl)
+
+    def test_held_data_gated_by_synchronizer_enable_is_approved(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (!aresetn_dst) begin
+            dst_q <= 8'd0;
+        end else if (stats_valid_rise) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertNotIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_held_data_without_the_enable_is_still_a_violation(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        dst_q <= src_q;
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_enable_low_branch_is_not_gated(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid_rise) begin
+            dst_q <= 8'd0;
+        end else begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_enable_from_a_plain_register_does_not_approve_the_crossing(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        other_q <= src_q;
+    end
+
+    always_ff @(posedge clk_b) begin
+        if (other_q[0]) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_synchronized_level_from_q_sync_also_counts_as_an_enable(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid_sync) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertNotIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_synchronizer_input_signal_does_not_count_as_an_enable(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_negated_enable_does_not_approve_the_crossing(self):
+        """`if (!enable)` captures while the enable is LOW -- the opposite of
+        the approved pattern. Name-matching alone would wrongly approve it."""
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (!stats_valid_rise) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_bitwise_negated_enable_does_not_approve_the_crossing(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (~stats_valid_rise) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_or_with_an_unrelated_term_does_not_approve_the_crossing(self):
+        """`enable || other` runs when `other` is true and the enable is low."""
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid_rise || other_q[0]) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_enable_anded_with_another_term_still_approves(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid_rise && other_q[0]) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertNotIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_or_group_anded_with_the_enable_still_approves(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if ((other_q[0] || aresetn_dst) && stats_valid_rise) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertNotIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_enable_inside_an_or_group_under_and_does_not_approve(self):
+        """`(enable || other) && aresetn_dst` is satisfiable with enable low."""
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if ((stats_valid_rise || other_q[0]) && aresetn_dst) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_wholly_negated_condition_does_not_approve(self):
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (!(stats_valid_rise && other_q[0])) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
+    def test_equality_comparison_against_the_enable_is_conservatively_rejected(self):
+        """`if (enable == 1'b1)` is a gating form the analyzer does not
+        recognise. It must fail closed, not open."""
+        report = self.analyze_held_data("""
+    always_ff @(posedge clk_b) begin
+        if (stats_valid_rise == 1'b1) begin
+            dst_q <= src_q;
+        end
+    end
+""")
+        self.assertIn("RTL-R009", {item["rule_id"] for item in report["violations"]})
+
     def test_comments_do_not_satisfy_or_trigger_code_rules(self):
         rtl = CLEAN_RTL.replace("`default_nettype none", "// `default_nettype none")
         rtl = rtl.replace("    logic [7:0] count_d;", "    // DONT_TOUCH is intentionally not used.\n    logic [7:0] count_d;")
@@ -232,7 +419,11 @@ endmodule
         report = self.analyze_text(CLEAN_RTL)
         self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
         self.assertEqual(report["schema_version"], 1)
-        self.assertEqual(report["ruleset_version"], 1)
+        # The ruleset version is bound to the module's constant rather than a
+        # literal, so a rule-acceptance change cannot land in one place and be
+        # forgotten in the other.
+        self.assertEqual(schema["properties"]["ruleset_version"]["const"], readability.RULESET_VERSION)
+        self.assertEqual(report["ruleset_version"], readability.RULESET_VERSION)
         self.assertEqual(set(report), set(schema["required"]))
 
     def test_cli_writes_fail_report_and_returns_nonzero(self):

@@ -19,9 +19,11 @@ def run_static_checks(manifest: dict, *, repository_root: Path, source_hashes: d
         raise ManifestError("source changed before G1 static checks")
     findings = []
     blocking = warnings = waived = missing = 0
+    ruleset_versions: set[int] = set()
     for source in manifest["sources"] + manifest["headers"]:
         path = root / source
         report = analyze(path, root=root)
+        ruleset_versions.add(report["ruleset_version"])
         blocking += report["summary"]["blocking"]
         warnings += report["summary"]["warnings"]
         waived += report["summary"]["waived"]
@@ -40,11 +42,24 @@ def run_static_checks(manifest: dict, *, repository_root: Path, source_hashes: d
             })
     if _hash_sources(root, manifest) != source_hashes:
         raise ManifestError("source changed during G1 static checks")
+    if len(ruleset_versions) != 1:
+        raise ManifestError(
+            "readability rule-set version could not be pinned: "
+            f"{sorted(ruleset_versions)}"
+        )
     findings.sort(key=lambda item: (item["file"], item["line"], item["column"], item["rule_id"]))
     result = {
         "status": "FAIL" if blocking or missing else "PASS",
         "source_sha256": source_hashes,
-        "readability": {"blocking": blocking, "warnings": warnings, "waived": waived},
+        # The rule-set version belongs in the hashed content: two runs that
+        # disagree about which patterns are approved must not produce the same
+        # evidence id.
+        "readability": {
+            "blocking": blocking,
+            "warnings": warnings,
+            "waived": waived,
+            "ruleset_version": next(iter(ruleset_versions)),
+        },
         "async_reg": {"missing": missing, "files_scanned": len(manifest["sources"] + manifest["headers"])},
         "findings": findings,
         "limitations": ["heuristic static checks; not CDC correctness or product signoff"],

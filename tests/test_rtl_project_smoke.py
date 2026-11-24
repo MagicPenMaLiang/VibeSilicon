@@ -107,6 +107,47 @@ class RtlProjectSmokeTests(unittest.TestCase):
                         self.assertEqual(rtl_project_smoke.main([str(MANIFEST), str(CONTRACT)]), 2)
             annotate.assert_called_once_with("BLOCKED")
 
+    def test_evidence_binds_an_included_testbench_model(self):
+        """An `include is an input: editing it must change the evidence ID."""
+        tool = {"status": "AVAILABLE", "version": "Verilator 5.048", "kind": "DIRECT", "command": ["verilator"]}
+        execution = {"compile": "PASS", "run": "PASS", "pass_token_count": 1}
+        manifest = json.loads((ROOT / MANIFEST).read_text(encoding="utf-8"))
+        contract = json.loads((ROOT / CONTRACT).read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            project = root / "project" / "demo"
+            (project / "rtl").mkdir(parents=True)
+            (project / "tests").mkdir()
+            (project / "rtl" / "demo.sv").write_text("module demo; endmodule\n", encoding="utf-8")
+            # The model lives outside source_roots, which is what lets it escape
+            # the manifest's own source inventory check.
+            model = project / "tests" / "slave_model.sv"
+            model.write_text("module slave_model; endmodule\n", encoding="utf-8")
+            bench = project / "tests" / "selfcheck_tb.sv"
+            bench.write_text(
+                'module selfcheck_tb;\n`include "slave_model.sv"\n'
+                'demo dut (\n);\ninitial $display("TB_PROBE_PASS");\nendmodule\n',
+                encoding="utf-8")
+            manifest.update({
+                "project_root": "project/demo", "top": "demo",
+                "source_roots": ["project/demo/rtl"], "sources": ["project/demo/rtl/demo.sv"],
+                "headers": [], "include_dirs": ["project/demo/rtl", "project/demo/tests"],
+                "clocks": [], "resets": [],
+            })
+            (project / "rtl_project_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            contract.update({"top": "selfcheck_tb", "testbench": "project/demo/tests/selfcheck_tb.sv"})
+            (project / "rtl_simulation_contract.json").write_text(json.dumps(contract), encoding="utf-8")
+            manifest_path = Path("project/demo/rtl_project_manifest.json")
+            contract_path = Path("project/demo/rtl_simulation_contract.json")
+            with patch.object(rtl_project_smoke, "_tool", return_value=tool):
+                with patch.object(rtl_project_smoke, "_run", return_value=execution):
+                    first = rtl_project_smoke.run_project(manifest_path, contract_path, repository_root=root)
+                    model.write_text("module slave_model; wire x; endmodule\n", encoding="utf-8")
+                    second = rtl_project_smoke.run_project(manifest_path, contract_path, repository_root=root)
+        self.assertEqual(first["status"], "PASS")
+        self.assertNotEqual(first["input_set_sha256"], second["input_set_sha256"])
+        self.assertNotEqual(first["evidence_id"], second["evidence_id"])
+
     def test_testbench_must_instantiate_manifest_top(self):
         manifest = json.loads((ROOT / MANIFEST).read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as directory:

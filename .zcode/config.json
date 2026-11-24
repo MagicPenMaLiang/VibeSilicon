@@ -1,0 +1,56 @@
+{
+  "mcp": {
+    "servers": {
+      "amd-doc-search": {
+        "type": "http",
+        "url": "https://ross.amd.com/mcp/doc-search",
+        "enabled": true,
+        "timeoutMs": 20000
+      },
+      "python-sim": {
+        "type": "stdio",
+        "command": "python",
+        "args": ["scripts/mcp_launcher.py", "python-sim"],
+        "enabled": true,
+        "timeoutMs": 30000
+      },
+      "vitis-hls": {
+        "type": "stdio",
+        "command": "python",
+        "args": ["scripts/mcp_launcher.py", "vitis-hls"],
+        "enabled": true,
+        "timeoutMs": 30000
+      },
+      "vivado": {
+        "type": "stdio",
+        "command": "python",
+        "args": ["scripts/mcp_launcher.py", "vivado"],
+        "enabled": true,
+        "timeoutMs": 30000
+      }
+    }
+  },
+  "hooks": {
+    "enabled": true,
+    "events": {
+      "PostToolUse": [
+        {
+          "matcher": "Write|Edit",
+          "hooks": [
+            {
+              "type": "process",
+              "command": "python",
+              "args": [
+                "${ZCODE_PROJECT_DIR}/scripts/quality_gate/post_edit_hook.py",
+                "--platform",
+                "claude"
+              ],
+              "timeoutMs": 30000,
+              "statusMessage": "Running VibeSilicon RTL quality gate"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

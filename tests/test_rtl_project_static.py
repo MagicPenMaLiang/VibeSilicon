@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.quality_gate import rtl_project_static
+from scripts.quality_gate import rtl_project_static, rtl_readability
 from scripts.quality_gate.rtl_manifest import ManifestError
 from scripts.quality_gate.rtl_project_lint import _hash_sources
 from scripts.quality_gate.rtl_readability import analyze
@@ -43,6 +43,19 @@ class RtlProjectStaticTests(unittest.TestCase):
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["readability"]["blocking"], 0)
         self.assertEqual(report["findings"][0]["message_code"], "ASYNC_REG_MISSING")
+
+    def test_readability_ruleset_version_is_bound_into_the_evidence(self):
+        """A rule-set change must move the evidence id. Without the version in
+        the hashed content, two runs that disagree about which patterns are
+        approved produce byte-identical evidence."""
+        report = self.run_check()
+        self.assertEqual(
+            report["readability"]["ruleset_version"],
+            rtl_readability.RULESET_VERSION,
+        )
+        with patch.object(rtl_readability, "RULESET_VERSION", rtl_readability.RULESET_VERSION + 1):
+            bumped = self.run_check()
+        self.assertNotEqual(report["evidence_id"], bumped["evidence_id"])
 
     def test_scanner_io_failure_never_returns_pass(self):
         with patch.object(rtl_project_static, "scan_file", side_effect=OSError("unreadable source")):

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic debug retrieval scenarios, not model or hardware evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scenarios"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "scenarios": {
+      "type": "array", "minItems": 1, "maxItems": 128,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "context", "expected"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,79}$"},
+          "context": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "target": {"type": "string", "minLength": 1, "maxLength": 80},
+              "pipeline": {"type": "string", "minLength": 1, "maxLength": 80},
+              "platform": {"type": "string", "minLength": 1, "maxLength": 80},
+              "boundary": {"type": "string", "minLength": 1, "maxLength": 80}
+            }
+          },
+          "expected": {
+            "type": "object", "additionalProperties": false,
+            "required": ["matched", "needs_context", "excluded"],
+            "properties": {
+              "matched": {"$ref": "#/$defs/ids"},
+              "needs_context": {"$ref": "#/$defs/ids"},
+              "excluded": {"$ref": "#/$defs/ids"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ids": {
+      "type": "array", "maxItems": 64, "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 80, "pattern": "^[a-z0-9][a-z0-9-]*$"}
+    }
+  }
+}

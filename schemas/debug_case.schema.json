@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vibesilicon:debug-case:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "case_id", "status", "curation_status", "review_status", "title", "conditions", "observations", "interpretation", "counterevidence", "unresolved_questions", "source_references", "supersedes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "case_id": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "content_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "status": {"enum": ["active", "superseded", "retracted", "stale"]},
+    "curation_status": {"const": "CURATED"},
+    "review_status": {"const": "REVIEW_REQUIRED"},
+    "title": {"$ref": "#/$defs/text"},
+    "conditions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required", "exclusions"],
+      "properties": {"required": {"$ref": "#/$defs/requiredMap"}, "exclusions": {"$ref": "#/$defs/contextMap"}}
+    },
+    "observations": {"$ref": "#/$defs/textList"},
+    "interpretation": {"$ref": "#/$defs/textList"},
+    "counterevidence": {"$ref": "#/$defs/textList"},
+    "unresolved_questions": {"$ref": "#/$defs/textList"},
+    "source_references": {
+      "type": "array", "minItems": 1, "maxItems": 12,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["record_id", "field", "summary"],
+        "properties": {
+          "record_id": {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"},
+          "field": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[A-Za-z0-9_.-]+$"},
+          "summary": {"$ref": "#/$defs/text"}
+        }
+      }
+    },
+    "supersedes": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9][a-z0-9-]*$"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "textList": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"$ref": "#/$defs/text"}},
+    "contextMap": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "target": {"$ref": "#/$defs/contextValue"}, "pipeline": {"$ref": "#/$defs/contextValue"},
+        "platform": {"$ref": "#/$defs/contextValue"}, "boundary": {"$ref": "#/$defs/contextValue"}
+      }
+    },
+    "requiredMap": {"allOf": [{"$ref": "#/$defs/contextMap"}, {"minProperties": 1}]},
+    "contextValue": {"type": "string", "minLength": 1, "maxLength": 128}
+  }
+}

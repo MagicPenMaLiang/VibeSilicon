@@ -39,13 +39,20 @@ file remains subject to audit even if it matches an ignore rule: force-adding a
 run or secret does not make it publishable.
 
 The public profile permits the root project/configuration files and these source
-directories: `.agents`, `.claude`, `.codex`, `.github`, `.opencode`, `config`, `docs`,
-`examples`, `mcp`, `schemas`, `scripts`, `skills`, `subagents`, `templates`, `tests`
-and `third_party`. Client directories have narrower configuration/agent/skill
+directories: `.agents`, `.claude`, `.codex`, `.github`, `.opencode`, `.zcode`, `config`, `docs`,
+`examples`, `knowledge`, `mcp`, `schemas`, `scripts`, `skills`, `subagents`, `templates`, `tests`,
+`third_party` and `trials`. The trial profile accepts only Markdown and JSON study
+records; it does not exempt them from content screening or make them hardware
+evidence. Client directories have narrower configuration/agent/skill
 subpaths. File types and root filenames are declared in the auditor. A new source
 category requires an explicit review of that profile; unknown files are not
 silently accepted. The audit is a deterministic content screen, not a complete
 secret scanner or a substitute for ownership/license review.
+
+Root `obj_*` build directories and `gate_*.json` local reports are ignored along
+with other generated output. ZCode publishes only its shared configuration and
+generated role files; local settings remain excluded. Role parity checks do not
+qualify a live ZCode installation or prove client-side permission enforcement.
 
 Known local workspace roots and tool outputs are ignored by `.gitignore`. This
 does not delete them or certify their contents. Inspect `git status --short` before

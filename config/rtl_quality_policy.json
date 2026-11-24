@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "policy_id": "vibesilicon-rtl-quality-v1",
-  "standard_version": "1.0",
+  "standard_version": "1.1",
   "activation": "round1_legacy_gate_only",
   "legacy_gate_thresholds": {
     "lint_errors": 0,
@@ -31,6 +31,6 @@
   "gate_requirements": {
     "g0": ["catalog", "policy", "module_contract", "waiver_review"],
     "g1": ["rtl_readability", "verilator_lint", "async_reg"],
-    "g2": ["project_elaboration", "protocol_regression", "cdc_review"]
+    "g2": ["project_elaboration", "protocol_regression", "cdc_review", "domain_approval"]
   }
 }

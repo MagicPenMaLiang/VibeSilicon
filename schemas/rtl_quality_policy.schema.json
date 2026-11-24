@@ -7,7 +7,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "policy_id": {"const": "vibesilicon-rtl-quality-v1"},
-    "standard_version": {"const": "1.0"},
+    "standard_version": {"const": "1.1"},
     "activation": {"enum": ["round1_legacy_gate_only", "round2_project_gate"]},
     "legacy_gate_thresholds": {"type": "object", "additionalProperties": false, "required": ["lint_errors", "async_reg_missing", "bram_pct_csyn_warn", "bram_pct_csyn_fail", "wns_ns_warn", "wns_ns_fail", "cdc_critical"], "properties": {
       "lint_errors": {"const": 0}, "async_reg_missing": {"const": 0},
