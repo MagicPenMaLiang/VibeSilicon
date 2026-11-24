@@ -33,3 +33,17 @@ Follow [release preparation](docs/release_preparation.md) for Git candidate audi
 and source snapshot preparation; do not force-add ignored local design data.
 
 By submitting a contribution, you agree that it is licensed under Apache-2.0 and that you have the right to contribute it.
+
+## Development tests and project evidence
+
+`tests/` contains VibeSilicon's own unit, contract, security-negative and CLI
+integration regressions. CI discovers `test_*.py` across this directory; retain
+the tests with the source they protect. They do not require users to run the
+entire toolkit suite for every hardware design, and they do not replace that
+design's RTL simulation, formal checks, implementation or board tests.
+
+`tests/fixtures/` supplies small parser/protocol examples. `examples/` contains
+reusable runnable inputs, including synthetic offline debug plans. Real customer
+vectors, dated trial scores, board runs and private review/signoff records belong
+in project storage outside the public toolkit. Keep one maintained guide per
+component rather than committing implementation diaries and repeated plans.

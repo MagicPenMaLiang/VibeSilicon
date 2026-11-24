@@ -41,9 +41,10 @@ run or secret does not make it publishable.
 The public profile permits the root project/configuration files and these source
 directories: `.agents`, `.claude`, `.codex`, `.github`, `.opencode`, `.zcode`, `config`, `docs`,
 `examples`, `knowledge`, `mcp`, `schemas`, `scripts`, `skills`, `subagents`, `templates`, `tests`,
-`third_party` and `trials`. The trial profile accepts only Markdown and JSON study
-records; it does not exempt them from content screening or make them hardware
-evidence. Client directories have narrower configuration/agent/skill
+and `third_party`. Reusable synthetic study fixtures belong under `examples/`;
+dated trial plans, scores, results and project retrospectives stay in private
+project storage or ignored local archives. The root `trials/` directory is outside
+the source profile, even when a file is force-added. Client directories have narrower configuration/agent/skill
 subpaths. File types and root filenames are declared in the auditor. A new source
 category requires an explicit review of that profile; unknown files are not
 silently accepted. The audit is a deterministic content screen, not a complete

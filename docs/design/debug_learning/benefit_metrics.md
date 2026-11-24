@@ -1,7 +1,7 @@
 # Feedback mechanism: benefit metrics and acceptance definition
 
-Status: draft for human approval, 2026-11-10. This defines how to judge whether
-the conditional-case feedback mechanism helps real bring-up work. It is a
+Optional rubric for separately approved offline studies. This defines how to
+judge whether the conditional-case feedback mechanism helps bring-up work. It is a
 measurement contract, not a claim that benefit has been shown. Nothing here
 authorizes a board run, relaxes a gate, or promotes a case.
 
@@ -22,8 +22,8 @@ is not a hardware trial, and more run IDs are not progress.
 
 ## Primary metrics
 
-Each decision is scored by an independent reviewer against the retrospective's
-own standard of separating first failure, protective stop and hypothesized root
+Each decision is scored by an independent reviewer against a declared standard
+of separating first failure, protective stop and hypothesized root
 cause. Lower is better for all error metrics.
 
 | ID | Metric | Definition | Target direction |
@@ -91,7 +91,9 @@ assumes that review has first confirmed the cases are faithful to their sources.
 
 ## Related documents
 
-- [Requirements](PRD.md)
-- [Verification and limitations](verification.md)
-- [Bring-up retrospective](../../reviews/kv260_video_bringup_retrospective_20261110.md)
 - [Case catalog and semantics](../../../knowledge/fpga-video/README.md)
+
+This file remains at its existing path because the bundled trial-plan schema
+uses that path as its rubric identifier. It defines the reusable scoring format;
+actual plans, decisions, scores and results stay outside public source. It is
+not a required FPGA/ASIC engineering gate.

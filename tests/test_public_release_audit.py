@@ -51,13 +51,14 @@ class PublicReleaseAuditTests(unittest.TestCase):
         path.write_text("module design; endmodule\n")
         self.assertTrue(any("outside public source profile" in issue for issue in release.audit(self.root)))
 
-    def test_zcode_and_trial_profiles_keep_private_and_generated_content_blocked(self):
-        for name in (".zcode/config.json", ".zcode/agents/reviewer-hw.md", "trials/example/scores.json"):
+    def test_client_and_example_profiles_keep_private_trial_content_blocked(self):
+        for name in (".zcode/config.json", ".zcode/agents/reviewer-hw.md", "examples/debug_learning/trial/scores.json"):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("{}\n", encoding="utf-8")
         self.assertEqual(release.audit(self.root), [])
-        for name in (".zcode/config.local.json", ".zcode/secrets/token.json", "trials/example/run.bit"):
+        for name in (".zcode/config.local.json", ".zcode/secrets/token.json",
+                     "trials/example/scores.json", "trials/example/run.bit"):
             with self.subTest(name=name):
                 path = self.root / name
                 path.parent.mkdir(parents=True, exist_ok=True)

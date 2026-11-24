@@ -123,13 +123,13 @@ adapter. New skills do not loosen `config/asic_backend_policy.json` or its CLI
 contracts. DRC/LVS localization can contain design identifiers and coordinates;
 keep those artifacts in external run storage, not public reports.
 
-## Video debugging feedback: first offline increment
+## Optional offline video debug tools
 
-Read the [bring-up retrospective](reviews/kv260_video_bringup_retrospective_20261110.md)
-for historical observations, retracted explanations and unresolved boundaries.
-The [design documents](design/debug_learning/PRD.md) distinguish this increment
-from future model evaluation or automation. The [catalog guide](../knowledge/fpga-video/README.md)
-contains the runnable local examples.
+The [catalog guide](../knowledge/fpga-video/README.md) is the maintained entry
+point for interfaces, synthetic examples, trust boundaries and maintenance.
+These tools are optional FPGA diagnostics, not prerequisites for FPGA or ASIC
+development. Single-project trial records and implementation diaries are not
+part of the public toolkit.
 
 - `python -m scripts.debug_cases validate`: schema and relationship checks.
 - `python -m scripts.debug_cases query --context <local-context.json>`: conditional

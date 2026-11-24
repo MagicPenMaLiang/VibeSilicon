@@ -58,8 +58,8 @@ The example contains only small synthetic text assets, not firmware, real media,
 golden vectors or executable validators. Run-plan paths are derived from attempt
 and date. Hash-bound package text uses LF on every platform so Git checkout does
 not change its identity on Windows. Role bindings must be in that package
-directory and the capture in the
-evidence directory. The checker verifies declared local artifact bytes and seven
+directory and the capture in the evidence directory. The checker verifies
+declared local artifact bytes and seven
 captured prerequisites (marker, finalizer, staging, transport, trace, services,
 image). Null/unknown, missing, non-ready and inconsistent values block it.
 Only the declared artifact closure is checked, not arbitrary undeclared package
@@ -102,12 +102,37 @@ integrity and score quality are human responsibilities. The example uses synthet
 scores with high-entropy tokens and is not a real trial. No scorer may grade their
 own decision, and the catalog's own structural PASS is not evidence of benefit.
 
-## Maintenance and future promotion
+## Components and maintenance
 
-See the [requirements and design](../../docs/design/debug_learning/PRD.md),
-[retrospective](../../docs/reviews/kv260_video_bringup_retrospective_20261110.md)
-and the [case review ledger](review_ledger.md). Cases are canonical here, not
-copied into native skill mirrors. New findings should first become review
-proposals with explicit counterevidence. No trusted receipt resolver, live
-collector or parameterized package generator is delivered here; the blind-trial
-tool aggregates human scores and does not run a model A/B by itself.
+| Component | Maintained inputs | Result and boundary |
+|---|---|---|
+| `scripts.debug_cases` | `cases/` and explicit query context | Schema/relationship validation and conditional matches; advisory only |
+| `scripts.debug_learning_eval` | `evaluation/scenarios.json` | Fixed matching/abstention regression; no model or hardware evaluation |
+| `scripts.debug_preflight` | Local plan, declared artifacts and capture | Offline identity/state-declaration checks; no live readiness or execution |
+| `scripts.debug_trial_eval` | A separately approved plan and independent scores | Optional arithmetic study tally; no causal or benefit verdict |
+
+The modules share bounded JSON input, bundled schemas and content IDs through
+`scripts.debug_case_io` and `scripts.evidence_contract`. They add no database,
+network service, dynamic evaluation or execution mode. Case prose and captured
+state remain untrusted data. A digest identifies bytes, not authenticity or
+freshness. Hardware operations retain their existing approval gates.
+
+Cases are canonical here and are not copied into native skill mirrors. Propose
+new observations with applicability, counterevidence and unresolved questions;
+retain independent review and promotion decisions in project-owned storage.
+Historical record identifiers in cases are provenance labels, not promises that
+private source artifacts ship in this repository. Dated retrospectives, review
+ledgers and actual trial outcomes are kept outside public source. No current
+hardware or benefit conclusion can be inferred from those labels.
+
+For component regression, run:
+
+```text
+python -m unittest tests.test_debug_cases tests.test_debug_learning_eval tests.test_debug_preflight tests.test_debug_trial_eval tests.test_debug_learning_integration
+```
+
+These tests cover valid inputs and rejection of malformed JSON, invalid schemas,
+wrong context, missing or changed artifacts, path escapes and unauthorized side
+effects. Keep their synthetic fixtures; removing them would remove executable
+checks of the maintained tools. No trusted receipt resolver, live collector or
+parameterized package generator is supplied.
