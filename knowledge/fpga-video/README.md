@@ -56,7 +56,9 @@ python -m scripts.debug_preflight --root examples/debug_learning --plan examples
 
 The example contains only small synthetic text assets, not firmware, real media,
 golden vectors or executable validators. Run-plan paths are derived from attempt
-and date; role bindings must be in that package directory and the capture in the
+and date. Hash-bound package text uses LF on every platform so Git checkout does
+not change its identity on Windows. Role bindings must be in that package
+directory and the capture in the
 evidence directory. The checker verifies declared local artifact bytes and seven
 captured prerequisites (marker, finalizer, staging, transport, trace, services,
 image). Null/unknown, missing, non-ready and inconsistent values block it.
